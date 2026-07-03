@@ -1,4 +1,14 @@
 (function () {
+  document.querySelectorAll('a[href="portion.html#gor-eget"]').forEach(link => {
+    link.setAttribute('href', 'gor-eget.html');
+  });
+  const currentFile = window.location.pathname.split('/').pop() || 'index.html';
+  if (currentFile === 'portion.html' && window.location.hash === '#gor-eget') {
+    window.location.replace('gor-eget.html');
+  }
+})();
+
+(function () {
   const saved = localStorage.getItem('swedsnus-theme') || '1';
   if (saved !== '1') document.documentElement.className = `theme-${saved}`;
   document.querySelectorAll('.theme-dot').forEach(dot => {
@@ -43,6 +53,41 @@ document.querySelectorAll('.filter-sidebar li').forEach(item => {
     item.classList.add('active');
   });
 });
+
+(function () {
+  document.querySelectorAll('[data-catalog-filter]').forEach(catalog => {
+    const buttons = catalog.querySelectorAll('.filter-pill[data-series]');
+    const cards = catalog.querySelectorAll('.product-card[data-series]');
+    const count = catalog.querySelector('.catalog-count');
+    const empty = catalog.querySelector('.catalog-empty');
+
+    function update(selected) {
+      let visible = 0;
+      cards.forEach(card => {
+        const match = !selected || card.dataset.series === selected;
+        card.classList.toggle('is-hidden', !match);
+        if (match) visible += 1;
+      });
+      if (count) count.textContent = `${visible} produkter`;
+      if (empty) empty.classList.toggle('show', visible === 0);
+    }
+
+    buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        const alreadyActive = button.classList.contains('active');
+        buttons.forEach(item => item.classList.remove('active'));
+        if (alreadyActive) {
+          update(null);
+        } else {
+          button.classList.add('active');
+          update(button.dataset.series);
+        }
+      });
+    });
+
+    update(null);
+  });
+})();
 
 document.querySelectorAll('.sub-tabs').forEach(group => {
   group.querySelectorAll('.sub-tab').forEach(tab => {
@@ -248,7 +293,7 @@ document.querySelectorAll('.pack-option').forEach(option => {
 
 document.querySelectorAll('.product-card').forEach(card => {
   card.addEventListener('click', event => {
-    if (event.target.closest('.pack-select') || event.target.closest('.add-to-cart-btn')) return;
+    if (event.target.closest('.pack-select') || event.target.closest('.add-to-cart-btn') || event.target.closest('.filter-pill')) return;
     const href = card.dataset.href || 'product.html';
     window.location.href = href;
   });
