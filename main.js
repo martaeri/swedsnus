@@ -5,7 +5,7 @@
   const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
 
   function loadStyles() {
-    ['interaction-fixes.css', 'product-card-cleanup.css'].forEach(href => {
+    ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css'].forEach(href => {
       if (!document.querySelector(`link[href="${href}"]`)) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
@@ -213,13 +213,11 @@
     normalizeMeta(card);
     ensureStrength(card);
     normalizePackOptions(card);
-
     const body = card.querySelector('.product-card-body');
     const actions = card.querySelector('.product-card-actions');
     const price = card.querySelector('.product-card-price');
     const button = card.querySelector('.add-to-cart-btn');
     if (!body || !actions || !price || !button) return;
-
     let bottom = card.querySelector('.product-card-bottom');
     if (!bottom) {
       bottom = document.createElement('div');
@@ -230,7 +228,6 @@
     bottom.appendChild(button);
     button.type = 'button';
     if (!button.querySelector('svg')) button.innerHTML = CART_ICON;
-
     const option = selectedOption(card);
     const per = unitPrice(option);
     price.innerHTML = `<span class="unit-price">${escapeHtml(per || selectedPrice(card))}</span><small>per produkt</small>`;
@@ -382,12 +379,85 @@
     const currentFile = window.location.pathname.split('/').pop() || 'index.html';
     if ((currentFile === 'portion.html' || currentFile === 'index.html') && window.location.hash === '#gor-eget') window.location.replace('gor-eget.html');
     document.querySelector('.nav-toggle')?.addEventListener('click', () => {
-      document.querySelector('.subheader')?.classList.toggle('mobile-open');
-      document.querySelector('.main-nav')?.classList.toggle('mobile-open');
+      const subheader = document.querySelector('.subheader');
+      const mainNav = document.querySelector('.main-nav');
+      const open = !(subheader?.classList.contains('mobile-open') || mainNav?.classList.contains('mobile-open'));
+      subheader?.classList.toggle('mobile-open', open);
+      mainNav?.classList.toggle('mobile-open', open);
+      document.body.classList.toggle('mobile-menu-open', open);
     });
     document.querySelectorAll('.subheader-inner a, .subnav-inner a, .main-nav a').forEach(link => {
       const href = (link.getAttribute('href') || '').split('#')[0].split('/').pop();
       if (href && href === currentFile) link.classList.add('active');
+    });
+  }
+
+  function sortGrid(grid, mode) {
+    const cards = Array.from(grid.querySelectorAll('.product-card'));
+    cards.forEach((card, index) => {
+      if (!card.dataset.originalIndex) card.dataset.originalIndex = index;
+    });
+    const sorted = cards.slice().sort((a, b) => {
+      const nameA = a.querySelector('.product-card-name')?.textContent?.trim() || '';
+      const nameB = b.querySelector('.product-card-name')?.textContent?.trim() || '';
+      const priceA = parsePrice(selectedPrice(a));
+      const priceB = parsePrice(selectedPrice(b));
+      if (mode === 'price-asc') return priceA - priceB;
+      if (mode === 'price-desc') return priceB - priceA;
+      if (mode === 'alpha') return nameA.localeCompare(nameB, 'sv');
+      if (mode === 'alpha-desc') return nameB.localeCompare(nameA, 'sv');
+      if (mode === 'newest') return Number(b.dataset.originalIndex) - Number(a.dataset.originalIndex);
+      return Number(a.dataset.originalIndex) - Number(b.dataset.originalIndex);
+    });
+    sorted.forEach(card => grid.appendChild(card));
+  }
+
+  function initCatalogControls() {
+    document.querySelectorAll('.catalog-page[data-catalog-filter]').forEach(catalog => {
+      if (catalog.querySelector('.catalog-mobile-tools')) return;
+      const tools = catalog.querySelector('.catalog-tools');
+      const sidebar = catalog.querySelector('.filter-sidebar');
+      const grid = catalog.querySelector('.product-grid');
+      if (!tools || !sidebar || !grid) return;
+
+      const controls = document.createElement('div');
+      controls.className = 'catalog-mobile-tools';
+      controls.innerHTML = `
+        <button class="catalog-filter-toggle" type="button" aria-expanded="false">Filter</button>
+        <select class="catalog-sort-select" aria-label="Sortera produkter">
+          <option value="relevance">Relevans</option>
+          <option value="price-asc">Pris: lägst först</option>
+          <option value="price-desc">Pris: högst först</option>
+          <option value="alpha">A–Ö</option>
+          <option value="alpha-desc">Ö–A</option>
+          <option value="newest">Nyast först</option>
+        </select>`;
+      tools.insertAdjacentElement('beforebegin', controls);
+
+      const overlay = document.createElement('div');
+      overlay.className = 'catalog-filter-overlay';
+      document.body.appendChild(overlay);
+
+      if (!sidebar.querySelector('.catalog-filter-close')) {
+        const close = document.createElement('button');
+        close.className = 'catalog-filter-close';
+        close.type = 'button';
+        close.textContent = 'Visa produkter';
+        sidebar.appendChild(close);
+      }
+
+      const toggle = controls.querySelector('.catalog-filter-toggle');
+      const sort = controls.querySelector('.catalog-sort-select');
+      function setFilterOpen(open) {
+        sidebar.classList.toggle('mobile-filter-open', open);
+        overlay.classList.toggle('show', open);
+        toggle?.setAttribute('aria-expanded', open ? 'true' : 'false');
+        document.body.classList.toggle('catalog-filter-open', open);
+      }
+      toggle?.addEventListener('click', () => setFilterOpen(!sidebar.classList.contains('mobile-filter-open')));
+      overlay.addEventListener('click', () => setFilterOpen(false));
+      sidebar.querySelector('.catalog-filter-close')?.addEventListener('click', () => setFilterOpen(false));
+      sort?.addEventListener('change', () => sortGrid(grid, sort.value));
     });
   }
 
@@ -442,7 +512,6 @@
       let current = 0;
       function visibleCount() {
         const width = outer.offsetWidth;
-        if (width < 440) return 1;
         if (width < 680) return 2;
         if (width < 920) return 4;
         return 6;
@@ -563,6 +632,7 @@
     initThemeSwitcher();
     initNavigation();
     initFilters();
+    initCatalogControls();
     initCarousels();
     renderBookmarksPage();
     normalizeAllProductCards();
