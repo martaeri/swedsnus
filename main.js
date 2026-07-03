@@ -4,13 +4,15 @@
   const CART_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
   const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
 
-  function loadInteractionCss() {
-    if (!document.querySelector('link[href="interaction-fixes.css"]')) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = 'interaction-fixes.css';
-      document.head.appendChild(link);
-    }
+  function loadStyles() {
+    ['interaction-fixes.css', 'product-card-cleanup.css'].forEach(href => {
+      if (!document.querySelector(`link[href="${href}"]`)) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        document.head.appendChild(link);
+      }
+    });
   }
 
   function readStore(key) {
@@ -44,36 +46,56 @@
       .replace(/'/g, '&#039;');
   }
 
-  function priceNumber(value) {
+  function parsePrice(value) {
     const match = String(value || '').replace(/\s/g, '').match(/[0-9]+/);
     return match ? parseInt(match[0], 10) : 0;
   }
 
-  function getSelectedOption(card) {
+  function formatKr(value) {
+    return `${Math.round(value).toLocaleString('sv-SE')} kr`;
+  }
+
+  function selectedOption(card) {
     return card?.querySelector?.('.pack-select option:checked') || null;
   }
 
-  function getSelectedPack(card) {
-    const option = getSelectedOption(card);
+  function selectedPack(card) {
+    const option = selectedOption(card);
     if (option) return option.dataset.pack || option.textContent.split('—')[0].trim() || '1-pack';
-    const selectedPack = document.querySelector('.pack-option.selected');
-    return selectedPack?.dataset.pack || '1-pack';
+    const pagePack = document.querySelector('.pack-option.selected');
+    return pagePack?.dataset.pack || '1-pack';
   }
 
-  function getSelectedPrice(card) {
-    const option = getSelectedOption(card);
+  function selectedPrice(card) {
+    const option = selectedOption(card);
     if (option?.dataset.price) return option.dataset.price;
-    const selectedPack = document.querySelector('.pack-option.selected');
-    if (selectedPack?.dataset.price) return selectedPack.dataset.price;
+    const pagePack = document.querySelector('.pack-option.selected');
+    if (pagePack?.dataset.price) return pagePack.dataset.price;
     const cardPrice = card?.querySelector?.('.product-card-price');
     const pagePrice = document.querySelector('.product-detail-price');
     return (cardPrice?.childNodes?.[0]?.textContent || cardPrice?.textContent || pagePrice?.childNodes?.[0]?.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function unitPrice(option) {
+    if (!option) return '';
+    if (option.dataset.per) return option.dataset.per;
+    const price = parsePrice(option.dataset.price || option.textContent);
+    const pack = option.dataset.pack || option.textContent;
+    const amount = parseInt((pack.match(/[0-9]+/) || ['1'])[0], 10) || 1;
+    return price ? `${formatKr(price / amount)}/st` : '';
   }
 
   function productMetaFromCard(card) {
     return Array.from(card.querySelectorAll('.product-card-meta'))
       .map(item => item.textContent.replace(/\s+/g, ' ').trim())
       .filter(Boolean);
+  }
+
+  function metaValue(card, label) {
+    const row = Array.from(card.querySelectorAll('.product-card-meta')).find(item => item.textContent.toLowerCase().startsWith(label.toLowerCase()));
+    const span = row?.querySelector('span');
+    if (span) return span.textContent.trim();
+    return row ? row.textContent.split(':').slice(1).join(':').trim() : '';
   }
 
   function productFromCard(card) {
@@ -83,8 +105,8 @@
       name,
       badge: card.querySelector('.product-card-badge')?.textContent?.trim() || '',
       meta: productMetaFromCard(card),
-      price: getSelectedPrice(card),
-      pack: getSelectedPack(card),
+      price: selectedPrice(card),
+      pack: selectedPack(card),
       href: card.dataset.href || 'product.html'
     };
   }
@@ -97,15 +119,152 @@
       const value = row.querySelector('dd')?.textContent?.replace(/\s+/g, ' ')?.trim();
       return key && value ? `${key}: ${value}` : '';
     }).filter(Boolean).slice(0, 3);
-    return {
-      id: slugify(name),
-      name,
-      badge: badges[0] || '',
-      meta,
-      price: getSelectedPrice(document),
-      pack: getSelectedPack(document),
-      href: 'product.html'
-    };
+    return { id: slugify(name), name, badge: badges[0] || '', meta, price: selectedPrice(document), pack: selectedPack(document), href: 'product.html' };
+  }
+
+  function isAroma(card) {
+    return card.textContent.toLowerCase().includes('arom');
+  }
+
+  function isAccessory(card) {
+    const path = window.location.pathname.split('/').pop();
+    const text = card.textContent.toLowerCase();
+    return path === 'tillbehor.html' || text.includes('tillbehör') || text.includes('material:');
+  }
+
+  function isPortionLike(card) {
+    if (isAccessory(card) || isAroma(card)) return false;
+    const text = card.textContent.toLowerCase();
+    return ['portion', 'white', 'premium', 'rebell', 'rx slim', 'mini', 'instant', 'super dry', 'notch', 'fat boy', 'compact', 'large'].some(term => text.includes(term));
+  }
+
+  function isSnusProduct(card) {
+    if (isAccessory(card) || isAroma(card)) return false;
+    const text = card.textContent.toLowerCase();
+    return ['snus', 'portion', 'white', 'premium', 'rebell', 'rx slim', 'mini', 'instant', 'super dry', 'notch', 'fat boy', 'lös'].some(term => text.includes(term));
+  }
+
+  function inferSize(card) {
+    const text = card.textContent.toLowerCase();
+    if (text.includes('rx slim')) return 'RX Slim';
+    if (text.includes('mini')) return 'Mini';
+    if (text.includes('compact')) return 'Compact';
+    if (text.includes('rebell')) return 'Rebell';
+    if (text.includes('premium')) return 'Premium';
+    if (text.includes('instant')) return 'Instant';
+    if (text.includes('large') || text.includes('fat boy') || text.includes('notch') || text.includes('super dry')) return 'Large';
+    return card.querySelector('.product-card-badge')?.textContent?.trim() || 'Premium';
+  }
+
+  function inferStrength(card) {
+    const text = card.textContent.toLowerCase();
+    if (text.includes('extra strong') || text.includes('extra stark') || text.includes('rebell')) return 4;
+    if (text.includes('rx slim') || text.includes('strong') || text.includes('stark')) return 3;
+    return 2;
+  }
+
+  function normalizePortionName(card) {
+    if (!isPortionLike(card)) return;
+    const name = card.querySelector('.product-card-name');
+    if (!name || name.textContent.includes('dosor')) return;
+    const text = name.textContent.trim();
+    const match = text.match(/\b(300|400|500)\b/);
+    if (!match) return;
+    const dosor = parseInt(match[1], 10) / 20;
+    name.textContent = text.replace(/\s*\b(300|400|500)\b\s*/g, ' ').replace(/\s+/g, ' ').trim() + ` ${dosor} dosor`;
+    card.dataset.productId = slugify(name.textContent);
+  }
+
+  function normalizeMeta(card) {
+    if (!isPortionLike(card)) return;
+    const flavor = metaValue(card, 'Smak') || 'Neutral';
+    card.querySelectorAll('.product-card-meta').forEach(item => item.remove());
+    const name = card.querySelector('.product-card-name');
+    if (!name) return;
+    name.insertAdjacentHTML('afterend', `<p class="product-card-meta">Portionsstorlek: <span>${escapeHtml(inferSize(card))}</span></p><p class="product-card-meta">Smak: <span>${escapeHtml(flavor)}</span></p>`);
+  }
+
+  function ensureStrength(card) {
+    if (!isSnusProduct(card) || card.querySelector('.strength-bar')) return;
+    const level = inferStrength(card);
+    const bar = document.createElement('div');
+    bar.className = 'strength-bar';
+    for (let i = 1; i <= 5; i += 1) {
+      const span = document.createElement('span');
+      if (i <= level) span.className = 'filled';
+      bar.appendChild(span);
+    }
+    const insertAfter = Array.from(card.querySelectorAll('.product-card-meta')).pop() || card.querySelector('.product-card-name');
+    insertAfter?.insertAdjacentElement('afterend', bar);
+  }
+
+  function normalizePackOptions(card) {
+    card.querySelectorAll('.pack-select option').forEach(option => {
+      const pack = option.dataset.pack || option.textContent.split('—')[0].trim() || '1-pack';
+      const price = option.dataset.price || option.textContent.split('—').slice(1).join('—').replace(/\([^)]*\)/g, '').trim();
+      if (pack) option.dataset.pack = pack;
+      if (price) option.dataset.price = price;
+      option.textContent = `${pack} — ${price}`;
+    });
+  }
+
+  function normalizeProductCardLayout(card) {
+    normalizePortionName(card);
+    normalizeMeta(card);
+    ensureStrength(card);
+    normalizePackOptions(card);
+
+    const body = card.querySelector('.product-card-body');
+    const actions = card.querySelector('.product-card-actions');
+    const price = card.querySelector('.product-card-price');
+    const button = card.querySelector('.add-to-cart-btn');
+    if (!body || !actions || !price || !button) return;
+
+    let bottom = card.querySelector('.product-card-bottom');
+    if (!bottom) {
+      bottom = document.createElement('div');
+      bottom.className = 'product-card-bottom';
+      actions.insertAdjacentElement('afterend', bottom);
+    }
+    bottom.appendChild(price);
+    bottom.appendChild(button);
+    button.type = 'button';
+    if (!button.querySelector('svg')) button.innerHTML = CART_ICON;
+
+    const option = selectedOption(card);
+    const per = unitPrice(option);
+    price.innerHTML = `<span class="unit-price">${escapeHtml(per || selectedPrice(card))}</span><small>per produkt</small>`;
+  }
+
+  function normalizeAllProductCards() {
+    document.querySelectorAll('.product-card').forEach(card => {
+      normalizeProductCardLayout(card);
+      const product = productFromCard(card);
+      card.dataset.productId = product.id;
+      if (!card.dataset.href) card.dataset.href = 'product.html';
+      if (!card.querySelector('.bookmark-toggle')) {
+        const bookmark = document.createElement('button');
+        bookmark.type = 'button';
+        bookmark.className = 'bookmark-toggle';
+        bookmark.setAttribute('aria-label', 'Spara produkt');
+        bookmark.innerHTML = BOOKMARK_ICON;
+        card.appendChild(bookmark);
+      }
+      card.querySelector('.bookmark-toggle').dataset.productId = card.dataset.productId;
+    });
+    syncBookmarkButtons();
+  }
+
+  function isBookmarked(id) {
+    return readStore(BOOKMARKS_KEY).some(item => item.id === id);
+  }
+
+  function syncBookmarkButtons() {
+    document.querySelectorAll('.bookmark-toggle[data-product-id]').forEach(button => {
+      const active = isBookmarked(button.dataset.productId);
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
   }
 
   function metaMarkup(meta) {
@@ -120,8 +279,18 @@
     }).join('');
   }
 
-  function isBookmarked(id) {
-    return readStore(BOOKMARKS_KEY).some(item => item.id === id);
+  function renderProductCard(product) {
+    return `<div class="product-card" data-product-id="${escapeHtml(product.id)}" data-href="${escapeHtml(product.href || 'product.html')}"><button class="bookmark-toggle active" data-product-id="${escapeHtml(product.id)}" type="button" aria-label="Spara produkt" aria-pressed="true">${BOOKMARK_ICON}</button><div class="img-placeholder product">Produktbild</div><div class="product-card-body">${product.badge ? `<span class="product-card-badge">${escapeHtml(product.badge)}</span>` : ''}<p class="product-card-name">${escapeHtml(product.name)}</p>${metaMarkup(product.meta)}<div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="${escapeHtml(product.price || '')}" data-pack="${escapeHtml(product.pack || '1-pack')}">${escapeHtml(product.pack || '1-pack')} — ${escapeHtml(product.price || '')}</option></select></div><div class="product-card-bottom"><p class="product-card-price"><span class="unit-price">${escapeHtml(product.price || '')}</span><small>per produkt</small></p><button class="add-to-cart-btn" type="button" aria-label="Lägg i kundvagn">${CART_ICON}</button></div></div></div>`;
+  }
+
+  function renderBookmarksPage() {
+    const list = document.querySelector('[data-bookmarks-list]') || (document.body.classList.contains('bookmarks-page') ? document.querySelector('.bookmarks-list') : null);
+    if (!list) return;
+    const bookmarks = readStore(BOOKMARKS_KEY);
+    const count = document.querySelector('[data-bookmark-count]');
+    if (count) count.textContent = `${bookmarks.length} ${bookmarks.length === 1 ? 'produkt' : 'produkter'}`;
+    list.classList.add('product-grid', 'bookmarks-product-grid');
+    list.innerHTML = bookmarks.length ? bookmarks.map(renderProductCard).join('') : '<div class="bookmarks-empty">Du har inga sparade produkter än.</div>';
   }
 
   function saveBookmark(product, shouldSave) {
@@ -129,59 +298,7 @@
     if (shouldSave) bookmarks.unshift(product);
     writeStore(BOOKMARKS_KEY, bookmarks);
     renderBookmarksPage();
-    ensureProductControls();
-  }
-
-  function syncBookmarkButtons() {
-    document.querySelectorAll('.bookmark-toggle[data-product-id]').forEach(button => {
-      const active = isBookmarked(button.dataset.productId);
-      button.classList.toggle('active', active);
-      button.setAttribute('aria-pressed', active ? 'true' : 'false');
-      button.setAttribute('title', active ? 'Ta bort från sparade produkter' : 'Spara produkt');
-    });
-  }
-
-  function ensureProductControls() {
-    document.querySelectorAll('.product-card').forEach(card => {
-      const product = productFromCard(card);
-      card.dataset.productId = product.id;
-      if (!card.dataset.href) card.dataset.href = product.href || 'product.html';
-
-      let bookmark = card.querySelector('.bookmark-toggle');
-      if (!bookmark) {
-        bookmark = document.createElement('button');
-        bookmark.type = 'button';
-        bookmark.className = 'bookmark-toggle';
-        bookmark.setAttribute('aria-label', 'Spara produkt');
-        bookmark.innerHTML = BOOKMARK_ICON;
-        card.appendChild(bookmark);
-      }
-      bookmark.dataset.productId = product.id;
-
-      card.querySelectorAll('.add-to-cart-btn').forEach(button => {
-        button.type = 'button';
-        if (!button.querySelector('svg')) button.innerHTML = CART_ICON;
-      });
-    });
-
-    const detail = document.querySelector('.product-detail');
-    const heading = detail?.querySelector('h1');
-    if (detail && heading && !detail.querySelector('.product-page-bookmark')) {
-      const product = productFromPage();
-      const wrap = document.createElement('div');
-      wrap.className = 'product-detail-actions';
-      heading.parentNode.insertBefore(wrap, heading);
-      wrap.appendChild(heading);
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'bookmark-toggle product-page-bookmark';
-      button.dataset.productId = product.id;
-      button.setAttribute('aria-label', 'Spara produkt');
-      button.innerHTML = BOOKMARK_ICON;
-      wrap.appendChild(button);
-    }
-
-    syncBookmarkButtons();
+    normalizeAllProductCards();
   }
 
   function addCartItem(product, quantity = 1) {
@@ -195,7 +312,7 @@
   }
 
   function cartTotal(cart) {
-    return cart.reduce((sum, item) => sum + priceNumber(item.price) * (item.quantity || 1), 0);
+    return cart.reduce((sum, item) => sum + parsePrice(item.price) * (item.quantity || 1), 0);
   }
 
   function updateCartPanel() {
@@ -204,7 +321,6 @@
     document.querySelectorAll('.cart-count').forEach(item => item.textContent = count);
     document.querySelectorAll('.cart-panel-count').forEach(item => item.textContent = `${count} ${count === 1 ? 'artikel' : 'artiklar'}`);
     document.querySelectorAll('.cart-total').forEach(item => item.textContent = `${cartTotal(cart).toLocaleString('sv-SE')} kr`);
-
     document.querySelectorAll('.cart-panel').forEach(panel => {
       let list = panel.querySelector('.cart-panel-items');
       if (!list) {
@@ -216,45 +332,8 @@
       }
       const empty = panel.querySelector('.cart-panel-empty');
       if (empty) empty.classList.toggle('is-hidden', cart.length > 0);
-      list.innerHTML = cart.slice(0, 4).map(item => `
-        <a href="${escapeHtml(item.href || 'product.html')}" class="cart-panel-item">
-          <span class="cart-panel-item-img"></span>
-          <span class="cart-panel-item-main"><span class="cart-panel-item-name">${escapeHtml(item.name)}</span><span class="cart-panel-item-meta">${item.quantity || 1} × ${escapeHtml(item.pack || '1-pack')}</span></span>
-          <span class="cart-panel-item-price">${escapeHtml(item.price || '')}</span>
-        </a>
-      `).join('');
+      list.innerHTML = cart.slice(0, 4).map(item => `<a href="${escapeHtml(item.href || 'product.html')}" class="cart-panel-item"><span class="cart-panel-item-img"></span><span class="cart-panel-item-main"><span class="cart-panel-item-name">${escapeHtml(item.name)}</span><span class="cart-panel-item-meta">${item.quantity || 1} × ${escapeHtml(item.pack || '1-pack')}</span></span><span class="cart-panel-item-price">${escapeHtml(item.price || '')}</span></a>`).join('');
     });
-  }
-
-  function renderProductCard(product) {
-    return `
-      <div class="product-card" data-product-id="${escapeHtml(product.id)}" data-href="${escapeHtml(product.href || 'product.html')}">
-        <button class="bookmark-toggle active" data-product-id="${escapeHtml(product.id)}" type="button" aria-label="Spara produkt" aria-pressed="true">${BOOKMARK_ICON}</button>
-        <div class="img-placeholder product">Produktbild</div>
-        <div class="product-card-body">
-          ${product.badge ? `<span class="product-card-badge">${escapeHtml(product.badge)}</span>` : ''}
-          <p class="product-card-name">${escapeHtml(product.name)}</p>
-          ${metaMarkup(product.meta)}
-          <div class="product-card-actions">
-            <select class="pack-select" aria-label="Välj antal"><option data-price="${escapeHtml(product.price || '')}" data-pack="${escapeHtml(product.pack || '1-pack')}">${escapeHtml(product.pack || '1-pack')} — ${escapeHtml(product.price || '')}</option></select>
-            <button class="add-to-cart-btn" type="button" aria-label="Lägg i kundvagn">${CART_ICON}</button>
-          </div>
-          <p class="product-card-price">${escapeHtml(product.price || '')} <small>${escapeHtml(product.pack || '')}</small></p>
-        </div>
-      </div>
-    `;
-  }
-
-  function renderBookmarksPage() {
-    const list = document.querySelector('[data-bookmarks-list]') || (document.body.classList.contains('bookmarks-page') ? document.querySelector('.bookmarks-list') : null);
-    if (!list) return;
-    const bookmarks = readStore(BOOKMARKS_KEY);
-    const count = document.querySelector('[data-bookmark-count]');
-    if (count) count.textContent = `${bookmarks.length} ${bookmarks.length === 1 ? 'produkt' : 'produkter'}`;
-    list.classList.add('product-grid', 'bookmarks-product-grid');
-    list.innerHTML = bookmarks.length
-      ? bookmarks.map(renderProductCard).join('')
-      : '<div class="bookmarks-empty">Du har inga sparade produkter än. Spara en produkt med bokmärkesikonen på ett produktkort eller en produktsida.</div>';
   }
 
   function renderCartPage() {
@@ -268,20 +347,7 @@
     if (summaryCount) summaryCount.textContent = `${totalQty} ${totalQty === 1 ? 'artikel' : 'artiklar'}`;
     if (summaryTotal) summaryTotal.textContent = `${cartTotal(cart).toLocaleString('sv-SE')} kr`;
     if (!list) return;
-    list.innerHTML = cart.length ? cart.map((item, index) => `
-      <article class="cart-page-item">
-        <a href="${escapeHtml(item.href || 'product.html')}" class="cart-page-img">Produktbild</a>
-        <div class="cart-page-main">
-          ${item.badge ? `<span class="product-card-badge">${escapeHtml(item.badge)}</span>` : ''}
-          <h3><a href="${escapeHtml(item.href || 'product.html')}">${escapeHtml(item.name)}</a></h3>
-          ${metaMarkup(item.meta)}
-          <p class="cart-page-pack">${escapeHtml(item.pack || '1-pack')}</p>
-        </div>
-        <div class="cart-page-qty"><button type="button" data-cart-action="decrease" data-index="${index}">−</button><span>${item.quantity || 1}</span><button type="button" data-cart-action="increase" data-index="${index}">+</button></div>
-        <strong class="cart-page-price">${escapeHtml(item.price || '')}</strong>
-        <button class="cart-page-remove" type="button" data-cart-action="remove" data-index="${index}" aria-label="Ta bort produkt">×</button>
-      </article>
-    `).join('') : '<div class="cart-empty-page">Din kundvagn är tom.</div>';
+    list.innerHTML = cart.length ? cart.map((item, index) => `<article class="cart-page-item"><a href="${escapeHtml(item.href || 'product.html')}" class="cart-page-img">Produktbild</a><div class="cart-page-main">${item.badge ? `<span class="product-card-badge">${escapeHtml(item.badge)}</span>` : ''}<h3><a href="${escapeHtml(item.href || 'product.html')}">${escapeHtml(item.name)}</a></h3>${metaMarkup(item.meta)}<p class="cart-page-pack">${escapeHtml(item.pack || '1-pack')}</p></div><div class="cart-page-qty"><button type="button" data-cart-action="decrease" data-index="${index}">−</button><span>${item.quantity || 1}</span><button type="button" data-cart-action="increase" data-index="${index}">+</button></div><strong class="cart-page-price">${escapeHtml(item.price || '')}</strong><button class="cart-page-remove" type="button" data-cart-action="remove" data-index="${index}" aria-label="Ta bort produkt">×</button></article>`).join('') : '<div class="cart-empty-page">Din kundvagn är tom.</div>';
   }
 
   function showToast(message) {
@@ -334,7 +400,6 @@
         chip.classList.add('active');
       });
     });
-
     document.querySelectorAll('[data-catalog-filter]').forEach(catalog => {
       const buttons = catalog.querySelectorAll('.filter-pill[data-series]');
       const cards = catalog.querySelectorAll('.product-card[data-series]');
@@ -363,32 +428,11 @@
     });
   }
 
-  function initProductPageControls() {
-    const qty = document.querySelector('.qty-display');
-    document.querySelector('.qty-minus')?.addEventListener('click', () => { if (qty) qty.value = Math.max(1, parseInt(qty.value || '1', 10) - 1); });
-    document.querySelector('.qty-plus')?.addEventListener('click', () => { if (qty) qty.value = parseInt(qty.value || '1', 10) + 1; });
-    document.querySelectorAll('.pack-option').forEach(option => option.addEventListener('click', () => {
-      document.querySelectorAll('.pack-option').forEach(item => item.classList.remove('selected'));
-      option.classList.add('selected');
-      const radio = option.querySelector('input[type=radio]');
-      if (radio) radio.checked = true;
-      const price = option.dataset.price;
-      const priceEl = document.querySelector('.product-detail-price');
-      if (price && priceEl) priceEl.innerHTML = `${price} <small>${option.dataset.pack || '1-pack'}</small>`;
-    }));
-    document.querySelector('.add-to-cart-main .btn-primary')?.addEventListener('click', event => {
-      event.preventDefault();
-      addCartItem(productFromPage(), parseInt(qty?.value || '1', 10) || 1);
-      showToast('Tillagd i kundvagnen');
-    });
-  }
-
   function initCarousels() {
     document.querySelectorAll('.carousel-header').forEach(header => {
       const heading = header.querySelector('.section-heading');
       if (heading && heading.textContent.trim().toLowerCase() === 'nyheter') header.querySelector('.see-all')?.remove();
     });
-
     document.querySelectorAll('.carousel-wrapper').forEach(wrapper => {
       const track = wrapper.querySelector('.carousel-track');
       const outer = wrapper.querySelector('.carousel-track-outer');
@@ -428,7 +472,50 @@
     });
   }
 
+  function initProductPageControls() {
+    const detail = document.querySelector('.product-detail');
+    const heading = detail?.querySelector('h1');
+    if (detail && heading && !detail.querySelector('.product-page-bookmark')) {
+      const product = productFromPage();
+      const wrap = document.createElement('div');
+      wrap.className = 'product-detail-actions';
+      heading.parentNode.insertBefore(wrap, heading);
+      wrap.appendChild(heading);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'bookmark-toggle product-page-bookmark';
+      button.dataset.productId = product.id;
+      button.setAttribute('aria-label', 'Spara produkt');
+      button.innerHTML = BOOKMARK_ICON;
+      wrap.appendChild(button);
+    }
+    const qty = document.querySelector('.qty-display');
+    document.querySelector('.qty-minus')?.addEventListener('click', () => { if (qty) qty.value = Math.max(1, parseInt(qty.value || '1', 10) - 1); });
+    document.querySelector('.qty-plus')?.addEventListener('click', () => { if (qty) qty.value = parseInt(qty.value || '1', 10) + 1; });
+    document.querySelectorAll('.pack-option').forEach(option => option.addEventListener('click', () => {
+      document.querySelectorAll('.pack-option').forEach(item => item.classList.remove('selected'));
+      option.classList.add('selected');
+      const radio = option.querySelector('input[type=radio]');
+      if (radio) radio.checked = true;
+      const price = option.dataset.price;
+      const priceEl = document.querySelector('.product-detail-price');
+      if (price && priceEl) priceEl.innerHTML = `${price} <small>${option.dataset.pack || '1-pack'}</small>`;
+    }));
+    document.querySelector('.add-to-cart-main .btn-primary')?.addEventListener('click', event => {
+      event.preventDefault();
+      addCartItem(productFromPage(), parseInt(qty?.value || '1', 10) || 1);
+      showToast('Tillagd i kundvagnen');
+    });
+    syncBookmarkButtons();
+  }
+
   function handleClicks() {
+    document.addEventListener('change', event => {
+      const select = event.target.closest('.pack-select');
+      if (!select) return;
+      const card = select.closest('.product-card');
+      if (card) normalizeProductCardLayout(card);
+    });
     document.addEventListener('click', event => {
       const bookmark = event.target.closest('.bookmark-toggle');
       if (bookmark) {
@@ -441,7 +528,6 @@
         showToast(shouldSave ? 'Sparad produkt' : 'Borttagen från sparade produkter');
         return;
       }
-
       const addButton = event.target.closest('.add-to-cart-btn');
       if (addButton) {
         event.preventDefault();
@@ -453,7 +539,6 @@
         showToast('Tillagd i kundvagnen');
         return;
       }
-
       const cartAction = event.target.closest('[data-cart-action]');
       if (cartAction) {
         event.preventDefault();
@@ -468,22 +553,19 @@
         renderCartPage();
         return;
       }
-
       const card = event.target.closest('.product-card');
-      if (card && !event.target.closest('.pack-select')) {
-        window.location.href = card.dataset.href || 'product.html';
-      }
+      if (card && !event.target.closest('.pack-select')) window.location.href = card.dataset.href || 'product.html';
     });
   }
 
   function init() {
-    loadInteractionCss();
+    loadStyles();
     initThemeSwitcher();
     initNavigation();
     initFilters();
     initCarousels();
     renderBookmarksPage();
-    ensureProductControls();
+    normalizeAllProductCards();
     initProductPageControls();
     updateCartPanel();
     renderCartPage();
