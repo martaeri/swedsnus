@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Swedsnus — Portionssnus och lössnus tillverkat i Sverige</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div class="age-banner">Tobaksförsäljning — åldersgräns 18 år · Legitimation kan krävas</div>
+
+  <header class="site-header">
+    <div class="header-topbar">
+      <!-- Logo -->
+      <a href="index.html" class="site-logo">Swedsnus<span>Tillverkare · Hemsjö, Sverige</span></a>
+
+      <!-- Search (centered) -->
+      <div class="header-search">
+        <input type="search" placeholder="Sök produkt eller smak..." aria-label="Sök" />
+      </div>
+
+      <!-- Icons -->
+      <div class="header-icons">
+        <!-- Bookmark -->
+        <a href="bookmarks.html" class="header-icon-btn" title="Sparade produkter" aria-label="Sparade produkter">
+          <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </a>
+        <!-- User -->
+        <a href="login.html" class="header-icon-btn" title="Mitt konto" aria-label="Mitt konto">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </a>
+        <!-- Cart -->
+        <div class="cart-wrapper">
+          <a href="cart.html" class="header-icon-btn" title="Kundvagn" aria-label="Kundvagn">
+            <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <span class="cart-badge cart-count">0</span>
+          </a>
+          <div class="cart-panel" role="dialog" aria-label="Kundvagn">
+            <div class="cart-panel-header">
+              <span>Kundvagn</span>
+              <span class="cart-panel-count">0 artiklar</span>
+            </div>
+            <div class="cart-panel-empty">Din kundvagn är tom.</div>
+            <div class="cart-panel-footer">
+              <span class="cart-total">0 kr</span>
+              <a href="cart.html" class="cart-goto">Till kassan</a>
+            </div>
+          </div>
+        </div>
+        <!-- Mobile toggle -->
+        <button class="nav-toggle" aria-label="Öppna meny"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+
+    <!-- Subheader (main nav) -->
+    <nav class="subheader" aria-label="Huvudnavigation">
+      <ul class="subheader-inner">
+        <li><a href="index.html" class="active">Hem</a></li>
+        <li class="has-dropdown">
+          <a href="#">Sortiment
+            <svg class="chevron" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </a>
+          <ul class="sub-dropdown">
+            <li><a href="portion.html">Portionssnus</a></li>
+            <li><a href="los.html">Lössnus</a></li>
+            <li><a href="portion.html#gor-eget">Gör Eget</a></li>
+            <li><a href="tillbehor.html">Tillbehör</a></li>
+          </ul>
+        </li>
+        <li><a href="about.html">Om oss</a></li>
+        <li><a href="guide.html">Guide</a></li>
+        <li><a href="#">Kontakt</a></li>
+      </ul>
+    </nav>
+
+    <!-- Subnav (product categories) -->
+    <nav class="subnav" aria-label="Produktkategorier">
+      <div class="subnav-inner">
+        <a href="portion.html">Portionssnus</a>
+        <a href="los.html">Lössnus</a>
+        <a href="portion.html#gor-eget">Gör Eget</a>
+        <a href="tillbehor.html">Tillbehör</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-content">
+      <p class="hero-tagline">Tillverkare · Hemsjö, Sverige</p>
+      <h1>Swedsnus</h1>
+      <p>Portionssnus och lössnus tillverkat i Sverige, levererat direkt från vår fabrik i Hemsjö. Försäljning till personer som fyllt 18 år.</p>
+      <div class="hero-tabs">
+        <button class="hero-tab active" data-href="portion.html">Portionssnus</button>
+        <button class="hero-tab" data-href="los.html">Lössnus</button>
+      </div>
+    </div>
+  </section>
+
+  <main>
+
+    <!-- ══════════════════════════════════════
+         NYHETER CAROUSEL
+    ══════════════════════════════════════ -->
+    <div class="page-wrap" style="padding-bottom:0;">
+      <section class="carousel-section">
+        <div class="carousel-header">
+          <h2 class="section-heading">Nyheter</h2>
+          <a href="portion.html" class="see-all">Se alla →</a>
+        </div>
+        <div class="carousel-wrapper">
+          <button class="carousel-btn carousel-btn-prev" aria-label="Föregående"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <div class="carousel-track-outer">
+            <div class="carousel-track">
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Premium</span>
+                  <p class="product-card-name">Spacemint Extra Strong Premium 300</p>
+                  <p class="product-card-meta">Typ: <span>White Portion</span></p>
+                  <p class="product-card-meta">Antal: <span>300 portioner</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span class="filled"></span><span class="filled"></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="289 kr" data-pack="1-pack" data-per="289 kr/st">1-pack — 289 kr (289 kr/st)</option>
+                      <option data-price="549 kr" data-pack="2-pack" data-per="274 kr/st">2-pack — 549 kr (274 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">289 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Rebell</span>
+                  <p class="product-card-name">Spacemint Extra Strong Rebell 400</p>
+                  <p class="product-card-meta">Typ: <span>White Portion</span></p>
+                  <p class="product-card-meta">Antal: <span>400 portioner</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span class="filled"></span><span class="filled"></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="299 kr" data-pack="1-pack">1-pack — 299 kr (299 kr/st)</option>
+                      <option data-price="549 kr" data-pack="2-pack">2-pack — 549 kr (274 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">299 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Premium</span>
+                  <p class="product-card-name">White RX Slim 400</p>
+                  <p class="product-card-meta">Typ: <span>White Slim</span></p>
+                  <p class="product-card-meta">Antal: <span>400 portioner</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span class="filled"></span><span></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="289 kr" data-pack="1-pack">1-pack — 289 kr (289 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">289 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Instant</span>
+                  <p class="product-card-name">Robust 40 Dosor</p>
+                  <p class="product-card-meta">Typ: <span>Lössnus Instant</span></p>
+                  <p class="product-card-meta">Antal: <span>40 dosor</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="969 kr" data-pack="1-pack">1-pack — 969 kr (969 kr/st)</option>
+                      <option data-price="1 841 kr" data-pack="2-pack">2-pack — 1 841 kr (920 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">969 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Express</span>
+                  <p class="product-card-name">Lössnus Grov Express 40 Dosor</p>
+                  <p class="product-card-meta">Typ: <span>Lössnus Express</span></p>
+                  <p class="product-card-meta">Antal: <span>40 dosor</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="989 kr" data-pack="1-pack">1-pack — 989 kr (989 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">989 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Instant Portion</span>
+                  <p class="product-card-name">Genuin Large Instant Portion 300</p>
+                  <p class="product-card-meta">Typ: <span>Gör Eget</span></p>
+                  <p class="product-card-meta">Antal: <span>300 portioner</span></p>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="199 kr" data-pack="1-pack">1-pack — 199 kr (199 kr/st)</option>
+                      <option data-price="876 kr" data-pack="5-pack">5-pack — 876 kr (175 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">199 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Super Dry</span>
+                  <p class="product-card-name">Fat Boy 500</p>
+                  <p class="product-card-meta">Typ: <span>Gör Eget</span></p>
+                  <p class="product-card-meta">Antal: <span>500 portioner</span></p>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="229 kr" data-pack="1-pack">1-pack — 229 kr (229 kr/st)</option>
+                      <option data-price="435 kr" data-pack="2-pack">2-pack — 435 kr (217 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">229 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Metalldosa</span>
+                  <p class="product-card-name">Swedsnus Metalldosa Black</p>
+                  <p class="product-card-meta">Typ: <span>Tillbehör</span></p>
+                  <p class="product-card-meta">Antal: <span>1 st</span></p>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="99 kr" data-pack="1-pack">1-pack — 99 kr (99 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">99 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <button class="carousel-btn carousel-btn-next" aria-label="Nästa"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         FULLBLEED — Svensk tillverkning
+    ══════════════════════════════════════ -->
+    <section class="feature-strip-fullbleed">
+      <div class="feature-strip-inner">
+        <div class="feature-strip-intro">
+          <h2>Svensk tillverkning</h2>
+          <p>Tillverkat av oss. Egen fabrik i Hemsjö.<br>Alla produkter produceras i vår fabrik och skickas direkt till kunden — utan mellanhänder.</p>
+        </div>
+        <div class="feature-item"><strong>Direkt från källan</strong><p>Inga mellanhänder</p></div>
+        <div class="feature-item"><strong>1–3 dagars leverans</strong><p>Via PostNord</p></div>
+        <div class="feature-item"><strong>Säker betalning</strong><p>Klarna · Swish · Kort</p></div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         PORTIONSSNUS CAROUSEL
+    ══════════════════════════════════════ -->
+    <div class="page-wrap" style="padding-top:2.5rem;padding-bottom:0;">
+      <section class="carousel-section" id="portionssnus">
+        <div class="carousel-header">
+          <h2 class="section-heading">Portionssnus</h2>
+          <a href="portion.html" class="see-all">Se alla →</a>
+        </div>
+        <div class="carousel-wrapper">
+          <button class="carousel-btn carousel-btn-prev" aria-label="Föregående"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <div class="carousel-track-outer">
+            <div class="carousel-track">
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Premium</span>
+                  <p class="product-card-name">Original Premium 300</p>
+                  <p class="product-card-meta">Smak: <span>Bergamott</span></p>
+                  <p class="product-card-meta">Antal: <span>300 portioner</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="269 kr" data-pack="1-pack">1-pack — 269 kr (269 kr/st)</option>
+                      <option data-price="510 kr" data-pack="2-pack">2-pack — 510 kr (255 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">269 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Premium</span>
+                  <p class="product-card-name">Paré Blue Premium 300</p>
+                  <p class="product-card-meta">Smak: <span>Göteborgsstil</span></p>
+                  <p class="product-card-meta">Antal: <span>300 portioner</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="269 kr" data-pack="1-pack">1-pack — 269 kr (269 kr/st)</option>
+                      <option data-price="510 kr" data-pack="2-pack">2-pack — 510 kr (255 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">269 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Premium</span>
+                  <p class="product-card-name">White Strong Premium 300</p>
+                  <p class="product-card-meta">Smak: <span>Neutral</span></p>
+                  <p class="product-card-meta">Antal: <span>300 portioner</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span class="filled"></span><span></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="269 kr" data-pack="1-pack">1-pack — 269 kr (269 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">269 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Rebell</span>
+                  <p class="product-card-name">Original Rebell 400</p>
+                  <p class="product-card-meta">Smak: <span>Bergamott</span></p>
+                  <p class="product-card-meta">Antal: <span>400 portioner</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="289 kr" data-pack="1-pack">1-pack — 289 kr (289 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">289 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Rebell</span>
+                  <p class="product-card-name">Spacemint Extra Strong Rebell 400</p>
+                  <p class="product-card-meta">Smak: <span>Mint</span></p>
+                  <p class="product-card-meta">Antal: <span>400 portioner</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span class="filled"></span><span class="filled"></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="299 kr" data-pack="1-pack">1-pack — 299 kr (299 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">299 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Premium</span>
+                  <p class="product-card-name">Special Premium 300</p>
+                  <p class="product-card-meta">Smak: <span>Lakrits</span></p>
+                  <p class="product-card-meta">Antal: <span>300 portioner</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="279 kr" data-pack="1-pack">1-pack — 279 kr (279 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">279 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <button class="carousel-btn carousel-btn-next" aria-label="Nästa"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         FULLBLEED — Lössnus
+    ══════════════════════════════════════ -->
+    <section class="fullbleed-section">
+      <div class="fullbleed-inner thirds">
+        <div>
+          <p class="tagline">Lössnus</p>
+          <h2>Instant och Express</h2>
+          <p>Lössnus Instant levereras färdigsmaksatt — tillsätt vatten och använd direkt. Lössnus Express är andra generationens lössnus: ofärgad bas som smaksätts med Expressaromer i flaska.</p>
+          <p>Finns i smakerna Genuin (bergamott), Gold (tobak), Monark (viol/citrus), Robust (geranium), Paré Blue (göteborgsstil) och Salmiak.</p>
+          <div class="btn-row"><a href="los.html" class="btn btn-white">Se lössnusprodukter</a></div>
+        </div>
+        <div class="img-placeholder wide" style="border-radius:0;">Produktfoto — Instant och Express</div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         LÖSSNUS CAROUSEL
+    ══════════════════════════════════════ -->
+    <div class="page-wrap" style="padding-top:2.5rem;padding-bottom:0;">
+      <section class="carousel-section" id="lossnus">
+        <div class="carousel-header">
+          <h2 class="section-heading">Lössnus</h2>
+          <a href="los.html" class="see-all">Se alla →</a>
+        </div>
+        <div class="carousel-wrapper">
+          <button class="carousel-btn carousel-btn-prev" aria-label="Föregående"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <div class="carousel-track-outer">
+            <div class="carousel-track">
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Instant</span>
+                  <p class="product-card-name">Genuin 40 Dosor</p>
+                  <p class="product-card-meta">Smak: <span>Bergamott</span></p>
+                  <p class="product-card-meta">Antal: <span>40 dosor</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="949 kr" data-pack="1-pack">1-pack — 949 kr (949 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">949 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Instant</span>
+                  <p class="product-card-name">Gold 40 Dosor</p>
+                  <p class="product-card-meta">Smak: <span>Tobak</span></p>
+                  <p class="product-card-meta">Antal: <span>40 dosor</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="949 kr" data-pack="1-pack">1-pack — 949 kr (949 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">949 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Instant</span>
+                  <p class="product-card-name">Monark 40 Dosor</p>
+                  <p class="product-card-meta">Smak: <span>Viol/Citrus</span></p>
+                  <p class="product-card-meta">Antal: <span>40 dosor</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="949 kr" data-pack="1-pack">1-pack — 949 kr (949 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">949 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Instant</span>
+                  <p class="product-card-name">Robust 40 Dosor</p>
+                  <p class="product-card-meta">Smak: <span>Geranium</span></p>
+                  <p class="product-card-meta">Antal: <span>40 dosor</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="969 kr" data-pack="1-pack">1-pack — 969 kr (969 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">969 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Instant</span>
+                  <p class="product-card-name">Paré Blue 40 Dosor</p>
+                  <p class="product-card-meta">Smak: <span>Göteborgsstil</span></p>
+                  <p class="product-card-meta">Antal: <span>40 dosor</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="969 kr" data-pack="1-pack">1-pack — 969 kr (969 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">969 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Express</span>
+                  <p class="product-card-name">Lössnus Standard Express 40 Dosor</p>
+                  <p class="product-card-meta">Smak: <span>Neutral</span></p>
+                  <p class="product-card-meta">Antal: <span>40 dosor</span></p>
+                  <div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="969 kr" data-pack="1-pack">1-pack — 969 kr (969 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">969 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <button class="carousel-btn carousel-btn-next" aria-label="Nästa"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         FULLBLEED — Gör Eget
+    ══════════════════════════════════════ -->
+    <section class="fullbleed-section light">
+      <div class="fullbleed-inner thirds" style="direction:rtl;">
+        <div style="direction:ltr;">
+          <p class="tagline">Gör Eget</p>
+          <h2>Färdiga portionspåsar — du väljer smaken</h2>
+          <p>Instant Portion levereras färdigsmaksatt — tillsätt bara vatten. Super Dry-påsarna är osmaksatta, avsedda att kombineras med Swedsnus aromer i din önskade smak.</p>
+          <div class="btn-row"><a href="portion.html#gor-eget" class="btn btn-primary">Se Gör Eget-produkter</a></div>
+        </div>
+        <div class="img-placeholder wide" style="border-radius:0;direction:ltr;">Produktfoto — Gör Eget</div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         GÖR EGET CAROUSEL
+    ══════════════════════════════════════ -->
+    <div class="page-wrap" style="padding-top:2.5rem;padding-bottom:0;" id="gor-eget">
+      <section class="carousel-section">
+        <div class="carousel-header">
+          <h2 class="section-heading">Gör Eget</h2>
+          <a href="portion.html#gor-eget" class="see-all">Se alla →</a>
+        </div>
+        <div class="carousel-wrapper">
+          <button class="carousel-btn carousel-btn-prev" aria-label="Föregående"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <div class="carousel-track-outer">
+            <div class="carousel-track">
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Instant</span>
+                  <p class="product-card-name">Genuin Instant Portion 400</p>
+                  <p class="product-card-meta">Smak: <span>Bergamott</span></p>
+                  <p class="product-card-meta">Antal: <span>400 portioner</span></p>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="199 kr" data-pack="1-pack">1-pack — 199 kr (199 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">199 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Instant</span>
+                  <p class="product-card-name">Genuin Large Instant Portion 300</p>
+                  <p class="product-card-meta">Smak: <span>Bergamott</span></p>
+                  <p class="product-card-meta">Antal: <span>300 portioner</span></p>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="199 kr" data-pack="1-pack">1-pack — 199 kr (199 kr/st)</option>
+                      <option data-price="876 kr" data-pack="5-pack">5-pack — 876 kr (175 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">199 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Instant</span>
+                  <p class="product-card-name">Paré Blue Instant Portion 400</p>
+                  <p class="product-card-meta">Smak: <span>Göteborgsstil</span></p>
+                  <p class="product-card-meta">Antal: <span>400 portioner</span></p>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="199 kr" data-pack="1-pack">1-pack — 199 kr (199 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">199 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Instant</span>
+                  <p class="product-card-name">Salmiak Instant Portion 400</p>
+                  <p class="product-card-meta">Smak: <span>Salmiak</span></p>
+                  <p class="product-card-meta">Antal: <span>400 portioner</span></p>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="199 kr" data-pack="1-pack">1-pack — 199 kr (199 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">199 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Super Dry</span>
+                  <p class="product-card-name">Notch 500</p>
+                  <p class="product-card-meta">Smak: <span>Ofärgat</span></p>
+                  <p class="product-card-meta">Antal: <span>500 portioner</span></p>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="199 kr" data-pack="1-pack">1-pack — 199 kr (199 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">199 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+              <div class="product-card" data-href="product.html">
+                <div class="img-placeholder product">Produktbild</div>
+                <div class="product-card-body">
+                  <span class="product-card-badge">Super Dry</span>
+                  <p class="product-card-name">Fat Boy 500</p>
+                  <p class="product-card-meta">Smak: <span>Ofärgat</span></p>
+                  <p class="product-card-meta">Antal: <span>500 portioner</span></p>
+                  <div class="product-card-actions">
+                    <select class="pack-select" aria-label="Välj antal">
+                      <option data-price="229 kr" data-pack="1-pack">1-pack — 229 kr (229 kr/st)</option>
+                      <option data-price="435 kr" data-pack="2-pack">2-pack — 435 kr (217 kr/st)</option>
+                    </select>
+                    <button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+                  </div>
+                  <p class="product-card-price">229 kr <small>1-pack</small></p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <button class="carousel-btn carousel-btn-next" aria-label="Nästa"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         FAQ
+    ══════════════════════════════════════ -->
+    <div class="page-wrap" style="padding-top:2.5rem;">
+      <section>
+        <h2 class="section-heading">FAQ — Vanliga frågor</h2>
+        <div class="faq-list">
+          <details class="faq-item"><summary>Hur aktiverar jag lössnus?</summary><p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo.</p></details>
+          <details class="faq-item"><summary>Vad är skillnaden mellan Instant och Express?</summary><p>Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus.</p></details>
+          <details class="faq-item"><summary>Hur länge behöver snuset mogna?</summary><p>Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi.</p></details>
+          <details class="faq-item"><summary>Vad händer om konsistensen inte stämmer?</summary><p>Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu.</p></details>
+          <details class="faq-item"><summary>Hur förvarar jag snuset?</summary><p>In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus.</p></details>
+        </div>
+        <div class="btn-row"><a href="#" class="btn btn-outline">Flera vanliga frågor</a></div>
+      </section>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-grid">
+        <div class="footer-brand"><div class="site-logo">Swedsnus.nu</div><p>Tillverkare av portionssnus och lössnus. Hemsjö, Sverige.</p></div>
+        <div class="footer-col"><h4>Produkter</h4><ul><li><a href="portion.html">Portionssnus</a></li><li><a href="los.html">Lössnus</a></li><li><a href="portion.html#gor-eget">Gör Eget</a></li><li><a href="tillbehor.html">Tillbehör</a></li></ul></div>
+        <div class="footer-col"><h4>Information</h4><ul><li><a href="about.html">Om oss</a></li><li><a href="guide.html">Guide</a></li><li><a href="#">Villkor</a></li><li><a href="#">Integritetspolicy</a></li></ul></div>
+        <div class="footer-col"><h4>Kundservice</h4><ul><li><a href="#">Kontakt</a></li><li><a href="#">Leveransinfo</a></li><li><a href="#">Returer</a></li><li><a href="#">FAQ</a></li></ul></div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2024 Swedsnus AB · Hemsjö, Sverige · Regleras av Lag (2018:2088) om tobak och liknande produkter · Åldersgräns 18 år</span>
+        <div class="payment-icons"><span class="payment-icon">Visa</span><span class="payment-icon">Mastercard</span><span class="payment-icon">Klarna</span><span class="payment-icon">Swish</span></div>
+      </div>
+    </div>
+  </footer>
+
+  <div class="theme-switcher"><p>Tema</p>
+    <button class="theme-dot theme-dot-1" data-theme="1" title="Classic Dark Brown"></button>
+    <button class="theme-dot theme-dot-2" data-theme="2" title="White &amp; Forest Green"></button>
+    <button class="theme-dot theme-dot-3" data-theme="3" title="Slate &amp; Gold"></button>
+    <button class="theme-dot theme-dot-4" data-theme="4" title="Nordic Light Blue"></button>
+  </div>
+  <script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lössnus — Swedsnus</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="age-banner">Tobaksförsäljning — åldersgräns 18 år · Legitimation kan krävas</div>
+  <header class="site-header">
+    <div class="header-topbar">
+      <a href="index.html" class="site-logo">Swedsnus<span>Tillverkare · Hemsjö, Sverige</span></a>
+      <div class="header-search"><input type="search" placeholder="Sök produkt eller smak..." aria-label="Sök" /></div>
+      <div class="header-icons">
+        <a href="bookmarks.html" class="header-icon-btn" aria-label="Sparade produkter"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></a>
+        <a href="login.html" class="header-icon-btn" aria-label="Mitt konto"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+        <div class="cart-wrapper">
+          <a href="cart.html" class="header-icon-btn" aria-label="Kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="cart-badge cart-count">0</span></a>
+          <div class="cart-panel"><div class="cart-panel-header"><span>Kundvagn</span><span class="cart-panel-count">0 artiklar</span></div><div class="cart-panel-empty">Din kundvagn är tom.</div><div class="cart-panel-footer"><span class="cart-total">0 kr</span><a href="cart.html" class="cart-goto">Till kassan</a></div></div>
+        </div>
+        <button class="nav-toggle" aria-label="Öppna meny"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+    <nav class="subheader">
+      <ul class="subheader-inner">
+        <li><a href="index.html">Hem</a></li>
+        <li class="has-dropdown"><a href="#" class="active">Sortiment <svg class="chevron" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></a>
+          <ul class="sub-dropdown"><li><a href="portion.html">Portionssnus</a></li><li><a href="los.html">Lössnus</a></li><li><a href="portion.html#gor-eget">Gör Eget</a></li><li><a href="tillbehor.html">Tillbehör</a></li></ul>
+        </li>
+        <li><a href="about.html">Om oss</a></li><li><a href="guide.html">Guide</a></li><li><a href="#">Kontakt</a></li>
+      </ul>
+    </nav>
+    <nav class="subnav"><div class="subnav-inner"><a href="portion.html">Portionssnus</a><a href="los.html" class="active">Lössnus</a><a href="portion.html#gor-eget">Gör Eget</a><a href="tillbehor.html">Tillbehör</a></div></nav>
+  </header>
+
+  <div class="page-title-bar"><div class="page-title-bar-inner"><h1>Lössnus</h1><p class="breadcrumb"><a href="index.html">Hem</a> / Sortiment / Lössnus</p></div></div>
+
+  <main class="page-wrap">
+    <div class="sub-tabs">
+      <button class="sub-tab active" data-target="instant">Instant</button>
+      <button class="sub-tab" data-target="express">Express</button>
+      <button class="sub-tab" data-target="expressarom">Expressarom</button>
+    </div>
+    <div class="filter-bar">
+      <span class="filter-label">Filtrera</span>
+      <button class="filter-chip active">Alla</button>
+      <button class="filter-chip">Expressarom</button>
+      <button class="filter-chip">Rensa filter</button>
+      <span class="filter-count">19 produkter</span>
+    </div>
+
+    <div class="catalog-layout">
+      <aside class="filter-sidebar">
+        <h4>Smak</h4>
+        <ul><li class="active">Klassisk</li><li>Enbär</li><li>Lakrits</li></ul>
+      </aside>
+
+      <div>
+        <!-- INSTANT 40 dosor -->
+        <h2 class="section-heading" style="font-size:1.05rem;margin-bottom:1rem;">Instant — 40 dosor</h2>
+        <div class="product-grid" style="margin-bottom:2rem;">
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Instant</span><p class="product-card-name">Genuin 40 Dosor</p><p class="product-card-meta">Smak: <span>Bergamott</span></p><p class="product-card-meta">Antal: <span>40 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="949 kr" data-pack="1-pack">1-pack — 949 kr (949 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">949 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Instant</span><p class="product-card-name">Gold 40 Dosor</p><p class="product-card-meta">Smak: <span>Tobak</span></p><p class="product-card-meta">Antal: <span>40 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="949 kr" data-pack="1-pack">1-pack — 949 kr (949 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">949 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Instant</span><p class="product-card-name">Monark 40 Dosor</p><p class="product-card-meta">Smak: <span>Viol/Citrus</span></p><p class="product-card-meta">Antal: <span>40 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="949 kr" data-pack="1-pack">1-pack — 949 kr (949 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">949 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Instant</span><p class="product-card-name">Robust 40 Dosor</p><p class="product-card-meta">Smak: <span>Geranium</span></p><p class="product-card-meta">Antal: <span>40 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="969 kr" data-pack="1-pack">1-pack — 969 kr (969 kr/st)</option><option data-price="1 841 kr" data-pack="2-pack">2-pack — 1 841 kr (920 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">969 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Instant</span><p class="product-card-name">Paré Blue 40 Dosor</p><p class="product-card-meta">Smak: <span>Göteborgsstil</span></p><p class="product-card-meta">Antal: <span>40 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="969 kr" data-pack="1-pack">1-pack — 969 kr (969 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">969 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Instant</span><p class="product-card-name">Salmiak 40 Dosor</p><p class="product-card-meta">Smak: <span>Salmiak</span></p><p class="product-card-meta">Antal: <span>40 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="969 kr" data-pack="1-pack">1-pack — 969 kr (969 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">969 kr <small>1-pack</small></p></div></div>
+        </div>
+
+        <!-- INSTANT 20 dosor -->
+        <h2 class="section-heading" style="font-size:1.05rem;margin-bottom:1rem;">Instant — 20 dosor</h2>
+        <div class="product-grid" style="margin-bottom:2rem;">
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Instant</span><p class="product-card-name">Genuin 20 Dosor</p><p class="product-card-meta">Smak: <span>Bergamott</span></p><p class="product-card-meta">Antal: <span>20 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="479 kr" data-pack="1-pack">1-pack — 479 kr (479 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">479 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Instant</span><p class="product-card-name">Gold 20 Dosor</p><p class="product-card-meta">Smak: <span>Tobak</span></p><p class="product-card-meta">Antal: <span>20 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="479 kr" data-pack="1-pack">1-pack — 479 kr (479 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">479 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Instant</span><p class="product-card-name">Monark 20 Dosor</p><p class="product-card-meta">Smak: <span>Viol/Citrus</span></p><p class="product-card-meta">Antal: <span>20 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="479 kr" data-pack="1-pack">1-pack — 479 kr (479 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">479 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Instant</span><p class="product-card-name">Robust 20 Dosor</p><p class="product-card-meta">Smak: <span>Geranium</span></p><p class="product-card-meta">Antal: <span>20 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="489 kr" data-pack="1-pack">1-pack — 489 kr (489 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">489 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Instant</span><p class="product-card-name">Paré Blue 20 Dosor</p><p class="product-card-meta">Smak: <span>Göteborgsstil</span></p><p class="product-card-meta">Antal: <span>20 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="489 kr" data-pack="1-pack">1-pack — 489 kr (489 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">489 kr <small>1-pack</small></p></div></div>
+        </div>
+
+        <!-- EXPRESS -->
+        <h2 class="section-heading" style="font-size:1.05rem;margin-bottom:1rem;">Express</h2>
+        <div class="product-grid" style="margin-bottom:2rem;">
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Express</span><p class="product-card-name">Lössnus Standard Express 40 Dosor</p><p class="product-card-meta">Smak: <span>Neutral</span></p><p class="product-card-meta">Antal: <span>40 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="969 kr" data-pack="1-pack">1-pack — 969 kr (969 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">969 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Express</span><p class="product-card-name">Lössnus Grov Express 40 Dosor</p><p class="product-card-meta">Smak: <span>Grov</span></p><p class="product-card-meta">Antal: <span>40 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="989 kr" data-pack="1-pack">1-pack — 989 kr (989 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">989 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Express</span><p class="product-card-name">Lössnus Standard Express 20 Dosor</p><p class="product-card-meta">Smak: <span>Neutral</span></p><p class="product-card-meta">Antal: <span>20 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="489 kr" data-pack="1-pack">1-pack — 489 kr (489 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">489 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Express</span><p class="product-card-name">Lössnus Grov Express 20 Dosor</p><p class="product-card-meta">Smak: <span>Grov</span></p><p class="product-card-meta">Antal: <span>20 dosor</span></p><div class="strength-bar"><span class="filled"></span><span class="filled"></span><span></span><span></span><span></span></div><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="499 kr" data-pack="1-pack">1-pack — 499 kr (499 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">499 kr <small>1-pack</small></p></div></div>
+        </div>
+
+        <!-- EXPRESSAROM -->
+        <h2 class="section-heading" style="font-size:1.05rem;margin-bottom:1rem;">Expressarom</h2>
+        <div class="product-grid" style="margin-bottom:2rem;">
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Arom</span><p class="product-card-name">Expressarom Original 40 dosor</p><p class="product-card-meta">Smak: <span>Original</span></p><p class="product-card-meta">Antal: <span>1 flaska</span></p><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="49 kr" data-pack="1-pack">1-pack — 49 kr (49 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">49 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Arom</span><p class="product-card-name">Expressarom Special 40 dosor</p><p class="product-card-meta">Smak: <span>Lakrits</span></p><p class="product-card-meta">Antal: <span>1 flaska</span></p><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="49 kr" data-pack="1-pack">1-pack — 49 kr (49 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">49 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Arom</span><p class="product-card-name">Expressarom Paré 40 dosor</p><p class="product-card-meta">Smak: <span>Göteborgsstil</span></p><p class="product-card-meta">Antal: <span>1 flaska</span></p><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="49 kr" data-pack="1-pack">1-pack — 49 kr (49 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">49 kr <small>1-pack</small></p></div></div>
+          <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Arom</span><p class="product-card-name">Expressarom Whisky 40 dosor</p><p class="product-card-meta">Smak: <span>Whisky</span></p><p class="product-card-meta">Antal: <span>1 flaska</span></p><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="49 kr" data-pack="1-pack">1-pack — 49 kr (49 kr/st)</option></select><button class="add-to-cart-btn" aria-label="Lägg i kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button></div><p class="product-card-price">49 kr <small>1-pack</small></p></div></div>
+        </div>
+
+        <!-- Om lössnus -->
+        <section style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:10px;padding:2rem;">
+          <h2 style="font-size:1.25rem;margin-bottom:1rem;color:var(--color-primary);">Om lössnus</h2>
+          <dl class="fact-grid" style="margin-top:0;margin-bottom:1.25rem;">
+            <div class="fact-item"><dt>System</dt><dd>Instant · Express</dd></div>
+            <div class="fact-item"><dt>Förpackning</dt><dd>10 · 20 · 40 dosar</dd></div>
+            <div class="fact-item"><dt>Tillverkning</dt><dd>Hemsjö, Sverige</dd></div>
+            <div class="fact-item"><dt>Åldersgräns</dt><dd>18 år</dd></div>
+          </dl>
+          <p style="color:var(--color-text-muted);font-size:.92rem;line-height:1.7;margin-bottom:1rem;">Swedsnus lössnus finns i två system: Lössnus Instant och Lössnus Express. Båda levereras som torra granuler och aktiveras med vatten. Instant är färdigsmaksatt — Express är en ofärgad bas som smaksätts med Expressaromer i flaska.</p>
+          <p style="color:var(--color-text-muted);font-size:.92rem;line-height:1.7;margin-bottom:1.25rem;">Alla lössnusprodukter tillverkas i Hemsjö, Sverige, och säljs i förpackningar om 10, 20 och 40 dosar. Se beredningsguiden för steg-för-steg-instruktioner.</p>
+          <h3 style="font-size:.95rem;font-weight:700;margin-bottom:.75rem;">Instant och Express — skillnader</h3>
+          <table class="compare-table" style="margin-bottom:1.5rem;">
+            <thead><tr><th></th><th>Lössnus Instant</th><th>Lössnus Express</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Smaksättning</strong></td><td>Inkluderad</td><td>Separat arom</td></tr>
+              <tr><td><strong>Aktivering</strong></td><td>Vatten</td><td>Arom + vatten</td></tr>
+              <tr><td><strong>Förpackning</strong></td><td>10 · 20 · 40 dosar</td><td>20 · 40 dosar</td></tr>
+            </tbody>
+          </table>
+          <h3 style="font-size:.95rem;font-weight:700;margin-bottom:.75rem;">Smakprofiler</h3>
+          <div class="flavor-grid">
+            <div class="flavor-card"><h4>Genuin</h4><p>Bergamott — klassisk bergamottsmak.</p></div>
+            <div class="flavor-card"><h4>Gold</h4><p>Tobak — naturlig tobakssmak.</p></div>
+            <div class="flavor-card"><h4>Monark</h4><p>Viol/Citrus — blommig med citrusnyanser.</p></div>
+            <div class="flavor-card"><h4>Robust</h4><p>Geranium — kraftig och örtig smakprofil.</p></div>
+            <div class="flavor-card"><h4>Paré Blue</h4><p>Göteborgsstil — traditionell göteborgsprofil.</p></div>
+            <div class="flavor-card"><h4>Salmiak</h4><p>Salmiak — lakrits med salmiakkaraktär.</p></div>
+          </div>
+          <div class="btn-row" style="margin-top:1.25rem;"><a href="guide.html" class="btn btn-primary">Se beredningsguiden</a></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer"><div class="footer-inner"><div class="footer-grid"><div class="footer-brand"><div class="site-logo">Swedsnus.nu</div><p>Tillverkare av portionssnus och lössnus. Hemsjö, Sverige.</p></div><div class="footer-col"><h4>Produkter</h4><ul><li><a href="portion.html">Portionssnus</a></li><li><a href="los.html">Lössnus</a></li><li><a href="portion.html#gor-eget">Gör Eget</a></li><li><a href="tillbehor.html">Tillbehör</a></li></ul></div><div class="footer-col"><h4>Information</h4><ul><li><a href="about.html">Om oss</a></li><li><a href="guide.html">Guide</a></li><li><a href="#">Villkor</a></li><li><a href="#">Integritetspolicy</a></li></ul></div><div class="footer-col"><h4>Kundservice</h4><ul><li><a href="#">Kontakt</a></li><li><a href="#">Leveransinfo</a></li><li><a href="#">Returer</a></li><li><a href="#">FAQ</a></li></ul></div></div><div class="footer-bottom"><span>© 2024 Swedsnus AB · Hemsjö, Sverige · Regleras av Lag (2018:2088) om tobak och liknande produkter · Åldersgräns 18 år</span><div class="payment-icons"><span class="payment-icon">Visa</span><span class="payment-icon">Mastercard</span><span class="payment-icon">Klarna</span><span class="payment-icon">Swish</span></div></div></div></footer>
+  <div class="theme-switcher"><p>Tema</p><button class="theme-dot theme-dot-1" data-theme="1"></button><button class="theme-dot theme-dot-2" data-theme="2"></button><button class="theme-dot theme-dot-3" data-theme="3"></button><button class="theme-dot theme-dot-4" data-theme="4"></button></div>
+  <script src="main.js"></script>
+</body>
+</html>
