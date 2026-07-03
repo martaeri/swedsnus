@@ -10,6 +10,13 @@
     link.setAttribute('href', 'gor-eget.html');
   });
 
+  document.querySelectorAll('.carousel-header').forEach(header => {
+    const heading = header.querySelector('.section-heading');
+    if (heading && heading.textContent.trim().toLowerCase() === 'nyheter') {
+      header.querySelector('.see-all')?.remove();
+    }
+  });
+
   const currentFile = window.location.pathname.split('/').pop() || 'index.html';
   if ((currentFile === 'portion.html' || currentFile === 'index.html') && window.location.hash === '#gor-eget') {
     window.location.replace('gor-eget.html');
@@ -43,12 +50,21 @@ function slugify(value) {
     .replace(/^-+|-+$/g, '') || 'produkt';
 }
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function getCleanPrice(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
 function getSelectedPackText(container) {
-  const selectedOption = container?.querySelector('.pack-select option:checked');
+  const selectedOption = container?.querySelector?.('.pack-select option:checked');
   if (selectedOption) return selectedOption.dataset.pack || selectedOption.textContent.split('—')[0].trim() || '1-pack';
   const selectedPack = document.querySelector('.pack-option.selected');
   if (selectedPack) return selectedPack.dataset.pack || '1-pack';
@@ -56,28 +72,32 @@ function getSelectedPackText(container) {
 }
 
 function getSelectedPrice(container) {
-  const selectedOption = container?.querySelector('.pack-select option:checked');
+  const selectedOption = container?.querySelector?.('.pack-select option:checked');
   if (selectedOption?.dataset.price) return selectedOption.dataset.price;
-  const price = container?.querySelector('.product-card-price')?.childNodes?.[0]?.textContent || container?.querySelector('.product-card-price')?.textContent;
+  const cardPrice = container?.querySelector?.('.product-card-price');
+  const price = cardPrice?.childNodes?.[0]?.textContent || cardPrice?.textContent;
   const pagePack = document.querySelector('.pack-option.selected');
   if (pagePack?.dataset.price) return pagePack.dataset.price;
   const pagePrice = document.querySelector('.product-detail-price')?.childNodes?.[0]?.textContent;
   return getCleanPrice(price || pagePrice || '');
 }
 
+function metaFromCard(card) {
+  return Array.from(card.querySelectorAll('.product-card-meta'))
+    .map(item => item.textContent.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+}
+
 function productFromCard(card) {
   const name = card.querySelector('.product-card-name')?.textContent?.trim() || 'Produkt';
   const badge = card.querySelector('.product-card-badge')?.textContent?.trim() || '';
-  const meta = Array.from(card.querySelectorAll('.product-card-meta')).map(item => item.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean);
-  const price = getSelectedPrice(card);
-  const pack = getSelectedPackText(card);
   return {
     id: card.dataset.productId || slugify(name),
     name,
     badge,
-    meta,
-    price,
-    pack,
+    meta: metaFromCard(card),
+    price: getSelectedPrice(card),
+    pack: getSelectedPackText(card),
     href: card.dataset.href || 'product.html'
   };
 }
@@ -101,6 +121,18 @@ function productFromPage() {
   };
 }
 
+function metaMarkup(meta) {
+  return (meta || []).slice(0, 3).map(item => {
+    const parts = String(item).split(':');
+    if (parts.length > 1) {
+      const key = parts.shift().trim();
+      const value = parts.join(':').trim();
+      return `<p class="product-card-meta">${escapeHtml(key)}: <span>${escapeHtml(value)}</span></p>`;
+    }
+    return `<p class="product-card-meta">${escapeHtml(item)}</p>`;
+  }).join('');
+}
+
 function isBookmarked(id) {
   return readStore(BOOKMARKS_KEY).some(item => item.id === id);
 }
@@ -109,8 +141,9 @@ function setBookmark(product, save) {
   const bookmarks = readStore(BOOKMARKS_KEY).filter(item => item.id !== product.id);
   if (save) bookmarks.unshift(product);
   writeStore(BOOKMARKS_KEY, bookmarks);
-  syncBookmarkButtons();
   renderBookmarksPage();
+  addBookmarkButtons();
+  syncBookmarkButtons();
 }
 
 function syncBookmarkButtons() {
@@ -124,22 +157,15 @@ function syncBookmarkButtons() {
 
 function addBookmarkButtons() {
   document.querySelectorAll('.product-card').forEach(card => {
-    if (card.querySelector('.bookmark-toggle')) return;
     const product = productFromCard(card);
     card.dataset.productId = product.id;
+    if (card.querySelector('.bookmark-toggle')) return;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'bookmark-toggle';
     button.dataset.productId = product.id;
     button.setAttribute('aria-label', 'Spara produkt');
     button.innerHTML = BOOKMARK_ICON;
-    button.addEventListener('click', event => {
-      event.preventDefault();
-      event.stopPropagation();
-      const currentProduct = productFromCard(card);
-      setBookmark(currentProduct, !isBookmarked(currentProduct.id));
-      showToast(isBookmarked(currentProduct.id) ? 'Sparad produkt' : 'Borttagen från sparade produkter');
-    });
     card.appendChild(button);
   });
 
@@ -157,16 +183,30 @@ function addBookmarkButtons() {
     button.dataset.productId = product.id;
     button.setAttribute('aria-label', 'Spara produkt');
     button.innerHTML = BOOKMARK_ICON;
-    button.addEventListener('click', event => {
-      event.preventDefault();
-      const currentProduct = productFromPage();
-      setBookmark(currentProduct, !isBookmarked(currentProduct.id));
-      showToast(isBookmarked(currentProduct.id) ? 'Sparad produkt' : 'Borttagen från sparade produkter');
-    });
     wrap.appendChild(button);
   }
 
   syncBookmarkButtons();
+}
+
+function renderProductCard(product, options = {}) {
+  const activeBookmark = options.activeBookmark ? ' active' : '';
+  return `
+    <div class="product-card" data-product-id="${escapeHtml(product.id)}" data-href="${escapeHtml(product.href || 'product.html')}">
+      <button class="bookmark-toggle${activeBookmark}" data-product-id="${escapeHtml(product.id)}" type="button" aria-label="Spara produkt" aria-pressed="${options.activeBookmark ? 'true' : 'false'}">${BOOKMARK_ICON}</button>
+      <div class="img-placeholder product">Produktbild</div>
+      <div class="product-card-body">
+        ${product.badge ? `<span class="product-card-badge">${escapeHtml(product.badge)}</span>` : ''}
+        <p class="product-card-name">${escapeHtml(product.name)}</p>
+        ${metaMarkup(product.meta)}
+        <div class="product-card-actions">
+          <select class="pack-select" aria-label="Välj antal"><option data-price="${escapeHtml(product.price || '')}" data-pack="${escapeHtml(product.pack || '1-pack')}">${escapeHtml(product.pack || '1-pack')} — ${escapeHtml(product.price || '')}</option></select>
+          <button class="add-to-cart-btn" type="button" aria-label="Lägg i kundvagn">${CART_ICON}</button>
+        </div>
+        <p class="product-card-price">${escapeHtml(product.price || '')} <small>${escapeHtml(product.pack || '')}</small></p>
+      </div>
+    </div>
+  `;
 }
 
 function renderBookmarksPage() {
@@ -175,30 +215,17 @@ function renderBookmarksPage() {
   const bookmarks = readStore(BOOKMARKS_KEY);
   const countEl = document.querySelector('[data-bookmark-count]');
   if (countEl) countEl.textContent = `${bookmarks.length} ${bookmarks.length === 1 ? 'produkt' : 'produkter'}`;
-  list.innerHTML = '';
+  list.classList.add('product-grid', 'bookmarks-product-grid');
   if (!bookmarks.length) {
     list.innerHTML = '<div class="bookmarks-empty">Du har inga sparade produkter än. Spara en produkt med bokmärkesikonen på en produktkort eller produktsida.</div>';
     return;
   }
-  bookmarks.forEach(product => {
-    const card = document.createElement('article');
-    card.className = 'bookmark-card';
-    card.innerHTML = `
-      <button class="bookmark-remove" type="button" aria-label="Ta bort sparad produkt">×</button>
-      <a href="${product.href || 'product.html'}" class="img-placeholder wide">Produktbild</a>
-      <div class="bookmark-card-body">
-        ${product.badge ? `<span class="product-card-badge" style="margin-bottom:.6rem;">${product.badge}</span>` : ''}
-        <h3>${product.name}</h3>
-        ${(product.meta || []).slice(0, 3).map(item => `<p class="meta">${item}</p>`).join('')}
-      </div>
-      <div class="bookmark-card-price"><strong>${product.price || ''}</strong><small>${product.pack || ''}</small></div>
-    `;
-    card.querySelector('.bookmark-remove').addEventListener('click', () => setBookmark(product, false));
-    list.appendChild(card);
-  });
+  list.innerHTML = bookmarks.map(product => renderProductCard(product, { activeBookmark: true })).join('');
+  enhanceCartButtons();
+  syncBookmarkButtons();
 }
 
-function normalizeCartItem(product) {
+function normalizeCartItem(product, quantity = 1) {
   return {
     id: product.id,
     name: product.name,
@@ -207,18 +234,36 @@ function normalizeCartItem(product) {
     price: product.price || '',
     pack: product.pack || '1-pack',
     href: product.href || 'product.html',
-    quantity: 1
+    quantity
   };
 }
 
-function addCartItem(product) {
+function addCartItem(product, quantity = 1) {
   const cart = readStore(CART_KEY);
-  const item = normalizeCartItem(product);
+  const item = normalizeCartItem(product, quantity);
   const existing = cart.find(entry => entry.id === item.id && entry.pack === item.pack && entry.price === item.price);
-  if (existing) existing.quantity += 1;
+  if (existing) existing.quantity += quantity;
   else cart.unshift(item);
   writeStore(CART_KEY, cart);
   updateCartPanel();
+  renderCartPage();
+}
+
+function setCartItemQuantity(index, quantity) {
+  const cart = readStore(CART_KEY);
+  if (!cart[index]) return;
+  cart[index].quantity = Math.max(1, quantity);
+  writeStore(CART_KEY, cart);
+  updateCartPanel();
+  renderCartPage();
+}
+
+function removeCartItem(index) {
+  const cart = readStore(CART_KEY);
+  cart.splice(index, 1);
+  writeStore(CART_KEY, cart);
+  updateCartPanel();
+  renderCartPage();
 }
 
 function priceNumber(value) {
@@ -226,13 +271,16 @@ function priceNumber(value) {
   return match ? parseInt(match[0], 10) : 0;
 }
 
+function cartTotal(cart) {
+  return cart.reduce((sum, item) => sum + priceNumber(item.price) * (item.quantity || 1), 0);
+}
+
 function updateCartPanel() {
   const cart = readStore(CART_KEY);
   const totalQty = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
   document.querySelectorAll('.cart-count').forEach(item => item.textContent = totalQty);
   document.querySelectorAll('.cart-panel-count').forEach(item => item.textContent = `${totalQty} ${totalQty === 1 ? 'artikel' : 'artiklar'}`);
-  const total = cart.reduce((sum, item) => sum + priceNumber(item.price) * (item.quantity || 1), 0);
-  document.querySelectorAll('.cart-total').forEach(item => item.textContent = `${total.toLocaleString('sv-SE')} kr`);
+  document.querySelectorAll('.cart-total').forEach(item => item.textContent = `${cartTotal(cart).toLocaleString('sv-SE')} kr`);
 
   document.querySelectorAll('.cart-panel').forEach(panel => {
     let list = panel.querySelector('.cart-panel-items');
@@ -250,11 +298,7 @@ function updateCartPanel() {
       const row = document.createElement('a');
       row.href = item.href || 'product.html';
       row.className = 'cart-panel-item';
-      row.innerHTML = `
-        <span class="cart-panel-item-img"></span>
-        <span class="cart-panel-item-main"><span class="cart-panel-item-name">${item.name}</span><span class="cart-panel-item-meta">${item.quantity || 1} × ${item.pack || '1-pack'}</span></span>
-        <span class="cart-panel-item-price">${item.price || ''}</span>
-      `;
+      row.innerHTML = `<span class="cart-panel-item-img"></span><span class="cart-panel-item-main"><span class="cart-panel-item-name">${escapeHtml(item.name)}</span><span class="cart-panel-item-meta">${item.quantity || 1} × ${escapeHtml(item.pack || '1-pack')}</span></span><span class="cart-panel-item-price">${escapeHtml(item.price || '')}</span>`;
       list.appendChild(row);
     });
     if (cart.length > 4) {
@@ -267,9 +311,45 @@ function updateCartPanel() {
   });
 }
 
+function renderCartPage() {
+  const page = document.querySelector('[data-cart-page]');
+  if (!page) return;
+  const list = page.querySelector('[data-cart-items]');
+  const summaryCount = page.querySelector('[data-cart-summary-count]');
+  const summaryTotal = page.querySelector('[data-cart-summary-total]');
+  const cart = readStore(CART_KEY);
+  const totalQty = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  if (summaryCount) summaryCount.textContent = `${totalQty} ${totalQty === 1 ? 'artikel' : 'artiklar'}`;
+  if (summaryTotal) summaryTotal.textContent = `${cartTotal(cart).toLocaleString('sv-SE')} kr`;
+  if (!list) return;
+  if (!cart.length) {
+    list.innerHTML = '<div class="cart-empty-page">Din kundvagn är tom.</div>';
+    return;
+  }
+  list.innerHTML = cart.map((item, index) => `
+    <article class="cart-page-item">
+      <a href="${escapeHtml(item.href || 'product.html')}" class="cart-page-img">Produktbild</a>
+      <div class="cart-page-main">
+        ${item.badge ? `<span class="product-card-badge">${escapeHtml(item.badge)}</span>` : ''}
+        <h3><a href="${escapeHtml(item.href || 'product.html')}">${escapeHtml(item.name)}</a></h3>
+        ${metaMarkup(item.meta)}
+        <p class="cart-page-pack">${escapeHtml(item.pack || '1-pack')}</p>
+      </div>
+      <div class="cart-page-qty" aria-label="Antal">
+        <button type="button" data-cart-action="decrease" data-cart-index="${index}">−</button>
+        <span>${item.quantity || 1}</span>
+        <button type="button" data-cart-action="increase" data-cart-index="${index}">+</button>
+      </div>
+      <strong class="cart-page-price">${escapeHtml(item.price || '')}</strong>
+      <button class="cart-page-remove" type="button" data-cart-action="remove" data-cart-index="${index}" aria-label="Ta bort produkt">×</button>
+    </article>
+  `).join('');
+}
+
 function enhanceCartButtons() {
   document.querySelectorAll('.add-to-cart-btn').forEach(button => {
     if (!button.querySelector('svg')) button.innerHTML = CART_ICON;
+    if (!button.getAttribute('type')) button.setAttribute('type', 'button');
   });
 }
 
@@ -398,7 +478,6 @@ document.querySelectorAll('.carousel-wrapper').forEach(wrapper => {
   const btnPrev = wrapper.querySelector('.carousel-btn-prev');
   const btnNext = wrapper.querySelector('.carousel-btn-next');
   if (!track || !outer) return;
-
   let current = 0;
 
   function visibleCount() {
@@ -409,10 +488,7 @@ document.querySelectorAll('.carousel-wrapper').forEach(wrapper => {
     return 6;
   }
 
-  function gapSize() {
-    return window.innerWidth <= 720 ? 10 : 12;
-  }
-
+  function gapSize() { return window.innerWidth <= 720 ? 10 : 12; }
   function cardWidth() {
     const cards = track.querySelectorAll('.product-card');
     if (!cards.length) return 0;
@@ -420,15 +496,8 @@ document.querySelectorAll('.carousel-wrapper').forEach(wrapper => {
     const visible = visibleCount();
     return (outer.offsetWidth - gap * (visible - 1)) / visible;
   }
-
-  function totalCards() {
-    return track.querySelectorAll('.product-card').length;
-  }
-
-  function maxIndex() {
-    return Math.max(0, totalCards() - visibleCount());
-  }
-
+  function totalCards() { return track.querySelectorAll('.product-card').length; }
+  function maxIndex() { return Math.max(0, totalCards() - visibleCount()); }
   function go(index) {
     current = Math.max(0, Math.min(index, maxIndex()));
     const width = cardWidth();
@@ -437,7 +506,6 @@ document.querySelectorAll('.carousel-wrapper').forEach(wrapper => {
     if (btnPrev) btnPrev.disabled = current === 0;
     if (btnNext) btnNext.disabled = current >= maxIndex();
   }
-
   function sizeCards() {
     const width = cardWidth();
     track.style.gap = `${gapSize()}px`;
@@ -450,35 +518,30 @@ document.querySelectorAll('.carousel-wrapper').forEach(wrapper => {
 
   window.addEventListener('resize', sizeCards);
   sizeCards();
-
   if (btnPrev) btnPrev.addEventListener('click', () => go(current - 1));
   if (btnNext) btnNext.addEventListener('click', () => go(current + 1));
 
   let startX = 0;
   let startY = 0;
   let dragging = false;
-
   track.addEventListener('pointerdown', event => {
     startX = event.clientX;
     startY = event.clientY;
     dragging = true;
     track.setPointerCapture(event.pointerId);
   });
-
   track.addEventListener('pointermove', event => {
     if (!dragging) return;
     const dx = event.clientX - startX;
     const dy = event.clientY - startY;
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) event.preventDefault();
   }, { passive: false });
-
   track.addEventListener('pointerup', event => {
     if (!dragging) return;
     dragging = false;
     const dx = event.clientX - startX;
     if (Math.abs(dx) > 50) go(current + (dx < 0 ? 1 : -1));
   });
-
   track.addEventListener('pointercancel', () => { dragging = false; });
 });
 
@@ -506,26 +569,61 @@ function showToast(message) {
 }
 
 enhanceCartButtons();
-addBookmarkButtons();
 renderBookmarksPage();
+addBookmarkButtons();
+renderCartPage();
 updateCartPanel();
 
-document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-  button.addEventListener('click', event => {
+document.addEventListener('click', event => {
+  const bookmarkButton = event.target.closest('.bookmark-toggle');
+  if (bookmarkButton) {
+    event.preventDefault();
     event.stopPropagation();
-    const card = button.closest('.product-card');
+    const card = bookmarkButton.closest('.product-card');
+    const product = card ? productFromCard(card) : productFromPage();
+    const shouldSave = !isBookmarked(product.id);
+    setBookmark(product, shouldSave);
+    showToast(shouldSave ? 'Sparad produkt' : 'Borttagen från sparade produkter');
+    return;
+  }
+
+  const cartButton = event.target.closest('.add-to-cart-btn');
+  if (cartButton) {
+    event.preventDefault();
+    event.stopPropagation();
+    const card = cartButton.closest('.product-card');
     if (card) addCartItem(productFromCard(card));
-    button.classList.add('added');
-    setTimeout(() => button.classList.remove('added'), 1000);
+    cartButton.classList.add('added');
+    setTimeout(() => cartButton.classList.remove('added'), 1000);
     showToast('Tillagd i kundvagnen');
-  });
+    return;
+  }
+
+  const cartAction = event.target.closest('[data-cart-action]');
+  if (cartAction) {
+    event.preventDefault();
+    const index = parseInt(cartAction.dataset.cartIndex, 10);
+    const cart = readStore(CART_KEY);
+    const current = cart[index]?.quantity || 1;
+    if (cartAction.dataset.cartAction === 'increase') setCartItemQuantity(index, current + 1);
+    if (cartAction.dataset.cartAction === 'decrease') setCartItemQuantity(index, Math.max(1, current - 1));
+    if (cartAction.dataset.cartAction === 'remove') removeCartItem(index);
+    return;
+  }
+
+  const card = event.target.closest('.product-card');
+  if (card && !event.target.closest('.pack-select')) {
+    const href = card.dataset.href || 'product.html';
+    window.location.href = href;
+  }
 });
 
 const mainCartBtn = document.querySelector('.add-to-cart-main .btn-primary');
 if (mainCartBtn) {
   mainCartBtn.addEventListener('click', event => {
     event.preventDefault();
-    addCartItem(productFromPage());
+    const quantity = parseInt(document.querySelector('.qty-display')?.value || '1', 10) || 1;
+    addCartItem(productFromPage(), quantity);
     showToast('Tillagd i kundvagnen');
   });
 }
@@ -551,13 +649,5 @@ document.querySelectorAll('.pack-option').forEach(option => {
     const price = option.dataset.price;
     const priceEl = document.querySelector('.product-detail-price');
     if (price && priceEl) priceEl.innerHTML = `${price} <small>${option.dataset.pack || '1-pack'}</small>`;
-  });
-});
-
-document.querySelectorAll('.product-card').forEach(card => {
-  card.addEventListener('click', event => {
-    if (event.target.closest('.pack-select') || event.target.closest('.add-to-cart-btn') || event.target.closest('.filter-pill') || event.target.closest('.bookmark-toggle')) return;
-    const href = card.dataset.href || 'product.html';
-    window.location.href = href;
   });
 });
