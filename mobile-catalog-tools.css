@@ -1,0 +1,31 @@
+.catalog-mobile-tools {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: .75rem;
+  margin: .65rem 0 1rem;
+}
+
+.catalog-mobile-tools .catalog-filter-toggle {
+  display: none;
+}
+
+.catalog-mobile-tools .catalog-sort-select {
+  max-width: 230px;
+}
+
+@media (max-width: 820px) {
+  .catalog-mobile-tools {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .65rem;
+  }
+
+  .catalog-mobile-tools .catalog-filter-toggle {
+    display: inline-flex;
+  }
+
+  .catalog-mobile-tools .catalog-sort-select {
+    max-width: none;
+  }
+}
