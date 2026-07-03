@@ -5,7 +5,7 @@
   const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
 
   function loadStyles() {
-    ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css'].forEach(href => {
+    ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css', 'mobile-polish.css'].forEach(href => {
       if (!document.querySelector(`link[href="${href}"]`)) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
@@ -29,30 +29,16 @@
   }
 
   function slugify(value) {
-    return String(value || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'produkt';
+    return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'produkt';
   }
 
   function escapeHtml(value) {
-    return String(value || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+    return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   }
 
   function parsePrice(value) {
     const match = String(value || '').replace(/\s/g, '').match(/[0-9]+/);
     return match ? parseInt(match[0], 10) : 0;
-  }
-
-  function formatKr(value) {
-    return `${Math.round(value).toLocaleString('sv-SE')} kr`;
   }
 
   function selectedOption(card) {
@@ -82,13 +68,11 @@
     const price = parsePrice(option.dataset.price || option.textContent);
     const pack = option.dataset.pack || option.textContent;
     const amount = parseInt((pack.match(/[0-9]+/) || ['1'])[0], 10) || 1;
-    return price ? `${formatKr(price / amount)}/st` : '';
+    return price ? `${Math.round(price / amount).toLocaleString('sv-SE')} kr/st` : '';
   }
 
   function productMetaFromCard(card) {
-    return Array.from(card.querySelectorAll('.product-card-meta'))
-      .map(item => item.textContent.replace(/\s+/g, ' ').trim())
-      .filter(Boolean);
+    return Array.from(card.querySelectorAll('.product-card-meta')).map(item => item.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean);
   }
 
   function metaValue(card, label) {
@@ -171,7 +155,7 @@
     const match = text.match(/\b(300|400|500)\b/);
     if (!match) return;
     const dosor = parseInt(match[1], 10) / 20;
-    name.textContent = text.replace(/\s*\b(300|400|500)\b\s*/g, ' ').replace(/\s+/g, ' ').trim() + ` ${dosor} dosor`;
+    name.textContent = `${text.replace(/\s*\b(300|400|500)\b\s*/g, ' ').replace(/\s+/g, ' ').trim()} ${dosor} dosor`;
     card.dataset.productId = slugify(name.textContent);
   }
 
@@ -186,9 +170,9 @@
 
   function ensureStrength(card) {
     if (!isSnusProduct(card) || card.querySelector('.strength-bar')) return;
-    const level = inferStrength(card);
     const bar = document.createElement('div');
     bar.className = 'strength-bar';
+    const level = inferStrength(card);
     for (let i = 1; i <= 5; i += 1) {
       const span = document.createElement('span');
       if (i <= level) span.className = 'filled';
@@ -213,11 +197,10 @@
     normalizeMeta(card);
     ensureStrength(card);
     normalizePackOptions(card);
-    const body = card.querySelector('.product-card-body');
     const actions = card.querySelector('.product-card-actions');
     const price = card.querySelector('.product-card-price');
     const button = card.querySelector('.add-to-cart-btn');
-    if (!body || !actions || !price || !button) return;
+    if (!actions || !price || !button) return;
     let bottom = card.querySelector('.product-card-bottom');
     if (!bottom) {
       bottom = document.createElement('div');
@@ -228,8 +211,7 @@
     bottom.appendChild(button);
     button.type = 'button';
     if (!button.querySelector('svg')) button.innerHTML = CART_ICON;
-    const option = selectedOption(card);
-    const per = unitPrice(option);
+    const per = unitPrice(selectedOption(card));
     price.innerHTML = `<span class="unit-price">${escapeHtml(per || selectedPrice(card))}</span><small>per produkt</small>`;
   }
 
@@ -374,29 +356,97 @@
     });
   }
 
+  function uniqueLinks(links) {
+    const seen = new Set();
+    return links.filter(link => {
+      const href = link.href || '#';
+      if (seen.has(href)) return false;
+      seen.add(href);
+      return true;
+    });
+  }
+
+  function initMobileMenu() {
+    if (document.querySelector('.mobile-menu-panel')) return;
+    const overlay = document.createElement('div');
+    overlay.className = 'mobile-menu-overlay';
+    const panel = document.createElement('aside');
+    panel.className = 'mobile-menu-panel';
+    panel.setAttribute('aria-hidden', 'true');
+    const categoryLinks = uniqueLinks(Array.from(document.querySelectorAll('.subnav-inner a, .sub-dropdown a')).map(a => ({ href: a.getAttribute('href') || '#', text: a.textContent.trim() })).filter(item => item.text));
+    const pageLinks = uniqueLinks(Array.from(document.querySelectorAll('.subheader-inner > li > a, .main-nav > li > a')).map(a => ({ href: a.getAttribute('href') || '#', text: a.childNodes[0]?.textContent?.trim() || a.textContent.trim() })).filter(item => item.text && item.href !== '#'));
+    const primary = uniqueLinks([...categoryLinks, ...pageLinks]);
+    panel.innerHTML = `
+      <div class="mobile-menu-header"><span class="mobile-menu-title">Meny</span><button class="mobile-menu-close" type="button" aria-label="Stäng meny">×</button></div>
+      <div class="mobile-menu-content">
+        <nav class="mobile-menu-section">${primary.map(item => `<a class="mobile-menu-link" href="${escapeHtml(item.href)}">${escapeHtml(item.text)}</a>`).join('')}</nav>
+        <nav class="mobile-menu-section"><a class="mobile-menu-link secondary" href="login.html">Mitt konto / logga in</a><a class="mobile-menu-link secondary" href="#">Kundservice</a></nav>
+      </div>`;
+    document.body.append(overlay, panel);
+    const toggle = document.querySelector('.nav-toggle');
+    const close = () => {
+      panel.classList.remove('open');
+      overlay.classList.remove('show');
+      document.body.classList.remove('mobile-menu-open');
+      panel.setAttribute('aria-hidden', 'true');
+      toggle?.setAttribute('aria-expanded', 'false');
+    };
+    const open = () => {
+      panel.classList.add('open');
+      overlay.classList.add('show');
+      document.body.classList.add('mobile-menu-open');
+      panel.setAttribute('aria-hidden', 'false');
+      toggle?.setAttribute('aria-expanded', 'true');
+    };
+    toggle?.addEventListener('click', event => {
+      event.preventDefault();
+      panel.classList.contains('open') ? close() : open();
+    });
+    panel.querySelector('.mobile-menu-close')?.addEventListener('click', close);
+    overlay.addEventListener('click', close);
+    panel.querySelectorAll('a').forEach(link => link.addEventListener('click', close));
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') close(); });
+  }
+
+  function initStickyHeader() {
+    const header = document.querySelector('.site-header');
+    if (!header) return;
+    let lastY = window.scrollY;
+    let ticking = false;
+    function update() {
+      const y = window.scrollY;
+      if (window.innerWidth <= 720) {
+        if (y > 80 && y > lastY + 4 && !document.body.classList.contains('mobile-menu-open')) header.classList.add('mobile-condensed');
+        if (y < lastY - 4 || y < 40) header.classList.remove('mobile-condensed');
+      } else {
+        header.classList.remove('mobile-condensed');
+      }
+      lastY = y;
+      ticking = false;
+    }
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(update);
+        ticking = true;
+      }
+    }, { passive: true });
+  }
+
   function initNavigation() {
     document.querySelectorAll('a[href="portion.html#gor-eget"], a[href="index.html#gor-eget"], a[href$="#gor-eget"]').forEach(link => link.href = 'gor-eget.html');
     const currentFile = window.location.pathname.split('/').pop() || 'index.html';
     if ((currentFile === 'portion.html' || currentFile === 'index.html') && window.location.hash === '#gor-eget') window.location.replace('gor-eget.html');
-    document.querySelector('.nav-toggle')?.addEventListener('click', () => {
-      const subheader = document.querySelector('.subheader');
-      const mainNav = document.querySelector('.main-nav');
-      const open = !(subheader?.classList.contains('mobile-open') || mainNav?.classList.contains('mobile-open'));
-      subheader?.classList.toggle('mobile-open', open);
-      mainNav?.classList.toggle('mobile-open', open);
-      document.body.classList.toggle('mobile-menu-open', open);
-    });
     document.querySelectorAll('.subheader-inner a, .subnav-inner a, .main-nav a').forEach(link => {
       const href = (link.getAttribute('href') || '').split('#')[0].split('/').pop();
       if (href && href === currentFile) link.classList.add('active');
     });
+    initMobileMenu();
+    initStickyHeader();
   }
 
   function sortGrid(grid, mode) {
     const cards = Array.from(grid.querySelectorAll('.product-card'));
-    cards.forEach((card, index) => {
-      if (!card.dataset.originalIndex) card.dataset.originalIndex = index;
-    });
+    cards.forEach((card, index) => { if (!card.dataset.originalIndex) card.dataset.originalIndex = index; });
     const sorted = cards.slice().sort((a, b) => {
       const nameA = a.querySelector('.product-card-name')?.textContent?.trim() || '';
       const nameB = b.querySelector('.product-card-name')?.textContent?.trim() || '';
@@ -419,25 +469,13 @@
       const sidebar = catalog.querySelector('.filter-sidebar');
       const grid = catalog.querySelector('.product-grid');
       if (!tools || !sidebar || !grid) return;
-
       const controls = document.createElement('div');
       controls.className = 'catalog-mobile-tools';
-      controls.innerHTML = `
-        <button class="catalog-filter-toggle" type="button" aria-expanded="false">Filter</button>
-        <select class="catalog-sort-select" aria-label="Sortera produkter">
-          <option value="relevance">Relevans</option>
-          <option value="price-asc">Pris: lägst först</option>
-          <option value="price-desc">Pris: högst först</option>
-          <option value="alpha">A–Ö</option>
-          <option value="alpha-desc">Ö–A</option>
-          <option value="newest">Nyast först</option>
-        </select>`;
+      controls.innerHTML = `<button class="catalog-filter-toggle" type="button" aria-expanded="false">Filter</button><select class="catalog-sort-select" aria-label="Sortera produkter"><option value="relevance">Relevans</option><option value="price-asc">Pris: lägst först</option><option value="price-desc">Pris: högst först</option><option value="alpha">A–Ö</option><option value="alpha-desc">Ö–A</option><option value="newest">Nyast först</option></select>`;
       tools.insertAdjacentElement('beforebegin', controls);
-
       const overlay = document.createElement('div');
       overlay.className = 'catalog-filter-overlay';
       document.body.appendChild(overlay);
-
       if (!sidebar.querySelector('.catalog-filter-close')) {
         const close = document.createElement('button');
         close.className = 'catalog-filter-close';
@@ -445,7 +483,6 @@
         close.textContent = 'Visa produkter';
         sidebar.appendChild(close);
       }
-
       const toggle = controls.querySelector('.catalog-filter-toggle');
       const sort = controls.querySelector('.catalog-sort-select');
       function setFilterOpen(open) {
@@ -489,10 +526,7 @@
         const active = button.classList.contains('active');
         buttons.forEach(item => item.classList.remove('active'));
         if (active) update(null);
-        else {
-          button.classList.add('active');
-          update(button.dataset.series);
-        }
+        else { button.classList.add('active'); update(button.dataset.series); }
       }));
       update(null);
     });
@@ -510,9 +544,13 @@
       const next = wrapper.querySelector('.carousel-btn-next');
       if (!track || !outer) return;
       let current = 0;
+      let startX = 0;
+      let startY = 0;
+      let dragging = false;
+      let swiped = false;
       function visibleCount() {
         const width = outer.offsetWidth;
-        if (width < 680) return 2;
+        if (width < 720) return 2;
         if (width < 920) return 4;
         return 6;
       }
@@ -534,6 +572,35 @@
         });
         go(current);
       }
+      outer.addEventListener('pointerdown', event => {
+        startX = event.clientX;
+        startY = event.clientY;
+        dragging = true;
+        swiped = false;
+        outer.setPointerCapture?.(event.pointerId);
+      });
+      outer.addEventListener('pointermove', event => {
+        if (!dragging) return;
+        const dx = event.clientX - startX;
+        const dy = event.clientY - startY;
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) event.preventDefault();
+      }, { passive: false });
+      outer.addEventListener('pointerup', event => {
+        if (!dragging) return;
+        dragging = false;
+        const dx = event.clientX - startX;
+        if (Math.abs(dx) > 36) {
+          swiped = true;
+          go(current + (dx < 0 ? 1 : -1));
+          setTimeout(() => { swiped = false; }, 120);
+        }
+      });
+      outer.addEventListener('click', event => {
+        if (swiped) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }, true);
       size();
       window.addEventListener('resize', size);
       prev?.addEventListener('click', () => go(current - 1));
