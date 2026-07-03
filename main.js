@@ -1,12 +1,277 @@
 (function () {
-  document.querySelectorAll('a[href="portion.html#gor-eget"]').forEach(link => {
+  if (!document.querySelector('link[href="interaction-fixes.css"]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'interaction-fixes.css';
+    document.head.appendChild(link);
+  }
+
+  document.querySelectorAll('a[href="portion.html#gor-eget"], a[href="index.html#gor-eget"], a[href$="#gor-eget"]').forEach(link => {
     link.setAttribute('href', 'gor-eget.html');
   });
+
   const currentFile = window.location.pathname.split('/').pop() || 'index.html';
-  if (currentFile === 'portion.html' && window.location.hash === '#gor-eget') {
+  if ((currentFile === 'portion.html' || currentFile === 'index.html') && window.location.hash === '#gor-eget') {
     window.location.replace('gor-eget.html');
   }
 })();
+
+const CART_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
+const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+const BOOKMARKS_KEY = 'swedsnus-bookmarks';
+const CART_KEY = 'swedsnus-cart';
+
+function readStore(key) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function writeStore(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function slugify(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'produkt';
+}
+
+function getCleanPrice(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function getSelectedPackText(container) {
+  const selectedOption = container?.querySelector('.pack-select option:checked');
+  if (selectedOption) return selectedOption.dataset.pack || selectedOption.textContent.split('—')[0].trim() || '1-pack';
+  const selectedPack = document.querySelector('.pack-option.selected');
+  if (selectedPack) return selectedPack.dataset.pack || '1-pack';
+  return '1-pack';
+}
+
+function getSelectedPrice(container) {
+  const selectedOption = container?.querySelector('.pack-select option:checked');
+  if (selectedOption?.dataset.price) return selectedOption.dataset.price;
+  const price = container?.querySelector('.product-card-price')?.childNodes?.[0]?.textContent || container?.querySelector('.product-card-price')?.textContent;
+  const pagePack = document.querySelector('.pack-option.selected');
+  if (pagePack?.dataset.price) return pagePack.dataset.price;
+  const pagePrice = document.querySelector('.product-detail-price')?.childNodes?.[0]?.textContent;
+  return getCleanPrice(price || pagePrice || '');
+}
+
+function productFromCard(card) {
+  const name = card.querySelector('.product-card-name')?.textContent?.trim() || 'Produkt';
+  const badge = card.querySelector('.product-card-badge')?.textContent?.trim() || '';
+  const meta = Array.from(card.querySelectorAll('.product-card-meta')).map(item => item.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const price = getSelectedPrice(card);
+  const pack = getSelectedPackText(card);
+  return {
+    id: card.dataset.productId || slugify(name),
+    name,
+    badge,
+    meta,
+    price,
+    pack,
+    href: card.dataset.href || 'product.html'
+  };
+}
+
+function productFromPage() {
+  const name = document.querySelector('.product-detail h1')?.textContent?.trim() || document.title.split('—')[0].trim() || 'Produkt';
+  const badges = Array.from(document.querySelectorAll('.product-detail-badge .product-card-badge')).map(item => item.textContent.trim()).filter(Boolean);
+  const meta = Array.from(document.querySelectorAll('.product-detail-meta-row')).map(row => {
+    const key = row.querySelector('dt')?.textContent?.trim();
+    const value = row.querySelector('dd')?.textContent?.replace(/\s+/g, ' ')?.trim();
+    return key && value ? `${key}: ${value}` : '';
+  }).filter(Boolean).slice(0, 3);
+  return {
+    id: slugify(name),
+    name,
+    badge: badges[0] || '',
+    meta,
+    price: getSelectedPrice(document),
+    pack: getSelectedPackText(document),
+    href: 'product.html'
+  };
+}
+
+function isBookmarked(id) {
+  return readStore(BOOKMARKS_KEY).some(item => item.id === id);
+}
+
+function setBookmark(product, save) {
+  const bookmarks = readStore(BOOKMARKS_KEY).filter(item => item.id !== product.id);
+  if (save) bookmarks.unshift(product);
+  writeStore(BOOKMARKS_KEY, bookmarks);
+  syncBookmarkButtons();
+  renderBookmarksPage();
+}
+
+function syncBookmarkButtons() {
+  document.querySelectorAll('.bookmark-toggle[data-product-id]').forEach(button => {
+    const active = isBookmarked(button.dataset.productId);
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    button.setAttribute('title', active ? 'Ta bort från sparade produkter' : 'Spara produkt');
+  });
+}
+
+function addBookmarkButtons() {
+  document.querySelectorAll('.product-card').forEach(card => {
+    if (card.querySelector('.bookmark-toggle')) return;
+    const product = productFromCard(card);
+    card.dataset.productId = product.id;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'bookmark-toggle';
+    button.dataset.productId = product.id;
+    button.setAttribute('aria-label', 'Spara produkt');
+    button.innerHTML = BOOKMARK_ICON;
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const currentProduct = productFromCard(card);
+      setBookmark(currentProduct, !isBookmarked(currentProduct.id));
+      showToast(isBookmarked(currentProduct.id) ? 'Sparad produkt' : 'Borttagen från sparade produkter');
+    });
+    card.appendChild(button);
+  });
+
+  const detail = document.querySelector('.product-detail');
+  const heading = detail?.querySelector('h1');
+  if (detail && heading && !detail.querySelector('.product-page-bookmark')) {
+    const product = productFromPage();
+    const wrap = document.createElement('div');
+    wrap.className = 'product-detail-actions';
+    heading.parentNode.insertBefore(wrap, heading);
+    wrap.appendChild(heading);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'bookmark-toggle product-page-bookmark';
+    button.dataset.productId = product.id;
+    button.setAttribute('aria-label', 'Spara produkt');
+    button.innerHTML = BOOKMARK_ICON;
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      const currentProduct = productFromPage();
+      setBookmark(currentProduct, !isBookmarked(currentProduct.id));
+      showToast(isBookmarked(currentProduct.id) ? 'Sparad produkt' : 'Borttagen från sparade produkter');
+    });
+    wrap.appendChild(button);
+  }
+
+  syncBookmarkButtons();
+}
+
+function renderBookmarksPage() {
+  const list = document.querySelector('[data-bookmarks-list]') || (document.body.classList.contains('bookmarks-page') ? document.querySelector('.bookmarks-list') : null);
+  if (!list) return;
+  const bookmarks = readStore(BOOKMARKS_KEY);
+  const countEl = document.querySelector('[data-bookmark-count]');
+  if (countEl) countEl.textContent = `${bookmarks.length} ${bookmarks.length === 1 ? 'produkt' : 'produkter'}`;
+  list.innerHTML = '';
+  if (!bookmarks.length) {
+    list.innerHTML = '<div class="bookmarks-empty">Du har inga sparade produkter än. Spara en produkt med bokmärkesikonen på en produktkort eller produktsida.</div>';
+    return;
+  }
+  bookmarks.forEach(product => {
+    const card = document.createElement('article');
+    card.className = 'bookmark-card';
+    card.innerHTML = `
+      <button class="bookmark-remove" type="button" aria-label="Ta bort sparad produkt">×</button>
+      <a href="${product.href || 'product.html'}" class="img-placeholder wide">Produktbild</a>
+      <div class="bookmark-card-body">
+        ${product.badge ? `<span class="product-card-badge" style="margin-bottom:.6rem;">${product.badge}</span>` : ''}
+        <h3>${product.name}</h3>
+        ${(product.meta || []).slice(0, 3).map(item => `<p class="meta">${item}</p>`).join('')}
+      </div>
+      <div class="bookmark-card-price"><strong>${product.price || ''}</strong><small>${product.pack || ''}</small></div>
+    `;
+    card.querySelector('.bookmark-remove').addEventListener('click', () => setBookmark(product, false));
+    list.appendChild(card);
+  });
+}
+
+function normalizeCartItem(product) {
+  return {
+    id: product.id,
+    name: product.name,
+    badge: product.badge || '',
+    meta: product.meta || [],
+    price: product.price || '',
+    pack: product.pack || '1-pack',
+    href: product.href || 'product.html',
+    quantity: 1
+  };
+}
+
+function addCartItem(product) {
+  const cart = readStore(CART_KEY);
+  const item = normalizeCartItem(product);
+  const existing = cart.find(entry => entry.id === item.id && entry.pack === item.pack && entry.price === item.price);
+  if (existing) existing.quantity += 1;
+  else cart.unshift(item);
+  writeStore(CART_KEY, cart);
+  updateCartPanel();
+}
+
+function priceNumber(value) {
+  const match = String(value || '').replace(/\s/g, '').match(/[0-9]+/);
+  return match ? parseInt(match[0], 10) : 0;
+}
+
+function updateCartPanel() {
+  const cart = readStore(CART_KEY);
+  const totalQty = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  document.querySelectorAll('.cart-count').forEach(item => item.textContent = totalQty);
+  document.querySelectorAll('.cart-panel-count').forEach(item => item.textContent = `${totalQty} ${totalQty === 1 ? 'artikel' : 'artiklar'}`);
+  const total = cart.reduce((sum, item) => sum + priceNumber(item.price) * (item.quantity || 1), 0);
+  document.querySelectorAll('.cart-total').forEach(item => item.textContent = `${total.toLocaleString('sv-SE')} kr`);
+
+  document.querySelectorAll('.cart-panel').forEach(panel => {
+    let list = panel.querySelector('.cart-panel-items');
+    if (!list) {
+      list = document.createElement('div');
+      list.className = 'cart-panel-items';
+      const empty = panel.querySelector('.cart-panel-empty');
+      if (empty) empty.insertAdjacentElement('afterend', list);
+      else panel.insertBefore(list, panel.querySelector('.cart-panel-footer'));
+    }
+    const empty = panel.querySelector('.cart-panel-empty');
+    if (empty) empty.classList.toggle('is-hidden', cart.length > 0);
+    list.innerHTML = '';
+    cart.slice(0, 4).forEach(item => {
+      const row = document.createElement('a');
+      row.href = item.href || 'product.html';
+      row.className = 'cart-panel-item';
+      row.innerHTML = `
+        <span class="cart-panel-item-img"></span>
+        <span class="cart-panel-item-main"><span class="cart-panel-item-name">${item.name}</span><span class="cart-panel-item-meta">${item.quantity || 1} × ${item.pack || '1-pack'}</span></span>
+        <span class="cart-panel-item-price">${item.price || ''}</span>
+      `;
+      list.appendChild(row);
+    });
+    if (cart.length > 4) {
+      const more = document.createElement('div');
+      more.className = 'cart-panel-item-meta';
+      more.style.padding = '.55rem .9rem';
+      more.textContent = `+ ${cart.length - 4} fler produkter`;
+      list.appendChild(more);
+    }
+  });
+}
+
+function enhanceCartButtons() {
+  document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+    if (!button.querySelector('svg')) button.innerHTML = CART_ICON;
+  });
+}
 
 (function () {
   const saved = localStorage.getItem('swedsnus-theme') || '1';
@@ -76,9 +341,8 @@ document.querySelectorAll('.filter-sidebar li').forEach(item => {
       button.addEventListener('click', () => {
         const alreadyActive = button.classList.contains('active');
         buttons.forEach(item => item.classList.remove('active'));
-        if (alreadyActive) {
-          update(null);
-        } else {
+        if (alreadyActive) update(null);
+        else {
           button.classList.add('active');
           update(button.dataset.series);
         }
@@ -224,14 +488,9 @@ document.querySelectorAll('.pack-select').forEach(select => {
     if (!card) return;
     const option = select.options[select.selectedIndex];
     const price = card.querySelector('.product-card-price');
-    if (price && option.dataset.price) {
-      price.innerHTML = `${option.dataset.price} <small>${option.dataset.pack || ''}</small>`;
-    }
+    if (price && option.dataset.price) price.innerHTML = `${option.dataset.price} <small>${option.dataset.pack || ''}</small>`;
   });
 });
-
-const cartCountEl = document.querySelector('.cart-count');
-let cartCount = 0;
 
 function showToast(message) {
   let toast = document.querySelector('.toast');
@@ -246,25 +505,29 @@ function showToast(message) {
   toast._timer = setTimeout(() => toast.classList.remove('show'), 2200);
 }
 
-function addToCart(button) {
-  cartCount += 1;
-  if (cartCountEl) cartCountEl.textContent = cartCount;
-  document.querySelectorAll('.cart-panel-count').forEach(item => item.textContent = `${cartCount} ${cartCount === 1 ? 'artikel' : 'artiklar'}`);
-  button.classList.add('added');
-  setTimeout(() => button.classList.remove('added'), 1000);
-  showToast('Tillagd i kundvagnen');
-}
+enhanceCartButtons();
+addBookmarkButtons();
+renderBookmarksPage();
+updateCartPanel();
 
 document.querySelectorAll('.add-to-cart-btn').forEach(button => {
   button.addEventListener('click', event => {
     event.stopPropagation();
-    addToCart(button);
+    const card = button.closest('.product-card');
+    if (card) addCartItem(productFromCard(card));
+    button.classList.add('added');
+    setTimeout(() => button.classList.remove('added'), 1000);
+    showToast('Tillagd i kundvagnen');
   });
 });
 
 const mainCartBtn = document.querySelector('.add-to-cart-main .btn-primary');
 if (mainCartBtn) {
-  mainCartBtn.addEventListener('click', () => showToast('Tillagd i kundvagnen'));
+  mainCartBtn.addEventListener('click', event => {
+    event.preventDefault();
+    addCartItem(productFromPage());
+    showToast('Tillagd i kundvagnen');
+  });
 }
 
 const qtyDisplay = document.querySelector('.qty-display');
@@ -293,7 +556,7 @@ document.querySelectorAll('.pack-option').forEach(option => {
 
 document.querySelectorAll('.product-card').forEach(card => {
   card.addEventListener('click', event => {
-    if (event.target.closest('.pack-select') || event.target.closest('.add-to-cart-btn') || event.target.closest('.filter-pill')) return;
+    if (event.target.closest('.pack-select') || event.target.closest('.add-to-cart-btn') || event.target.closest('.filter-pill') || event.target.closest('.bookmark-toggle')) return;
     const href = card.dataset.href || 'product.html';
     window.location.href = href;
   });
