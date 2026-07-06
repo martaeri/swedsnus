@@ -38,11 +38,13 @@
     grid-template-areas:
       "menu logo icons"
       "search search search" !important;
+    align-items: start;
   }
 
   body .site-header .site-logo {
     grid-area: logo;
     justify-self: center !important;
+    align-self: start;
     text-align: center;
     z-index: 2;
   }
@@ -50,6 +52,7 @@
   body .site-header .header-icons {
     grid-area: icons;
     justify-self: end !important;
+    align-self: start;
     display: flex;
     align-items: center;
   }
@@ -57,7 +60,7 @@
   body .site-header .header-icons .nav-toggle {
     position: absolute;
     left: clamp(.75rem, 4vw, 1rem);
-    top: .42rem;
+    top: .2rem;
     display: inline-flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -68,7 +71,7 @@
   }
 
   body .site-header.mobile-condensed .header-icons .nav-toggle {
-    top: .32rem;
+    top: .18rem;
   }
 
   body .site-header .header-search {
@@ -79,6 +82,21 @@
   body .mobile-menu-header {
     justify-content: flex-end;
     position: relative;
+    min-height: 66px;
+  }
+
+  body .mobile-menu-header::before {
+    content: 'Swedsnus';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--color-text);
+    font-size: 1.2rem;
+    font-weight: 900;
+    letter-spacing: .04em;
+    line-height: 1;
+    pointer-events: none;
   }
 
   body .mobile-menu-title {
@@ -99,11 +117,11 @@
   body .mobile-menu-section:first-child::before {
     content: 'Sortiment';
     order: 2;
-    margin: .55rem 0 .18rem;
-    padding: .72rem .1rem .35rem;
-    border-top: 1px solid var(--color-border);
+    margin: .45rem 0 .18rem;
+    padding: .28rem .1rem .35rem;
+    border-top: 0;
     color: var(--color-text);
-    font-size: 1rem;
+    font-size: 1.02rem;
     font-weight: 900;
     letter-spacing: .02em;
   }
@@ -113,31 +131,24 @@
   }
 
   body .mobile-menu-section:first-child .mobile-menu-link[href="index.html"] {
-    position: absolute;
-    top: calc(-58px - .2rem);
-    left: 48px;
-    right: 48px;
+    position: static;
+    order: 1;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 58px;
+    min-height: 42px;
     padding: 0;
     color: var(--color-text);
-    font-size: 0;
+    font-size: 1.02rem;
     font-weight: 900;
-    letter-spacing: .04em;
+    letter-spacing: normal;
     text-transform: none;
-    z-index: 3;
   }
 
   body .mobile-menu-section:first-child .mobile-menu-link[href="index.html"]::before {
-    content: 'Swedsnus';
-    font-size: 1.18rem;
-    line-height: 1;
+    content: none;
   }
 
   body .mobile-menu-section:first-child .mobile-menu-link[href="index.html"]::after {
-    display: none;
+    display: inline;
   }
 
   body .mobile-menu-section:first-child .mobile-menu-link[href="about.html"],
