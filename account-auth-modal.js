@@ -22,6 +22,15 @@
   }
 
   document.addEventListener('click', event => {
+    const logout = event.target.closest('[data-logout]');
+    if (logout) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      sessionStorage.removeItem(AUTH_KEY);
+      window.location.href = 'index.html';
+      return;
+    }
+
     const close = event.target.closest('[data-account-auth-close]');
     if (close) {
       event.preventDefault();
