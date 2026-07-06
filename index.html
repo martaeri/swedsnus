@@ -1,2 +1,42 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Index</title><link rel="stylesheet" href="styles.css"></head><body><main><h1>Startsida</h1><p>Layout restored.</p></main><script src="main.js"></script></body></html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Swedsnus — Startsida</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="age-banner">Åldersgräns 18 år</div>
+  <header class="site-header">
+    <div class="header-topbar">
+      <a href="index.html" class="site-logo">Swedsnus<span>Hemsjö, Sverige</span></a>
+      <div class="header-search"><input type="search" placeholder="Sök..." aria-label="Sök" /></div>
+      <div class="header-icons">
+        <a href="bookmarks.html" class="header-icon-btn" aria-label="Sparade produkter"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></a>
+        <a href="cart.html" class="header-icon-btn" aria-label="Korg"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="cart-badge cart-count">0</span></a>
+        <button class="nav-toggle" aria-label="Öppna meny"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+    <nav class="subheader" aria-label="Huvudnavigation"><ul class="subheader-inner"><li><a href="index.html" class="active">Hem</a></li><li><a href="portion.html">Sortiment</a></li><li><a href="about.html">Om oss</a></li><li><a href="guide.html">Guide</a></li></ul></nav>
+    <nav class="subnav" aria-label="Produktkategorier"><div class="subnav-inner"><a href="portion.html">Portion</a><a href="los.html">Lös</a><a href="gor-eget.html">Gör Eget</a><a href="tillbehor.html">Tillbehör</a></div></nav>
+  </header>
+  <section class="hero"><div class="hero-content"><p class="hero-tagline">Startsida</p><h1>Swedsnus</h1><p>Startsidans layout är återställd med hero, karuseller, informationsblock och FAQ.</p><div class="hero-tabs"><button class="hero-tab active" data-href="portion.html">Portion</button><button class="hero-tab" data-href="los.html">Lös</button><button class="hero-tab" data-href="gor-eget.html">Gör Eget</button></div></div></section>
+  <main>
+    <div class="page-wrap" style="padding-bottom:0;"><section class="carousel-section"><div class="carousel-header"><h2 class="section-heading">Nyheter</h2></div><div class="carousel-wrapper"><button class="carousel-btn carousel-btn-prev" aria-label="Föregående"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="carousel-track-outer"><div class="carousel-track">
+      <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Nyhet</span><p class="product-card-name">Produkt A</p><p class="product-card-meta">Typ: <span>Produkt</span></p><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-pack="1-pack">1-pack</option></select><button class="add-to-cart-btn" aria-label="Lägg till"></button></div><p class="product-card-price"><small>1-pack</small></p></div></div>
+      <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Nyhet</span><p class="product-card-name">Produkt B</p><p class="product-card-meta">Typ: <span>Produkt</span></p><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-pack="1-pack">1-pack</option></select><button class="add-to-cart-btn" aria-label="Lägg till"></button></div><p class="product-card-price"><small>1-pack</small></p></div></div>
+      <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Nyhet</span><p class="product-card-name">Produkt C</p><p class="product-card-meta">Typ: <span>Produkt</span></p><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-pack="1-pack">1-pack</option></select><button class="add-to-cart-btn" aria-label="Lägg till"></button></div><p class="product-card-price"><small>1-pack</small></p></div></div>
+      <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Nyhet</span><p class="product-card-name">Produkt D</p><p class="product-card-meta">Typ: <span>Produkt</span></p><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-pack="1-pack">1-pack</option></select><button class="add-to-cart-btn" aria-label="Lägg till"></button></div><p class="product-card-price"><small>1-pack</small></p></div></div>
+    </div></div><button class="carousel-btn carousel-btn-next" aria-label="Nästa"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></section></div>
+    <section class="feature-strip-fullbleed"><div class="feature-strip-inner"><div class="feature-strip-intro"><h2>Informationsblock</h2><p>Startsidan har åter flera sektioner och rätt rytm mellan innehållsblock.</p></div><div class="feature-item"><strong>Kategori</strong><p>Produktöversikt</p></div><div class="feature-item"><strong>Guide</strong><p>Information</p></div><div class="feature-item"><strong>Support</strong><p>Kundservice</p></div></div></section>
+    <div class="page-wrap" style="padding-top:2.5rem;"><section class="carousel-section"><div class="carousel-header"><h2 class="section-heading">Sortiment</h2><a href="portion.html" class="see-all">Se alla →</a></div><div class="carousel-wrapper"><button class="carousel-btn carousel-btn-prev" aria-label="Föregående"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="carousel-track-outer"><div class="carousel-track">
+      <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Serie</span><p class="product-card-name">Produkt E</p><p class="product-card-meta">Typ: <span>Produkt</span></p><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-pack="1-pack">1-pack</option></select><button class="add-to-cart-btn" aria-label="Lägg till"></button></div><p class="product-card-price"><small>1-pack</small></p></div></div>
+      <div class="product-card" data-href="product.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Serie</span><p class="product-card-name">Produkt F</p><p class="product-card-meta">Typ: <span>Produkt</span></p><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-pack="1-pack">1-pack</option></select><button class="add-to-cart-btn" aria-label="Lägg till"></button></div><p class="product-card-price"><small>1-pack</small></p></div></div>
+    </div></div><button class="carousel-btn carousel-btn-next" aria-label="Nästa"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></section></div>
+    <div class="page-wrap" style="padding-top:2rem;"><section><h2 class="section-heading">FAQ</h2><div class="faq-list"><details class="faq-item"><summary>Var hittar jag sortimentet?</summary><p>I menyn högst upp.</p></details></div></section></div>
+  </main>
+  <footer class="site-footer"><div class="footer-inner"><div class="footer-grid"><div class="footer-brand"><div class="site-logo">Swedsnus.nu</div><p>Hemsjö, Sverige.</p></div></div></div></footer>
+  <script src="main.js"></script>
+</body>
+</html>
