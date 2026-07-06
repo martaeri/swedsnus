@@ -141,7 +141,7 @@
     return `<div class="product-card" data-product-id="${escapeHtml(product.id)}" data-href="${escapeHtml(product.href || 'product.html')}"><button class="bookmark-toggle active" data-product-id="${escapeHtml(product.id)}" type="button" aria-label="Spara produkt" aria-pressed="true">${BOOKMARK_ICON}</button><div class="img-placeholder product">Produktbild</div><div class="product-card-body">${product.badge ? `<span class="product-card-badge">${escapeHtml(product.badge)}</span>` : ''}<p class="product-card-name">${escapeHtml(product.name)}</p>${metaMarkup(product.meta)}<div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="${escapeHtml(product.price || '')}" data-pack="${escapeHtml(product.pack || '1-pack')}">${escapeHtml(product.pack || '1-pack')} — ${escapeHtml(product.price || '')}</option></select></div><div class="product-card-bottom"><p class="product-card-price"><span class="unit-price">${escapeHtml(product.price || '')}</span><small>per produkt</small></p><button class="add-to-cart-btn" type="button" aria-label="Lägg i kundvagn">${CART_ICON}</button></div></div></div>`;
   }
 
-  function requireMarkup(message, redirect = 'customer.html') { return `<div class="account-locked"><span class="account-kicker">Inloggning krävs</span><h2>Logga in för att fortsätta</h2><p>${escapeHtml(message)}</p><div class="account-action-row"><a class="btn btn-primary" href="${redirect}">Logga in eller skapa konto</a><a class="btn btn-outline" href="index.html">Till startsidan</a></div></div>`; }
+  function requireMarkup(message, redirect = 'account.html') { return `<div class="account-locked"><span class="account-kicker">Inloggning krävs</span><h2>Logga in för att fortsätta</h2><p>${escapeHtml(message)}</p><div class="account-action-row"><a class="btn btn-primary" href="${redirect}">Logga in eller skapa konto</a><a class="btn btn-outline" href="index.html">Till startsidan</a></div></div>`; }
   function renderBookmarksPage() {
     const list = $('[data-bookmarks-list]') || (document.body.classList.contains('bookmarks-page') ? $('.bookmarks-list') : null);
     if (!list) return;
@@ -149,7 +149,7 @@
       const count = $('[data-bookmark-count]');
       if (count) count.textContent = 'Logga in krävs';
       list.classList.remove('product-grid', 'bookmarks-product-grid');
-      list.innerHTML = requireMarkup('Logga in för att se och hantera dina sparade produkter.', 'customer.html?redirect=bookmarks.html');
+      list.innerHTML = requireMarkup('Logga in för att se och hantera dina sparade produkter.', 'account.html');
       return;
     }
     const bookmarks = readStore(BOOKMARKS_KEY);
@@ -272,7 +272,7 @@
     document.body.classList.toggle('is-logged-in', active);
     document.body.classList.toggle('is-logged-out', !active);
     $$('a[href="login.html"], a[href="customer.html"], a[href="account.html"]').forEach(link => {
-      link.href = active ? 'account.html' : 'customer.html';
+      link.href = 'account.html';
       link.title = active ? 'Mina sidor' : 'Logga in';
       link.setAttribute('aria-label', active ? 'Mina sidor' : 'Logga in');
     });
@@ -294,7 +294,7 @@
   function renderAccountPage() {
     const page = $('[data-account-page]');
     if (!page) return;
-    if (!loggedIn()) { page.innerHTML = requireMarkup('Mina sidor visas först när du är inloggad.', 'customer.html?redirect=account.html'); return; }
+    if (!loggedIn()) { page.innerHTML = requireMarkup('Mina sidor visas först när du är inloggad.', 'account.html'); return; }
     const bookmarks = readStore(BOOKMARKS_KEY);
     const cartQty = readStore(CART_KEY).reduce((sum, item) => sum + (item.quantity || 1), 0);
     const currentOrders = orders.filter(order => order.current);
@@ -305,7 +305,7 @@
   function renderOrderPage() {
     const page = $('[data-order-page]');
     if (!page) return;
-    if (!loggedIn()) { page.innerHTML = requireMarkup('Logga in för att visa orderdetaljer.', 'customer.html?redirect=order.html'); return; }
+    if (!loggedIn()) { page.innerHTML = requireMarkup('Logga in för att visa orderdetaljer.', 'account.html'); return; }
     const id = new URLSearchParams(window.location.search).get('id') || orders[0].id;
     const order = orders.find(item => item.id === id) || orders[0];
     page.innerHTML = `<div class="order-detail-layout"><section><article class="order-detail-card"><span class="order-status-pill">${escapeHtml(order.status)}</span><h1>Order ${escapeHtml(order.id)}</h1><p>${escapeHtml(order.eta)}</p><div class="order-detail-actions">${order.current ? '<button class="btn btn-primary" type="button" data-demo-action="track">Spåra order</button>' : '<button class="btn btn-primary" type="button" data-demo-action="return">Hantera retur</button><button class="btn btn-outline" type="button" data-demo-action="reorder">Beställ igen</button>'}<a class="btn btn-outline" href="account.html">Till Mina sidor</a></div></article><section class="order-timeline"><h2>${order.current ? 'Spårning' : 'Orderstatus'}</h2><ol><li>Order mottagen</li><li>Order behandlad</li><li>${order.current ? 'På väg till kund' : 'Levererad'}</li>${order.current ? '<li>Väntar på leverans</li>' : '<li>Retur/reklamation kan startas från denna vy</li>'}</ol></section><section class="order-items-panel"><h2>Produkter</h2>${order.items.map(item => `<div class="order-item-row"><span>${escapeHtml(item)}</span><strong>${escapeHtml(order.total)}</strong></div>`).join('')}</section></section><aside class="order-summary-panel"><h2>Sammanfattning</h2><p><strong>Datum:</strong> ${escapeHtml(order.date)}</p><p><strong>Totalt:</strong> ${escapeHtml(order.total)}</p><p><strong>Spårningsnr:</strong> ${escapeHtml(order.tracking)}</p><p>${order.current ? 'Denna order är inte levererad ännu och visar därför spårningsåtgärder.' : 'Denna order är tidigare levererad och visar därför retur- och ombeställningsåtgärder.'}</p></aside></div>`;
@@ -329,7 +329,7 @@
     const categories = uniqueLinks($$('.subnav-inner a, .sub-dropdown a').map(a => ({ href: a.getAttribute('href') || '#', text: a.textContent.trim() })).filter(a => a.text));
     const pages = uniqueLinks($$('.subheader-inner > li > a, .main-nav > li > a').map(a => ({ href: a.getAttribute('href') || '#', text: a.childNodes[0]?.textContent?.trim() || a.textContent.trim() })).filter(a => a.text && a.href !== '#'));
     const links = uniqueLinks([...categories, ...pages]);
-    panel.innerHTML = `<div class="mobile-menu-header"><span class="mobile-menu-title">Meny</span><button class="mobile-menu-close" type="button" aria-label="Stäng meny">×</button></div><div class="mobile-menu-content"><nav class="mobile-menu-section">${links.map(item => `<a class="mobile-menu-link" href="${escapeHtml(item.href)}">${escapeHtml(item.text)}</a>`).join('')}</nav><nav class="mobile-menu-section"><a class="mobile-menu-link secondary" href="${loggedIn() ? 'account.html' : 'customer.html'}">${loggedIn() ? 'Mina sidor' : 'Mitt konto / logga in'}</a><a class="mobile-menu-link secondary" href="contact.html">Kundservice</a></nav></div>`;
+    panel.innerHTML = `<div class="mobile-menu-header"><span class="mobile-menu-title">Meny</span><button class="mobile-menu-close" type="button" aria-label="Stäng meny">×</button></div><div class="mobile-menu-content"><nav class="mobile-menu-section">${links.map(item => `<a class="mobile-menu-link" href="${escapeHtml(item.href)}">${escapeHtml(item.text)}</a>`).join('')}</nav><nav class="mobile-menu-section"><a class="mobile-menu-link secondary" href="account.html">${loggedIn() ? 'Mina sidor' : 'Mitt konto / logga in'}</a><a class="mobile-menu-link secondary" href="contact.html">Kundservice</a></nav></div>`;
     document.body.append(overlay, panel);
     const toggle = $('.nav-toggle');
     const close = () => { panel.classList.remove('open'); overlay.classList.remove('show'); document.body.classList.remove('mobile-menu-open'); panel.setAttribute('aria-hidden', 'true'); toggle?.setAttribute('aria-expanded', 'false'); };
@@ -391,7 +391,8 @@
     document.addEventListener('click', event => {
       const link = event.target.closest('a[href="bookmarks.html"], a[href="account.html"], a[href="customer.html"], a[href="login.html"], a[href="order.html"]');
       if (link && link.getAttribute('href') === 'bookmarks.html' && !loggedIn()) { event.preventDefault(); requireLogin('Logga in för att se dina sparade produkter.', () => { window.location.href = 'bookmarks.html'; }); return; }
-      if (link && (link.getAttribute('href') === 'account.html' || link.getAttribute('href') === 'login.html' || link.getAttribute('href') === 'order.html') && !loggedIn()) { event.preventDefault(); window.location.href = 'customer.html?redirect=' + encodeURIComponent(link.getAttribute('href')); return; }
+      if (link && ['account.html', 'customer.html', 'login.html'].includes(link.getAttribute('href')) && !loggedIn()) { event.preventDefault(); requireLogin('Logga in eller skapa ett konto för att gå till Mina sidor.', () => { window.location.href = 'account.html'; }); return; }
+      if (link && link.getAttribute('href') === 'order.html' && !loggedIn()) { event.preventDefault(); requireLogin('Logga in för att visa orderdetaljer.', () => { window.location.href = 'order.html'; }); return; }
       const bookmark = event.target.closest('.bookmark-toggle');
       if (bookmark) { event.preventDefault(); event.stopPropagation(); const card = bookmark.closest('.product-card'); const product = card ? productFromCard(card) : productFromPage(); requireLogin('Logga in eller skapa ett konto för att spara produkter.', () => { const shouldSave = !isBookmarked(product.id); saveBookmark(product, shouldSave); showToast(shouldSave ? 'Sparad produkt' : 'Borttagen från sparade produkter'); }); return; }
       const add = event.target.closest('.add-to-cart-btn');
