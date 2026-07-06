@@ -318,6 +318,10 @@
 }
 
 body.is-logged-in .header-icon-btn[href="account.html"] {
+  background: transparent;
+}
+
+body.is-logged-in .header-icon-btn[href="account.html"]:hover {
   background: var(--color-surface-2);
 }
 
