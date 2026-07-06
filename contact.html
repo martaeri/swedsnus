@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kontakt och kundservice — Swedsnus</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="account.css" />
+</head>
+<body class="contact-page">
+  <div class="age-banner">Tobaksförsäljning — åldersgräns 18 år · Legitimation kan krävas</div>
+
+  <header class="site-header">
+    <div class="header-topbar">
+      <a href="index.html" class="site-logo">Swedsnus<span>Tillverkare · Hemsjö, Sverige</span></a>
+      <div class="header-search"><input type="search" placeholder="Sök produkt eller smak..." aria-label="Sök" /></div>
+      <div class="header-icons">
+        <a href="bookmarks.html" class="header-icon-btn" title="Sparade produkter" aria-label="Sparade produkter"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></a>
+        <a href="customer.html" class="header-icon-btn" title="Mitt konto" aria-label="Mitt konto"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></a>
+        <div class="cart-wrapper"><a href="cart.html" class="header-icon-btn" title="Kundvagn" aria-label="Kundvagn"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="cart-badge cart-count">0</span></a><div class="cart-panel"><div class="cart-panel-header"><span>Kundvagn</span><span class="cart-panel-count">0 artiklar</span></div><div class="cart-panel-empty">Din kundvagn är tom.</div><div class="cart-panel-footer"><span class="cart-total">0 kr</span><a href="cart.html" class="cart-goto">Till kassan</a></div></div></div>
+        <button class="nav-toggle" aria-label="Öppna meny"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+    <nav class="subheader" aria-label="Huvudnavigation"><ul class="subheader-inner"><li><a href="index.html">Hem</a></li><li class="has-dropdown"><a href="#">Sortiment <svg class="chevron" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></a><ul class="sub-dropdown"><li><a href="portion.html">Portionssnus</a></li><li><a href="los.html">Lössnus</a></li><li><a href="gor-eget.html">Gör Eget</a></li><li><a href="tillbehor.html">Tillbehör</a></li></ul></li><li><a href="about.html">Om oss</a></li><li><a href="guide.html">Guide</a></li><li><a href="contact.html" class="active">Kontakt</a></li></ul></nav>
+    <nav class="subnav" aria-label="Produktkategorier"><div class="subnav-inner"><a href="portion.html">Portionssnus</a><a href="los.html">Lössnus</a><a href="gor-eget.html">Gör Eget</a><a href="tillbehor.html">Tillbehör</a></div></nav>
+  </header>
+
+  <div class="page-title-bar">
+    <div class="page-title-bar-inner">
+      <h1>Kontakt och kundservice</h1>
+      <p class="breadcrumb"><a href="index.html">Hem</a> / Kontakt</p>
+    </div>
+  </div>
+
+  <main class="contact-page-wrap">
+    <section class="contact-hero-card">
+      <div>
+        <span class="account-kicker">Kundservice</span>
+        <h2>Hur kan vi hjälpa dig?</h2>
+        <p>Här har vi samlat kontaktvägar, vanliga frågor och länkar för beställningar, returer, villkor och återförsäljarfrågor. Swedsnus säljer endast egna produkter och har ingen livechatt i denna prototyp.</p>
+      </div>
+      <div class="contact-methods">
+        <article><strong>E-post</strong><span>Skicka ditt ärende via formuläret nedan.</span></article>
+        <article><strong>Telefon</strong><span>Ring kundservice under angivna öppettider.</span></article>
+      </div>
+    </section>
+
+    <section class="contact-grid">
+      <div class="contact-form-card">
+        <h2>Mejla kundservice</h2>
+        <p>Fyll i formuläret så öppnas ett prototypärende. I en skarp version kopplas detta till e-post eller ärendehantering.</p>
+        <form class="support-form" data-support-form>
+          <label>Namn<input type="text" name="name" placeholder="Ditt namn" /></label>
+          <label>E-post<input type="email" name="email" placeholder="din@email.se" /></label>
+          <label>Ordernummer<input type="text" name="order" placeholder="Ex. SW-10482" /></label>
+          <label>Ärendetyp<select name="topic"><option>Beställning</option><option>Retur eller reklamation</option><option>Produktfråga</option><option>Återförsäljare</option><option>Övrigt</option></select></label>
+          <label>Meddelande<textarea name="message" rows="6" placeholder="Beskriv ditt ärende"></textarea></label>
+          <button class="btn btn-primary" type="submit">Skicka ärende</button>
+        </form>
+      </div>
+
+      <aside class="contact-side-card">
+        <h2>Ha gärna detta redo</h2>
+        <ul>
+          <li>Ordernummer om frågan gäller en beställning.</li>
+          <li>Produktnamn och antal om frågan gäller en produkt.</li>
+          <li>Bild på produkten eller etiketten vid reklamation.</li>
+          <li>Kontaktuppgifter så att kundservice kan återkomma.</li>
+        </ul>
+      </aside>
+    </section>
+
+    <section class="service-window-grid">
+      <article><h3>Beställningar</h3><p>Hitta information om orderbekräftelse, leveransstatus och vanliga frågor kring beställningar.</p><a href="account.html">Gå till Mina sidor</a></article>
+      <article><h3>Returer</h3><p>Returer och reklamationer hanteras enklast från ordervyn när kunden är inloggad.</p><a href="account.html">Se orderhistorik</a></article>
+      <article><h3>Villkor</h3><p>Plats för köpvillkor, integritetspolicy och praktisk information kring betalning och leverans.</p><a href="#">Läs villkor</a></article>
+      <article><h3>Återförsäljare</h3><p>För frågor om återförsäljning av Swedsnus egna produkter kan ärendet skickas via formuläret.</p><a href="#">Kontakta oss</a></article>
+    </section>
+
+    <section class="contact-faq">
+      <h2>Vanliga frågor om order</h2>
+      <details><summary>Var hittar jag min orderbekräftelse?</summary><p>Kontrollera först inkorgen och skräpposten. Om du angivit fel e-postadress kan kundservice hjälpa till att kontrollera om beställningen har registrerats.</p></details>
+      <details><summary>Hur följer jag min beställning?</summary><p>När ordern har skickats kan spårning visas i ordervyn på Mina sidor. I prototypen finns en aktuell order med en spårningsknapp.</p></details>
+      <details><summary>Hur gör jag en retur?</summary><p>Gå till orderhistoriken på Mina sidor, öppna en levererad order och välj Hantera retur. Returflödet är markerat som prototyp.</p></details>
+      <details><summary>Vad gör jag om något saknas eller är fel?</summary><p>Kontakta kundservice och ange ordernummer, produktnamn och en kort beskrivning av problemet.</p></details>
+      <details><summary>Kan jag kontakta er via livechatt?</summary><p>Nej. Swedsnus är en mindre e-handel och kundservice nås via e-postformulär och telefon under öppettider.</p></details>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="footer-inner"><div class="footer-grid"><div class="footer-brand"><div class="site-logo">Swedsnus.nu</div><p>Tillverkare av portionssnus och lössnus. Hemsjö, Sverige.</p></div><div class="footer-col"><h4>Produkter</h4><ul><li><a href="portion.html">Portionssnus</a></li><li><a href="los.html">Lössnus</a></li><li><a href="gor-eget.html">Gör Eget</a></li><li><a href="tillbehor.html">Tillbehör</a></li></ul></div><div class="footer-col"><h4>Information</h4><ul><li><a href="about.html">Om oss</a></li><li><a href="guide.html">Guide</a></li><li><a href="#">Villkor</a></li><li><a href="#">Integritetspolicy</a></li></ul></div><div class="footer-col"><h4>Kundservice</h4><ul><li><a href="contact.html">Kontakt</a></li><li><a href="#">Leveransinfo</a></li><li><a href="#">Returer</a></li><li><a href="contact.html">FAQ</a></li></ul></div></div><div class="footer-bottom"><span>© 2024 Swedsnus AB · Hemsjö, Sverige · Regleras av Lag (2018:2088) om tobak och liknande produkter · Åldersgräns 18 år</span><div class="payment-icons"><span class="payment-icon">Visa</span><span class="payment-icon">Mastercard</span><span class="payment-icon">Klarna</span><span class="payment-icon">Swish</span></div></div></div></footer>
+  <script src="main.js"></script>
+</body>
+</html>
