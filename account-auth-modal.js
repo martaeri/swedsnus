@@ -21,6 +21,16 @@
     document.body.classList.add('auth-modal-open');
   }
 
+  function syncOrderBreadcrumb() {
+    const current = document.querySelector('[data-order-breadcrumb]');
+    if (!current) return;
+    const id = new URLSearchParams(window.location.search).get('id');
+    current.textContent = id ? `Order ${id}` : 'Order';
+  }
+
+  document.addEventListener('DOMContentLoaded', syncOrderBreadcrumb);
+  syncOrderBreadcrumb();
+
   document.addEventListener('click', event => {
     const logout = event.target.closest('[data-logout]');
     if (logout) {
