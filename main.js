@@ -577,7 +577,6 @@
         startY = event.clientY;
         dragging = true;
         swiped = false;
-        outer.setPointerCapture?.(event.pointerId);
       });
       outer.addEventListener('pointermove', event => {
         if (!dragging) return;
@@ -594,6 +593,9 @@
           go(current + (dx < 0 ? 1 : -1));
           setTimeout(() => { swiped = false; }, 120);
         }
+      });
+      outer.addEventListener('pointercancel', () => {
+        dragging = false;
       });
       outer.addEventListener('click', event => {
         if (swiped) {
