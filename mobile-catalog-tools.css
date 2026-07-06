@@ -57,7 +57,7 @@
   body .site-header .header-icons .nav-toggle {
     position: absolute;
     left: clamp(.75rem, 4vw, 1rem);
-    top: .62rem;
+    top: .42rem;
     display: inline-flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -68,12 +68,103 @@
   }
 
   body .site-header.mobile-condensed .header-icons .nav-toggle {
-    top: .42rem;
+    top: .32rem;
   }
 
   body .site-header .header-search {
     grid-area: search;
     width: 100%;
+  }
+
+  body .mobile-menu-header {
+    justify-content: flex-end;
+    position: relative;
+  }
+
+  body .mobile-menu-title {
+    display: none;
+  }
+
+  body .mobile-menu-content {
+    padding-top: .2rem;
+  }
+
+  body .mobile-menu-section:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: .08rem;
+    position: relative;
+  }
+
+  body .mobile-menu-section:first-child::before {
+    content: 'Sortiment';
+    order: 2;
+    margin: .55rem 0 .18rem;
+    padding: .72rem .1rem .35rem;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-text);
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: .02em;
+  }
+
+  body .mobile-menu-section:first-child .mobile-menu-link {
+    min-height: 42px;
+  }
+
+  body .mobile-menu-section:first-child .mobile-menu-link[href="index.html"] {
+    position: absolute;
+    top: calc(-58px - .2rem);
+    left: 48px;
+    right: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 58px;
+    padding: 0;
+    color: var(--color-text);
+    font-size: 0;
+    font-weight: 900;
+    letter-spacing: .04em;
+    text-transform: none;
+    z-index: 3;
+  }
+
+  body .mobile-menu-section:first-child .mobile-menu-link[href="index.html"]::before {
+    content: 'Swedsnus';
+    font-size: 1.18rem;
+    line-height: 1;
+  }
+
+  body .mobile-menu-section:first-child .mobile-menu-link[href="index.html"]::after {
+    display: none;
+  }
+
+  body .mobile-menu-section:first-child .mobile-menu-link[href="about.html"],
+  body .mobile-menu-section:first-child .mobile-menu-link[href="guide.html"] {
+    order: 1;
+    color: var(--color-text);
+    font-size: 1.02rem;
+    font-weight: 900;
+  }
+
+  body .mobile-menu-section:first-child .mobile-menu-link[href="portion.html"],
+  body .mobile-menu-section:first-child .mobile-menu-link[href="los.html"],
+  body .mobile-menu-section:first-child .mobile-menu-link[href="gor-eget.html"],
+  body .mobile-menu-section:first-child .mobile-menu-link[href="tillbehor.html"] {
+    order: 3;
+    min-height: 36px;
+    padding-left: .85rem;
+    color: var(--color-text-muted);
+    font-size: .88rem;
+    font-weight: 700;
+  }
+
+  body .mobile-menu-section:first-child .mobile-menu-link[href="portion.html"]::after,
+  body .mobile-menu-section:first-child .mobile-menu-link[href="los.html"]::after,
+  body .mobile-menu-section:first-child .mobile-menu-link[href="gor-eget.html"]::after,
+  body .mobile-menu-section:first-child .mobile-menu-link[href="tillbehor.html"]::after {
+    opacity: .45;
   }
 
   body .catalog-page .catalog-mobile-tools,
