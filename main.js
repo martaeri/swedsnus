@@ -5,9 +5,10 @@
   const CART_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
   const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
   const orders = [
-    { id: 'SW-10482', date: '2026-06-28', status: 'Levererad', total: '867 kr', items: 'Spacemint Premium 15 dosor, Robust 40 dosor' },
-    { id: 'SW-10361', date: '2026-05-17', status: 'Levererad', total: '549 kr', items: 'Spacemint Rebell 2-pack' },
-    { id: 'SW-10224', date: '2026-04-03', status: 'Returnerad', total: '289 kr', items: 'White RX Slim 15 dosor' }
+    { id: 'SW-10504', date: '2026-07-05', status: 'På väg', current: true, total: '989 kr', items: ['Lössnus Grov Express 40 Dosor'], eta: 'Beräknad leverans: 2026-07-08', tracking: 'PN-735904-SW' },
+    { id: 'SW-10482', date: '2026-06-28', status: 'Levererad', current: false, total: '867 kr', items: ['Spacemint Premium 15 dosor', 'Robust 40 dosor'], eta: 'Levererad 2026-07-01', tracking: 'PN-732884-SW' },
+    { id: 'SW-10361', date: '2026-05-17', status: 'Levererad', current: false, total: '549 kr', items: ['Spacemint Rebell 2-pack'], eta: 'Levererad 2026-05-20', tracking: 'PN-712409-SW' },
+    { id: 'SW-10224', date: '2026-04-03', status: 'Returnerad', current: false, total: '289 kr', items: ['White RX Slim 15 dosor'], eta: 'Retur hanterad 2026-04-12', tracking: 'PN-690122-SW' }
   ];
   let pendingLoginAction = null;
 
@@ -15,7 +16,7 @@
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
   function loadStyles() {
-    ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css', 'mobile-polish.css', 'account.css'].forEach(href => {
+    ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css', 'mobile-polish.css', 'account.css', 'support.css'].forEach(href => {
       if (!$(`link[href="${href}"]`)) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
@@ -80,6 +81,7 @@
   }
 
   function normalizeProductCard(card) {
+    if (!card || card.dataset.normalized === 'true') return;
     if (!card.dataset.href) card.dataset.href = 'product.html';
     const product = productFromCard(card);
     card.dataset.productId = product.id;
@@ -115,6 +117,7 @@
       card.appendChild(bookmark);
     }
     $('.bookmark-toggle', card).dataset.productId = product.id;
+    card.dataset.normalized = 'true';
   }
   function normalizeCards() { $$('.product-card').forEach(normalizeProductCard); syncBookmarkButtons(); }
   function syncBookmarkButtons() {
@@ -154,6 +157,7 @@
     if (count) count.textContent = `${bookmarks.length} ${bookmarks.length === 1 ? 'produkt' : 'produkter'}`;
     list.classList.add('product-grid', 'bookmarks-product-grid');
     list.innerHTML = bookmarks.length ? bookmarks.map(productCardMarkup).join('') : '<div class="bookmarks-empty">Du har inga sparade produkter än.</div>';
+    normalizeCards();
   }
 
   function addCartItem(product, quantity = 1) {
@@ -188,8 +192,10 @@
     if (!page) return;
     const cart = readStore(CART_KEY);
     const qty = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-    $('[data-cart-summary-count]', page) && ($('[data-cart-summary-count]', page).textContent = `${qty} ${qty === 1 ? 'artikel' : 'artiklar'}`);
-    $('[data-cart-summary-total]', page) && ($('[data-cart-summary-total]', page).textContent = `${cartTotal(cart).toLocaleString('sv-SE')} kr`);
+    const summaryCount = $('[data-cart-summary-count]', page);
+    const summaryTotal = $('[data-cart-summary-total]', page);
+    if (summaryCount) summaryCount.textContent = `${qty} ${qty === 1 ? 'artikel' : 'artiklar'}`;
+    if (summaryTotal) summaryTotal.textContent = `${cartTotal(cart).toLocaleString('sv-SE')} kr`;
     const list = $('[data-cart-items]', page);
     if (!list) return;
     list.innerHTML = cart.length ? cart.map((item, index) => `<article class="cart-page-item"><a href="${escapeHtml(item.href || 'product.html')}" class="cart-page-img">Produktbild</a><div class="cart-page-main">${item.badge ? `<span class="product-card-badge">${escapeHtml(item.badge)}</span>` : ''}<h3><a href="${escapeHtml(item.href || 'product.html')}">${escapeHtml(item.name)}</a></h3>${metaMarkup(item.meta)}<p class="cart-page-pack">${escapeHtml(item.pack || '1-pack')}</p></div><div class="cart-page-qty"><button type="button" data-cart-action="decrease" data-index="${index}">−</button><span>${item.quantity || 1}</span><button type="button" data-cart-action="increase" data-index="${index}">+</button></div><strong class="cart-page-price">${escapeHtml(item.price || '')}</strong><button class="cart-page-remove" type="button" data-cart-action="remove" data-index="${index}" aria-label="Ta bort produkt">×</button></article>`).join('') : '<div class="cart-empty-page">Din kundvagn är tom.</div>';
@@ -247,7 +253,7 @@
           if (redirect) window.location.href = redirect;
         }
         showToast('Du är inloggad');
-        renderLoginPage(); renderAccountPage(); renderBookmarksPage();
+        renderLoginPage(); renderAccountPage(); renderBookmarksPage(); renderOrderPage();
       });
     });
     $$('[data-auth-tab]', root).forEach(tab => {
@@ -266,11 +272,10 @@
     document.body.classList.toggle('is-logged-in', active);
     document.body.classList.toggle('is-logged-out', !active);
     $$('a[href="login.html"], a[href="customer.html"], a[href="account.html"]').forEach(link => {
-      if (link.getAttribute('href') !== 'bookmarks.html') link.href = active ? 'account.html' : 'customer.html';
+      link.href = active ? 'account.html' : 'customer.html';
       link.title = active ? 'Mina sidor' : 'Logga in';
       link.setAttribute('aria-label', active ? 'Mina sidor' : 'Logga in');
     });
-    $$('[data-account-status]').forEach(item => { item.textContent = active ? 'Inloggad' : 'Utloggad'; });
     syncBookmarkButtons();
   }
   function renderLoginPage() {
@@ -281,18 +286,32 @@
       : `<div class="auth-page-card"><span class="account-kicker">Mina sidor</span><h1>Logga in eller skapa konto</h1><p>Det här är en prototyp. Du kan fortsätta utan riktiga uppgifter för att testa sparade produkter och Mina sidor.</p>${authPanels()}</div>`;
     bindAuth(page); bindLogout(page);
   }
-  function orderMarkup(order, compact = false) { return `<article class="order-card"><div><span class="order-id">${escapeHtml(order.id)}</span><h3>${escapeHtml(order.status)}</h3><p>${escapeHtml(order.items)}</p><small>${escapeHtml(order.date)} · ${escapeHtml(order.total)}</small></div><div class="order-actions"><button type="button" class="btn btn-outline btn-small" data-demo-action="reorder">Beställ igen</button>${compact ? '' : '<button type="button" class="btn btn-outline btn-small" data-demo-action="return">Hantera retur</button>'}</div></article>`; }
+
+  function orderItemsText(order) { return Array.isArray(order.items) ? order.items.join(', ') : order.items; }
+  function orderMarkup(order, compact = false) {
+    return `<article class="order-card"><div><span class="order-id">${escapeHtml(order.id)}</span><h3>${escapeHtml(order.status)}</h3><p>${escapeHtml(orderItemsText(order))}</p><small>${escapeHtml(order.date)} · ${escapeHtml(order.total)}</small></div><div class="order-actions"><a class="btn btn-outline btn-small" href="order.html?id=${encodeURIComponent(order.id)}">Visa order</a>${order.current ? '<a class="btn btn-outline btn-small" href="order.html?id=' + encodeURIComponent(order.id) + '">Spåra</a>' : compact ? '' : '<a class="btn btn-outline btn-small" href="order.html?id=' + encodeURIComponent(order.id) + '">Hantera retur</a>'}</div></article>`;
+  }
   function renderAccountPage() {
     const page = $('[data-account-page]');
     if (!page) return;
     if (!loggedIn()) { page.innerHTML = requireMarkup('Mina sidor visas först när du är inloggad.', 'customer.html?redirect=account.html'); return; }
     const bookmarks = readStore(BOOKMARKS_KEY);
     const cartQty = readStore(CART_KEY).reduce((sum, item) => sum + (item.quantity || 1), 0);
-    page.innerHTML = `<div class="account-layout"><aside class="account-sidebar"><span class="account-kicker">Mina sidor</span><h2>Hej!</h2><p>Du är inloggad i prototypläge.</p><button class="account-tab active" type="button" data-account-tab="overview">Översikt</button><button class="account-tab" type="button" data-account-tab="orders">Orderhistorik</button><button class="account-tab" type="button" data-account-tab="saved">Sparade produkter</button><button class="account-tab" type="button" data-account-tab="settings">Inställningar</button><button class="btn btn-outline account-logout" type="button" data-logout>Logga ut</button></aside><section class="account-main"><div class="account-panel" data-account-panel="overview"><h1>Översikt</h1><div class="account-stat-grid"><div class="account-stat"><span>Sparade produkter</span><strong>${bookmarks.length}</strong></div><div class="account-stat"><span>Produkter i kundvagn</span><strong>${cartQty}</strong></div><div class="account-stat"><span>Senaste order</span><strong>${orders[0].id}</strong></div></div><div class="account-section"><h2>Senaste order</h2>${orders.slice(0, 2).map(o => orderMarkup(o, true)).join('')}</div><div class="account-section account-help"><h2>Relevant innehåll</h2><div class="account-help-grid"><article><h3>Leverans och returer</h3><p>Snabb åtkomst till returärenden och leveransinformation.</p></article><article><h3>Ålderskontroll</h3><p>Plats för verifieringsstatus när sidan kopplas till riktig e-handel.</p></article><article><h3>Preferenser</h3><p>Framtida plats för nyhetsbrev, språk och kommunikationsval.</p></article></div></div></div><div class="account-panel is-hidden" data-account-panel="orders"><h1>Orderhistorik</h1><p>Se tidigare köp, beställ igen eller starta ett returärende.</p>${orders.map(orderMarkup).join('')}</div><div class="account-panel is-hidden" data-account-panel="saved"><h1>Sparade produkter</h1><div class="account-saved-grid">${bookmarks.length ? bookmarks.map(productCardMarkup).join('') : '<div class="bookmarks-empty">Du har inga sparade produkter än.</div>'}</div></div><div class="account-panel is-hidden" data-account-panel="settings"><h1>Inställningar</h1><div class="settings-grid"><div class="settings-card"><h2>Personuppgifter</h2><p>Här kan kunden senare uppdatera namn, e-post och adress.</p><button class="btn btn-primary" type="button" data-demo-action="settings">Spara ändringar</button></div><div class="settings-card danger-zone"><h2>Radera konto</h2><p>Visuell prototyp för kontoradering.</p><button class="btn btn-outline" type="button" data-demo-action="delete">Radera konto</button></div></div></div></section></div>`;
+    const currentOrders = orders.filter(order => order.current);
+    const pastOrders = orders.filter(order => !order.current);
+    page.innerHTML = `<div class="account-layout"><aside class="account-sidebar"><span class="account-kicker">Mina sidor</span><h2>Hej!</h2><p>Du är inloggad i prototypläge.</p><button class="account-tab active" type="button" data-account-tab="overview">Översikt</button><button class="account-tab" type="button" data-account-tab="orders">Orderhistorik</button><button class="account-tab" type="button" data-account-tab="saved">Sparade produkter</button><button class="account-tab" type="button" data-account-tab="settings">Inställningar</button><button class="btn btn-outline account-logout" type="button" data-logout>Logga ut</button></aside><section class="account-main"><div class="account-panel" data-account-panel="overview"><h1>Översikt</h1><div class="account-stat-grid"><div class="account-stat"><span>Sparade produkter</span><strong>${bookmarks.length}</strong></div><div class="account-stat"><span>Produkter i kundvagn</span><strong>${cartQty}</strong></div><div class="account-stat"><span>Aktuell order</span><strong>${currentOrders[0]?.id || '—'}</strong></div></div><div class="account-section"><h2>Aktuella beställningar</h2>${currentOrders.map(order => orderMarkup(order, true)).join('') || '<p>Du har inga aktuella beställningar.</p>'}</div><div class="account-section"><h2>Senaste tidigare order</h2>${pastOrders.slice(0, 2).map(order => orderMarkup(order, true)).join('')}</div><div class="account-section account-help"><h2>Relevant innehåll</h2><div class="account-help-grid"><article><h3>Leverans och returer</h3><p>Snabb åtkomst till returärenden och leveransinformation.</p></article><article><h3>Ålderskontroll</h3><p>Plats för verifieringsstatus när sidan kopplas till riktig e-handel.</p></article><article><h3>Kundservice</h3><p><a href="contact.html">Kontakta kundservice</a> om något saknas eller behöver ändras.</p></article></div></div></div><div class="account-panel is-hidden" data-account-panel="orders"><h1>Beställningar</h1><div class="account-section"><h2>Aktuella order</h2>${currentOrders.map(order => orderMarkup(order)).join('') || '<p>Inga aktuella order.</p>'}</div><div class="account-section"><h2>Tidigare order</h2>${pastOrders.map(orderMarkup).join('')}</div></div><div class="account-panel is-hidden" data-account-panel="saved"><h1>Sparade produkter</h1><div class="account-saved-grid">${bookmarks.length ? bookmarks.map(productCardMarkup).join('') : '<div class="bookmarks-empty">Du har inga sparade produkter än.</div>'}</div></div><div class="account-panel is-hidden" data-account-panel="settings"><h1>Inställningar</h1><div class="settings-grid"><div class="settings-card"><h2>Personuppgifter</h2><p>Här kan kunden senare uppdatera namn, e-post och adress.</p><button class="btn btn-primary" type="button" data-demo-action="settings">Spara ändringar</button></div><div class="settings-card danger-zone"><h2>Radera konto</h2><p>Visuell prototyp för kontoradering.</p><button class="btn btn-outline" type="button" data-demo-action="delete">Radera konto</button></div></div></div></section></div>`;
     bindAccountTabs(page); bindLogout(page); normalizeCards();
   }
+  function renderOrderPage() {
+    const page = $('[data-order-page]');
+    if (!page) return;
+    if (!loggedIn()) { page.innerHTML = requireMarkup('Logga in för att visa orderdetaljer.', 'customer.html?redirect=order.html'); return; }
+    const id = new URLSearchParams(window.location.search).get('id') || orders[0].id;
+    const order = orders.find(item => item.id === id) || orders[0];
+    page.innerHTML = `<div class="order-detail-layout"><section><article class="order-detail-card"><span class="order-status-pill">${escapeHtml(order.status)}</span><h1>Order ${escapeHtml(order.id)}</h1><p>${escapeHtml(order.eta)}</p><div class="order-detail-actions">${order.current ? '<button class="btn btn-primary" type="button" data-demo-action="track">Spåra order</button>' : '<button class="btn btn-primary" type="button" data-demo-action="return">Hantera retur</button><button class="btn btn-outline" type="button" data-demo-action="reorder">Beställ igen</button>'}<a class="btn btn-outline" href="account.html">Till Mina sidor</a></div></article><section class="order-timeline"><h2>${order.current ? 'Spårning' : 'Orderstatus'}</h2><ol><li>Order mottagen</li><li>Order behandlad</li><li>${order.current ? 'På väg till kund' : 'Levererad'}</li>${order.current ? '<li>Väntar på leverans</li>' : '<li>Retur/reklamation kan startas från denna vy</li>'}</ol></section><section class="order-items-panel"><h2>Produkter</h2>${order.items.map(item => `<div class="order-item-row"><span>${escapeHtml(item)}</span><strong>${escapeHtml(order.total)}</strong></div>`).join('')}</section></section><aside class="order-summary-panel"><h2>Sammanfattning</h2><p><strong>Datum:</strong> ${escapeHtml(order.date)}</p><p><strong>Totalt:</strong> ${escapeHtml(order.total)}</p><p><strong>Spårningsnr:</strong> ${escapeHtml(order.tracking)}</p><p>${order.current ? 'Denna order är inte levererad ännu och visar därför spårningsåtgärder.' : 'Denna order är tidigare levererad och visar därför retur- och ombeställningsåtgärder.'}</p></aside></div>`;
+  }
   function bindAccountTabs(root) { $$('[data-account-tab]', root).forEach(tab => tab.addEventListener('click', () => { $$('[data-account-tab]', root).forEach(item => item.classList.toggle('active', item === tab)); $$('[data-account-panel]', root).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.accountPanel !== tab.dataset.accountTab)); })); }
-  function bindLogout(root = document) { $$('[data-logout]', root).forEach(button => { if (button.dataset.bound) return; button.dataset.bound = 'true'; button.addEventListener('click', () => { setLoggedIn(false); showToast('Du är utloggad'); renderLoginPage(); renderAccountPage(); renderBookmarksPage(); }); }); }
+  function bindLogout(root = document) { $$('[data-logout]', root).forEach(button => { if (button.dataset.bound) return; button.dataset.bound = 'true'; button.addEventListener('click', () => { setLoggedIn(false); showToast('Du är utloggad'); renderLoginPage(); renderAccountPage(); renderBookmarksPage(); renderOrderPage(); }); }); }
 
   function initThemeSwitcher() {
     const saved = localStorage.getItem('swedsnus-theme') || '1';
@@ -310,7 +329,7 @@
     const categories = uniqueLinks($$('.subnav-inner a, .sub-dropdown a').map(a => ({ href: a.getAttribute('href') || '#', text: a.textContent.trim() })).filter(a => a.text));
     const pages = uniqueLinks($$('.subheader-inner > li > a, .main-nav > li > a').map(a => ({ href: a.getAttribute('href') || '#', text: a.childNodes[0]?.textContent?.trim() || a.textContent.trim() })).filter(a => a.text && a.href !== '#'));
     const links = uniqueLinks([...categories, ...pages]);
-    panel.innerHTML = `<div class="mobile-menu-header"><span class="mobile-menu-title">Meny</span><button class="mobile-menu-close" type="button" aria-label="Stäng meny">×</button></div><div class="mobile-menu-content"><nav class="mobile-menu-section">${links.map(item => `<a class="mobile-menu-link" href="${escapeHtml(item.href)}">${escapeHtml(item.text)}</a>`).join('')}</nav><nav class="mobile-menu-section"><a class="mobile-menu-link secondary" href="${loggedIn() ? 'account.html' : 'customer.html'}">${loggedIn() ? 'Mina sidor' : 'Mitt konto / logga in'}</a><a class="mobile-menu-link secondary" href="#">Kundservice</a></nav></div>`;
+    panel.innerHTML = `<div class="mobile-menu-header"><span class="mobile-menu-title">Meny</span><button class="mobile-menu-close" type="button" aria-label="Stäng meny">×</button></div><div class="mobile-menu-content"><nav class="mobile-menu-section">${links.map(item => `<a class="mobile-menu-link" href="${escapeHtml(item.href)}">${escapeHtml(item.text)}</a>`).join('')}</nav><nav class="mobile-menu-section"><a class="mobile-menu-link secondary" href="${loggedIn() ? 'account.html' : 'customer.html'}">${loggedIn() ? 'Mina sidor' : 'Mitt konto / logga in'}</a><a class="mobile-menu-link secondary" href="contact.html">Kundservice</a></nav></div>`;
     document.body.append(overlay, panel);
     const toggle = $('.nav-toggle');
     const close = () => { panel.classList.remove('open'); overlay.classList.remove('show'); document.body.classList.remove('mobile-menu-open'); panel.setAttribute('aria-hidden', 'true'); toggle?.setAttribute('aria-expanded', 'false'); };
@@ -321,6 +340,7 @@
     $$('a', panel).forEach(link => link.addEventListener('click', close));
   }
   function initNavigation() {
+    $$('a[href="#"]').forEach(link => { if (link.textContent.trim().toLowerCase() === 'kontakt') link.href = 'contact.html'; });
     $$('a[href="portion.html#gor-eget"], a[href="index.html#gor-eget"], a[href$="#gor-eget"]').forEach(link => link.href = 'gor-eget.html');
     const file = window.location.pathname.split('/').pop() || 'index.html';
     $$('.subheader-inner a, .subnav-inner a, .main-nav a').forEach(link => { const href = (link.getAttribute('href') || '').split('#')[0].split('/').pop(); if (href && href === file) link.classList.add('active'); });
@@ -359,12 +379,19 @@
     $$('.pack-option').forEach(option => option.addEventListener('click', () => { $$('.pack-option').forEach(item => item.classList.remove('selected')); option.classList.add('selected'); const radio = $('input[type=radio]', option); if (radio) radio.checked = true; const price = $('.product-detail-price'); if (price && option.dataset.price) price.innerHTML = `${option.dataset.price} <small>${option.dataset.pack || '1-pack'}</small>`; }));
     $('.add-to-cart-main .btn-primary')?.addEventListener('click', event => { event.preventDefault(); addCartItem(productFromPage(), parseInt(qty?.value || '1', 10) || 1); showToast('Tillagd i kundvagnen'); });
   }
+  function bindSupportForm() {
+    $$('[data-support-form]').forEach(form => {
+      if (form.dataset.bound) return;
+      form.dataset.bound = 'true';
+      form.addEventListener('submit', event => { event.preventDefault(); showToast('Kundserviceärende markerat i prototypen'); form.reset(); });
+    });
+  }
   function handleClicks() {
-    document.addEventListener('change', event => { const select = event.target.closest('.pack-select'); if (select) normalizeProductCard(select.closest('.product-card')); });
+    document.addEventListener('change', event => { const select = event.target.closest('.pack-select'); if (select) { const card = select.closest('.product-card'); if (card) { delete card.dataset.normalized; normalizeProductCard(card); } } });
     document.addEventListener('click', event => {
-      const link = event.target.closest('a[href="bookmarks.html"], a[href="account.html"], a[href="customer.html"], a[href="login.html"]');
+      const link = event.target.closest('a[href="bookmarks.html"], a[href="account.html"], a[href="customer.html"], a[href="login.html"], a[href="order.html"]');
       if (link && link.getAttribute('href') === 'bookmarks.html' && !loggedIn()) { event.preventDefault(); requireLogin('Logga in för att se dina sparade produkter.', () => { window.location.href = 'bookmarks.html'; }); return; }
-      if (link && (link.getAttribute('href') === 'account.html' || link.getAttribute('href') === 'login.html') && !loggedIn()) { event.preventDefault(); window.location.href = 'customer.html?redirect=account.html'; return; }
+      if (link && (link.getAttribute('href') === 'account.html' || link.getAttribute('href') === 'login.html' || link.getAttribute('href') === 'order.html') && !loggedIn()) { event.preventDefault(); window.location.href = 'customer.html?redirect=' + encodeURIComponent(link.getAttribute('href')); return; }
       const bookmark = event.target.closest('.bookmark-toggle');
       if (bookmark) { event.preventDefault(); event.stopPropagation(); const card = bookmark.closest('.product-card'); const product = card ? productFromCard(card) : productFromPage(); requireLogin('Logga in eller skapa ett konto för att spara produkter.', () => { const shouldSave = !isBookmarked(product.id); saveBookmark(product, shouldSave); showToast(shouldSave ? 'Sparad produkt' : 'Borttagen från sparade produkter'); }); return; }
       const add = event.target.closest('.add-to-cart-btn');
@@ -375,6 +402,6 @@
       const card = event.target.closest('.product-card'); if (card && !event.target.closest('.pack-select')) window.location.href = card.dataset.href || 'product.html';
     });
   }
-  function init() { loadStyles(); syncAccountState(); initThemeSwitcher(); initNavigation(); initFilters(); initCatalogControls(); initCarousels(); renderLoginPage(); renderAccountPage(); renderBookmarksPage(); normalizeCards(); initProductPage(); updateCartPanel(); renderCartPage(); bindAuth(); bindLogout(); handleClicks(); }
+  function init() { loadStyles(); syncAccountState(); initThemeSwitcher(); initNavigation(); initFilters(); initCatalogControls(); initCarousels(); renderLoginPage(); renderAccountPage(); renderOrderPage(); renderBookmarksPage(); normalizeCards(); initProductPage(); updateCartPanel(); renderCartPage(); bindAuth(); bindLogout(); bindSupportForm(); handleClicks(); }
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
 })();
