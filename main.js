@@ -5,7 +5,7 @@
   const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
 
   function loadStyles() {
-    ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css', 'mobile-polish.css'].forEach(href => {
+    ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css', 'mobile-polish.css', 'category-extra.css'].forEach(href => {
       if (!document.querySelector(`link[href="${href}"]`)) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
@@ -118,6 +118,7 @@
 
   function isPortionLike(card) {
     if (isAccessory(card) || isAroma(card)) return false;
+    if (card.closest('.vitt-showcase-track') || document.body.classList.contains('vitt-page')) return false;
     const text = card.textContent.toLowerCase();
     return ['portion', 'white', 'premium', 'rebell', 'rx slim', 'mini', 'instant', 'super dry', 'notch', 'fat boy', 'compact', 'large'].some(term => text.includes(term));
   }
@@ -125,19 +126,22 @@
   function isSnusProduct(card) {
     if (isAccessory(card) || isAroma(card)) return false;
     const text = card.textContent.toLowerCase();
-    return ['snus', 'portion', 'white', 'premium', 'rebell', 'rx slim', 'mini', 'instant', 'super dry', 'notch', 'fat boy', 'lös'].some(term => text.includes(term));
+    return ['snus', 'portion', 'white', 'premium', 'rebell', 'rx slim', 'mini', 'instant', 'super dry', 'notch', 'fat boy', 'lös', 'vitt'].some(term => text.includes(term));
   }
 
   function inferSize(card) {
+    const format = metaValue(card, 'Format');
+    if (format) return format;
     const text = card.textContent.toLowerCase();
-    if (text.includes('rx slim')) return 'RX Slim';
+    if (text.includes('rx slim') || text.includes('slim')) return 'Slim';
     if (text.includes('mini')) return 'Mini';
     if (text.includes('compact')) return 'Compact';
+    if (text.includes('large') || text.includes('fat boy') || text.includes('notch') || text.includes('super dry')) return 'Large';
+    if (text.includes('normal')) return 'Normal';
     if (text.includes('rebell')) return 'Rebell';
     if (text.includes('premium')) return 'Premium';
     if (text.includes('instant')) return 'Instant';
-    if (text.includes('large') || text.includes('fat boy') || text.includes('notch') || text.includes('super dry')) return 'Large';
-    return card.querySelector('.product-card-badge')?.textContent?.trim() || 'Premium';
+    return card.querySelector('.product-card-badge')?.textContent?.trim() || 'Normal';
   }
 
   function inferStrength(card) {
@@ -200,19 +204,20 @@
     const actions = card.querySelector('.product-card-actions');
     const price = card.querySelector('.product-card-price');
     const button = card.querySelector('.add-to-cart-btn');
-    if (!actions || !price || !button) return;
-    let bottom = card.querySelector('.product-card-bottom');
-    if (!bottom) {
-      bottom = document.createElement('div');
-      bottom.className = 'product-card-bottom';
-      actions.insertAdjacentElement('afterend', bottom);
+    if (actions && price && button) {
+      let bottom = card.querySelector('.product-card-bottom');
+      if (!bottom) {
+        bottom = document.createElement('div');
+        bottom.className = 'product-card-bottom';
+        actions.insertAdjacentElement('afterend', bottom);
+      }
+      bottom.appendChild(price);
+      bottom.appendChild(button);
+      button.type = 'button';
+      if (!button.querySelector('svg')) button.innerHTML = CART_ICON;
+      const per = unitPrice(selectedOption(card));
+      price.innerHTML = `<span class="unit-price">${escapeHtml(per || selectedPrice(card))}</span><small>per produkt</small>`;
     }
-    bottom.appendChild(price);
-    bottom.appendChild(button);
-    button.type = 'button';
-    if (!button.querySelector('svg')) button.innerHTML = CART_ICON;
-    const per = unitPrice(selectedOption(card));
-    price.innerHTML = `<span class="unit-price">${escapeHtml(per || selectedPrice(card))}</span><small>per produkt</small>`;
   }
 
   function normalizeAllProductCards() {
@@ -356,6 +361,32 @@
     });
   }
 
+  function insertAfter(reference, node) {
+    reference?.parentNode?.insertBefore(node, reference.nextSibling);
+  }
+
+  function ensureVittSnusLinks() {
+    document.querySelectorAll('.sub-dropdown').forEach(dropdown => {
+      if (!dropdown.querySelector('a[href="vitt-snus.html"]')) {
+        const li = document.createElement('li');
+        li.innerHTML = '<a href="vitt-snus.html">Vitt snus</a>';
+        const los = Array.from(dropdown.querySelectorAll('a')).find(link => link.getAttribute('href') === 'los.html')?.closest('li');
+        los ? insertAfter(los, li) : dropdown.appendChild(li);
+      }
+      dropdown.querySelectorAll('a[href="portion.html#gor-eget"], a[href="index.html#gor-eget"], a[href$="#gor-eget"]').forEach(link => link.href = 'gor-eget.html');
+    });
+    document.querySelectorAll('.subnav-inner').forEach(nav => {
+      if (!nav.querySelector('a[href="vitt-snus.html"]')) {
+        const link = document.createElement('a');
+        link.href = 'vitt-snus.html';
+        link.textContent = 'Vitt snus';
+        const los = Array.from(nav.querySelectorAll('a')).find(item => item.getAttribute('href') === 'los.html');
+        los ? insertAfter(los, link) : nav.appendChild(link);
+      }
+      nav.querySelectorAll('a[href="portion.html#gor-eget"], a[href="index.html#gor-eget"], a[href$="#gor-eget"]').forEach(link => link.href = 'gor-eget.html');
+    });
+  }
+
   function uniqueLinks(links) {
     const seen = new Set();
     return links.filter(link => {
@@ -376,12 +407,7 @@
     const categoryLinks = uniqueLinks(Array.from(document.querySelectorAll('.subnav-inner a, .sub-dropdown a')).map(a => ({ href: a.getAttribute('href') || '#', text: a.textContent.trim() })).filter(item => item.text));
     const pageLinks = uniqueLinks(Array.from(document.querySelectorAll('.subheader-inner > li > a, .main-nav > li > a')).map(a => ({ href: a.getAttribute('href') || '#', text: a.childNodes[0]?.textContent?.trim() || a.textContent.trim() })).filter(item => item.text && item.href !== '#'));
     const primary = uniqueLinks([...categoryLinks, ...pageLinks]);
-    panel.innerHTML = `
-      <div class="mobile-menu-header"><span class="mobile-menu-title">Meny</span><button class="mobile-menu-close" type="button" aria-label="Stäng meny">×</button></div>
-      <div class="mobile-menu-content">
-        <nav class="mobile-menu-section">${primary.map(item => `<a class="mobile-menu-link" href="${escapeHtml(item.href)}">${escapeHtml(item.text)}</a>`).join('')}</nav>
-        <nav class="mobile-menu-section"><a class="mobile-menu-link secondary" href="login.html">Mitt konto / logga in</a><a class="mobile-menu-link secondary" href="#">Kundservice</a></nav>
-      </div>`;
+    panel.innerHTML = `<div class="mobile-menu-header"><span class="mobile-menu-title">Meny</span><button class="mobile-menu-close" type="button" aria-label="Stäng meny">×</button></div><div class="mobile-menu-content"><nav class="mobile-menu-section">${primary.map(item => `<a class="mobile-menu-link" href="${escapeHtml(item.href)}">${escapeHtml(item.text)}</a>`).join('')}</nav><nav class="mobile-menu-section"><a class="mobile-menu-link secondary" href="login.html">Mitt konto / logga in</a><a class="mobile-menu-link secondary" href="#">Kundservice</a></nav></div>`;
     document.body.append(overlay, panel);
     const toggle = document.querySelector('.nav-toggle');
     const close = () => {
@@ -433,15 +459,27 @@
   }
 
   function initNavigation() {
+    ensureVittSnusLinks();
     document.querySelectorAll('a[href="portion.html#gor-eget"], a[href="index.html#gor-eget"], a[href$="#gor-eget"]').forEach(link => link.href = 'gor-eget.html');
     const currentFile = window.location.pathname.split('/').pop() || 'index.html';
     if ((currentFile === 'portion.html' || currentFile === 'index.html') && window.location.hash === '#gor-eget') window.location.replace('gor-eget.html');
     document.querySelectorAll('.subheader-inner a, .subnav-inner a, .main-nav a').forEach(link => {
       const href = (link.getAttribute('href') || '').split('#')[0].split('/').pop();
-      if (href && href === currentFile) link.classList.add('active');
+      link.classList.toggle('active', !!href && href === currentFile);
     });
     initMobileMenu();
     initStickyHeader();
+  }
+
+  function initVittShowcase() {
+    const currentFile = window.location.pathname.split('/').pop() || 'index.html';
+    if (currentFile !== 'index.html' || document.querySelector('.vitt-showcase-section')) return;
+    const feature = document.querySelector('.feature-strip-fullbleed');
+    if (!feature) return;
+    const section = document.createElement('section');
+    section.className = 'vitt-showcase-section';
+    section.innerHTML = `<div class="vitt-showcase-shell"><div class="vitt-showcase-copy"><span class="vitt-showcase-kicker">Ny produktgrupp</span><h2>Vitt snus</h2><p>En egen yta för kommande tobaksfria produkter. Layouten skiljer sig från de övriga karusellerna med en friare, horisontell produktvisning.</p><div class="vitt-tag-row"><span>Normal</span><span>Slim</span><span>Mini</span><span>Compact</span><span>Large</span></div><div class="btn-row"><a class="btn btn-primary" href="vitt-snus.html">Se vitt snus</a></div></div><div class="vitt-showcase-track-wrap"><div class="vitt-showcase-track"><div class="product-card" data-href="vitt-snus.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Normal</span><p class="product-card-name">Vitt Snus Normal Mint</p><p class="product-card-meta">Format: <span>Normal</span></p><p class="product-card-meta">Smak: <span>Mint</span></p><div class="product-card-actions"><select class="pack-select"><option data-price="249 kr" data-pack="1-pack">1-pack — 249 kr</option></select><button class="add-to-cart-btn">+</button></div><p class="product-card-price">249 kr <small>1-pack</small></p></div></div><div class="product-card" data-href="vitt-snus.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Slim</span><p class="product-card-name">Vitt Snus Slim Citrus</p><p class="product-card-meta">Format: <span>Slim</span></p><p class="product-card-meta">Smak: <span>Klassisk</span></p><div class="product-card-actions"><select class="pack-select"><option data-price="259 kr" data-pack="1-pack">1-pack — 259 kr</option></select><button class="add-to-cart-btn">+</button></div><p class="product-card-price">259 kr <small>1-pack</small></p></div></div><div class="product-card" data-href="vitt-snus.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Compact</span><p class="product-card-name">Vitt Snus Compact Berry</p><p class="product-card-meta">Format: <span>Compact</span></p><p class="product-card-meta">Smak: <span>Bergamott</span></p><div class="product-card-actions"><select class="pack-select"><option data-price="239 kr" data-pack="1-pack">1-pack — 239 kr</option></select><button class="add-to-cart-btn">+</button></div><p class="product-card-price">239 kr <small>1-pack</small></p></div></div></div></div></div>`;
+    insertAfter(feature, section);
   }
 
   function sortGrid(grid, mode) {
@@ -471,7 +509,7 @@
       if (!tools || !sidebar || !grid) return;
       const controls = document.createElement('div');
       controls.className = 'catalog-mobile-tools';
-      controls.innerHTML = `<button class="catalog-filter-toggle" type="button" aria-expanded="false">Filter</button><select class="catalog-sort-select" aria-label="Sortera produkter"><option value="relevance">Relevans</option><option value="price-asc">Pris: lägst först</option><option value="price-desc">Pris: högst först</option><option value="alpha">A–Ö</option><option value="alpha-desc">Ö–A</option><option value="newest">Nyast först</option></select>`;
+      controls.innerHTML = '<button class="catalog-filter-toggle" type="button" aria-expanded="false">Filter</button><select class="catalog-sort-select" aria-label="Sortera produkter"><option value="relevance">Relevans</option><option value="price-asc">Pris: lägst först</option><option value="price-desc">Pris: högst först</option><option value="alpha">A–Ö</option><option value="alpha-desc">Ö–A</option><option value="newest">Nyast först</option></select>';
       tools.insertAdjacentElement('beforebegin', controls);
       const overlay = document.createElement('div');
       overlay.className = 'catalog-filter-overlay';
@@ -698,6 +736,7 @@
     loadStyles();
     initThemeSwitcher();
     initNavigation();
+    initVittShowcase();
     initFilters();
     initCatalogControls();
     initCarousels();
