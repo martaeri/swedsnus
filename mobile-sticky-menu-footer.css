@@ -1,6 +1,0 @@
-/* Hamburger menu removed. Keep legacy remnants non-rendering if older scripts still append them. */
-.nav-toggle,
-.mobile-menu-overlay,
-.mobile-menu-panel {
-  display: none !important;
-}
