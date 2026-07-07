@@ -3,30 +3,78 @@
 }
 
 .has-collapsible-copy .banner-copy-collapse {
-  max-height: 3.75rem;
+  position: relative;
+  max-height: 4.15rem;
   overflow: hidden;
-  transition: max-height .24s ease;
+  padding-bottom: 2rem;
+  transition: max-height .24s ease, padding-bottom .24s ease;
+}
+
+.has-collapsible-copy .banner-copy-collapse::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  height: 3.2rem;
+  background: linear-gradient(to bottom, rgba(67, 80, 90, 0), var(--color-footer-bg) 68%, var(--color-footer-bg));
+  pointer-events: none;
+  transition: opacity .2s ease;
+}
+
+.fullbleed-section.light .banner-copy-collapse::after {
+  background: linear-gradient(to bottom, rgba(233, 228, 216, 0), var(--color-surface-2) 68%, var(--color-surface-2));
 }
 
 .has-collapsible-copy.is-expanded .banner-copy-collapse {
   max-height: 28rem;
+  padding-bottom: 1.9rem;
+}
+
+.has-collapsible-copy.is-expanded .banner-copy-collapse::after {
+  opacity: 0;
 }
 
 .banner-copy-toggle {
+  position: absolute;
+  left: 0;
+  bottom: .08rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: .32rem;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .02em;
+  text-transform: none;
+}
+
+.banner-copy-toggle:hover {
+  color: inherit;
+  opacity: .78;
+}
+
+.banner-toggle-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: .25rem;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  background: transparent;
-  color: inherit;
-  padding: .34rem .78rem;
-  font-family: var(--font-body);
-  font-size: .68rem;
-  font-weight: 800;
-  letter-spacing: .06em;
-  text-transform: uppercase;
+  font-size: 1rem;
+  line-height: 1;
+  transform: translateY(-1px);
+  transition: transform .2s ease;
+}
+
+.has-collapsible-copy.is-expanded .banner-toggle-icon {
+  transform: translateY(-1px) rotate(180deg);
 }
 
 .fullbleed-section.light .banner-copy-toggle {
@@ -308,7 +356,7 @@
   }
 
   .has-collapsible-copy .banner-copy-collapse {
-    max-height: 3.25rem;
+    max-height: 3.95rem;
   }
 }
 

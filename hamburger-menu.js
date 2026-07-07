@@ -114,6 +114,14 @@
     });
   }
 
+  function unwrapBannerCopy(block, collapse, paragraphs, button) {
+    paragraphs.forEach(paragraph => collapse.insertAdjacentElement('beforebegin', paragraph));
+    button.remove();
+    collapse.remove();
+    block.classList.remove('has-collapsible-copy', 'is-expanded');
+    block.dataset.bannerCollapse = 'skipped';
+  }
+
   function initHomepageBannerCollapse() {
     $('.hero .hero-tabs')?.remove();
 
@@ -123,11 +131,14 @@
     ];
 
     blocks.forEach(block => {
-      if (block.dataset.bannerCollapse === 'true') return;
+      if (block.dataset.bannerCollapse) return;
       const paragraphs = $$(':scope > p', block).filter(paragraph => !paragraph.classList.contains('tagline'));
       const text = paragraphs.map(paragraph => paragraph.textContent.trim()).join(' ');
 
-      if (paragraphs.length === 0 || text.length < 95) return;
+      if (paragraphs.length === 0 || text.length < 140) {
+        block.dataset.bannerCollapse = 'skipped';
+        return;
+      }
 
       const collapse = document.createElement('div');
       collapse.className = 'banner-copy-collapse';
@@ -138,17 +149,24 @@
       button.className = 'banner-copy-toggle';
       button.type = 'button';
       button.setAttribute('aria-expanded', 'false');
-      button.textContent = 'Se mer';
-      collapse.insertAdjacentElement('afterend', button);
+      button.innerHTML = '<span>Visa mer</span><span class="banner-toggle-icon" aria-hidden="true">⌄</span>';
+      collapse.appendChild(button);
 
       button.addEventListener('click', () => {
         const expanded = block.classList.toggle('is-expanded');
         button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        button.textContent = expanded ? 'Visa mindre' : 'Se mer';
+        $('.banner-copy-toggle span:first-child', collapse).textContent = expanded ? 'Visa mindre' : 'Visa mer';
       });
 
       block.classList.add('has-collapsible-copy');
       block.dataset.bannerCollapse = 'true';
+
+      requestAnimationFrame(() => {
+        if (!block.classList.contains('has-collapsible-copy')) return;
+        if (collapse.scrollHeight <= collapse.clientHeight + 6) {
+          unwrapBannerCopy(block, collapse, paragraphs, button);
+        }
+      });
     });
   }
 
