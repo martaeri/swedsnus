@@ -77,11 +77,23 @@
     return 2;
   }
 
-  function formatForCard(card) {
+  function stableIndex(value, max) {
+    return slugify(value).split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % max;
+  }
+
+  function isLooseSnusCard(card) {
     const path = window.location.pathname.split('/').pop() || 'index.html';
-    const formatPages = ['portion.html', 'gor-eget.html', 'vitt-snus.html', 'index.html'];
-    if (!formatPages.includes(path)) return '';
-    return textFromMeta(card, 'Format') || $('.product-card-badge', card)?.textContent.trim() || textFromMeta(card, 'Typ');
+    const text = `${$('.product-card-name', card)?.textContent || ''} ${textFromMeta(card, 'Typ')} ${$('.product-card-badge', card)?.textContent || ''}`.toLowerCase();
+    return path === 'los.html' || text.includes('lössnus') || text.includes('lossnus');
+  }
+
+  function cardInfoLine(card, name) {
+    if (isLooseSnusCard(card)) {
+      const text = name.toLowerCase();
+      return { label: 'Malningsgrad', value: text.includes('grov') ? 'Grov' : 'Normal' };
+    }
+    const formats = ['Premium', 'Rebell', 'Compact'];
+    return { label: 'Format', value: formats[stableIndex(name, formats.length)] };
   }
 
   function isSnusCard(card) {
@@ -106,14 +118,52 @@
       if (!body || !name) return;
       const productName = name.textContent.trim();
       const taste = textFromMeta(card, 'Smak') || inferTaste(productName);
-      const format = formatForCard(card);
+      const info = cardInfoLine(card, productName);
       const strength = inferStrength(card, productName);
       const summary = document.createElement('div');
       summary.className = 'snus-card-summary';
-      summary.innerHTML = `<p class="product-card-meta primary-meta">Smak: <span>${taste}</span></p>${format ? `<p class="product-card-meta primary-meta">Format: <span>${format}</span></p>` : ''}<div class="product-card-strength-row"><span>Styrka</span>${strengthDots(strength)}</div>`;
+      summary.innerHTML = `<p class="product-card-meta primary-meta">Smak: <span>${taste}</span></p><p class="product-card-meta primary-meta">${info.label}: <span>${info.value}</span></p><div class="product-card-strength-row">${strengthDots(strength)}</div>`;
       name.insertAdjacentElement('afterend', summary);
       card.classList.add('snus-card-enhanced');
       card.dataset.experienceEnhanced = 'true';
+    });
+  }
+
+  function updateFilterPills() {
+    const path = window.location.pathname.split('/').pop() || 'index.html';
+    const changes = {
+      'portion.html': {
+        'White Portion': { title: 'White Portion', subtitle: 'Färdig att snusa' },
+        'Instant Portion': { title: 'Instant Portion', subtitle: 'Smaksatta snussatser' },
+        'Super Dry': { title: 'Super Dry', subtitle: 'Snussatser' }
+      },
+      'los.html': {
+        'Instant': { title: 'Instant', subtitle: 'Smaksatta snussatser' }
+      },
+      'vitt-snus.html': {
+        'Normal - produktgrupp': { title: 'Normal', subtitle: 'Produktgrupp' },
+        'Slim - produktgrupp': { title: 'Slim', subtitle: 'Produktgrupp' },
+        'Compact - produktgrupp': { title: 'Compact', subtitle: 'Produktgrupp' }
+      },
+      'gor-eget.html': {
+        'Instant Portion': { title: 'Instant Portion', subtitle: 'Smaksatta snussatser' },
+        'Super Dry': { title: 'Super Dry', subtitle: 'Snussatser' }
+      },
+      'tillbehor.html': {
+        'Tillbehör lössnus': { title: 'Lössnus', subtitle: 'Tillbehör till lössnus' },
+        'Tillbehör portionssnus': { title: 'Portionssnus', subtitle: 'Tillbehör till portionssnus' }
+      }
+    }[path];
+    if (!changes) return;
+    $$('.filter-pill').forEach(pill => {
+      const title = $('.filter-pill-title', pill);
+      const subtitle = $('.filter-pill-subtitle', pill);
+      if (!title || !subtitle) return;
+      const current = title.textContent.trim();
+      const next = changes[current];
+      if (!next) return;
+      title.textContent = next.title;
+      subtitle.textContent = next.subtitle;
     });
   }
 
@@ -213,11 +263,12 @@
   function init() {
     loadMobileFixStyles();
     repairAuthTabs();
+    updateFilterPills();
     enhanceCards();
     enhanceProductPage();
     rebuildMobileMenu();
     updateSavedBadge();
-    document.addEventListener('click', () => setTimeout(() => { updateSavedBadge(); enhanceCards(); rebuildMobileMenu(); }, 60));
+    document.addEventListener('click', () => setTimeout(() => { updateSavedBadge(); enhanceCards(); rebuildMobileMenu(); updateFilterPills(); }, 60));
     window.addEventListener('storage', updateSavedBadge);
     window.addEventListener('focus', updateSavedBadge);
   }
