@@ -16,7 +16,7 @@
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
   function loadStyles() {
-    ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css', 'mobile-polish.css', 'account.css', 'support.css', 'category-extra.css'].forEach(href => {
+    ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css', 'mobile-polish.css', 'mobile-menu-carousel-fixes.css', 'account.css', 'support.css', 'category-extra.css'].forEach(href => {
       if (!$(`link[href="${href}"]`)) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
@@ -262,7 +262,7 @@
       tab.addEventListener('click', () => {
         const wrap = tab.closest('.auth-modal, .auth-page-card');
         $$('[data-auth-tab]', wrap).forEach(item => item.classList.toggle('active', item === tab));
-        $$('[data-auth-panel]', wrap).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.authPanel !== tab.dataset.authTab));
+        $$('[data-auth-panel]', wrap).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.authPanel !== tab.datasetAuthTab));
       });
     });
     $$('[data-auth-close]', root).forEach(button => button.addEventListener('click', closeAuth));
@@ -346,16 +346,28 @@
       }
     });
   }
-  
-  function uniqueLinks(links) { const seen = new Set(); return links.filter(link => { if (seen.has(link.href)) return false; seen.add(link.href); return true; }); }
+
+  function mobileMenuLink(href, text, extra = '') { return `<a class="mobile-menu-link${extra ? ` ${extra}` : ''}" href="${href}">${text}</a>`; }
   function initMobileMenu() {
     if ($('.mobile-menu-panel')) return;
     const overlay = document.createElement('div'); overlay.className = 'mobile-menu-overlay';
     const panel = document.createElement('aside'); panel.className = 'mobile-menu-panel'; panel.setAttribute('aria-hidden', 'true');
-    const categories = uniqueLinks($$('.subnav-inner a, .sub-dropdown a').map(a => ({ href: a.getAttribute('href') || '#', text: a.textContent.trim() })).filter(a => a.text));
-    const pages = uniqueLinks($$('.subheader-inner > li > a, .main-nav > li > a').map(a => ({ href: a.getAttribute('href') || '#', text: a.childNodes[0]?.textContent?.trim() || a.textContent.trim() })).filter(a => a.text && a.href !== '#'));
-    const links = uniqueLinks([...categories, ...pages]);
-    panel.innerHTML = `<div class="mobile-menu-header"><span class="mobile-menu-title">Meny</span><button class="mobile-menu-close" type="button" aria-label="Stäng meny">×</button></div><div class="mobile-menu-content"><nav class="mobile-menu-section">${links.map(item => `<a class="mobile-menu-link" href="${escapeHtml(item.href)}">${escapeHtml(item.text)}</a>`).join('')}</nav><nav class="mobile-menu-section"><a class="mobile-menu-link secondary" href="account.html">${loggedIn() ? 'Mina sidor' : 'Mitt konto / logga in'}</a><a class="mobile-menu-link secondary" href="contact.html">Kundservice</a></nav></div>`;
+    const primaryLinks = [
+      ['index.html', 'Hem', 'mobile-menu-top-link'],
+      ['portion.html', 'Sortiment', 'mobile-menu-parent-link'],
+      ['portion.html', 'Portionssnus', 'mobile-menu-category-link'],
+      ['los.html', 'Lössnus', 'mobile-menu-category-link'],
+      ['vitt-snus.html', 'Vitt snus', 'mobile-menu-category-link'],
+      ['gor-eget.html', 'Gör Eget', 'mobile-menu-category-link'],
+      ['tillbehor.html', 'Tillbehör', 'mobile-menu-category-link'],
+      ['about.html', 'Om oss', 'mobile-menu-top-link'],
+      ['guide.html', 'Guide', 'mobile-menu-top-link']
+    ];
+    const secondaryLinks = [
+      ['account.html', 'Mina sidor', 'secondary'],
+      ['contact.html', 'Kundservice', 'secondary']
+    ];
+    panel.innerHTML = `<div class="mobile-menu-header"><span class="mobile-menu-title">Meny</span><button class="mobile-menu-close" type="button" aria-label="Stäng meny">×</button></div><div class="mobile-menu-content"><nav class="mobile-menu-section">${primaryLinks.map(([href, text, extra]) => mobileMenuLink(href, text, extra)).join('')}</nav><nav class="mobile-menu-section">${secondaryLinks.map(([href, text, extra]) => mobileMenuLink(href, text, extra)).join('')}</nav></div>`;
     document.body.append(overlay, panel);
     const toggle = $('.nav-toggle');
     const close = () => { panel.classList.remove('open'); overlay.classList.remove('show'); document.body.classList.remove('mobile-menu-open'); panel.setAttribute('aria-hidden', 'true'); toggle?.setAttribute('aria-expanded', 'false'); };
@@ -408,7 +420,28 @@
   }
   function initCarousels() {
     $$('.carousel-header').forEach(header => { if ($('.section-heading', header)?.textContent.trim().toLowerCase() === 'nyheter') $('.see-all', header)?.remove(); });
-    $$('.carousel-wrapper').forEach(wrapper => { const track = $('.carousel-track', wrapper), outer = $('.carousel-track-outer', wrapper); if (!track || !outer) return; const prev = $('.carousel-btn-prev', wrapper), next = $('.carousel-btn-next', wrapper); let index = 0; function visible() { const w = outer.offsetWidth; return w < 720 ? 2 : w < 920 ? 4 : 6; } function gap() { return window.innerWidth <= 720 ? 10 : 12; } function width() { return (outer.offsetWidth - gap() * (visible() - 1)) / visible(); } function max() { return Math.max(0, $$('.product-card', track).length - visible()); } function go(value) { index = Math.max(0, Math.min(value, max())); track.style.transform = `translateX(-${index * (width() + gap())}px)`; if (prev) prev.disabled = index === 0; if (next) next.disabled = index >= max(); } function size() { const w = width(); track.style.gap = `${gap()}px`; $$('.product-card', track).forEach(card => { card.style.flex = `0 0 ${w}px`; card.style.width = `${w}px`; }); go(index); } prev?.addEventListener('click', () => go(index - 1)); next?.addEventListener('click', () => go(index + 1)); window.addEventListener('resize', size); size(); });
+    $$('.carousel-wrapper').forEach(wrapper => {
+      const track = $('.carousel-track', wrapper), outer = $('.carousel-track-outer', wrapper);
+      if (!track || !outer) return;
+      const prev = $('.carousel-btn-prev', wrapper), next = $('.carousel-btn-next', wrapper);
+      let index = 0;
+      let startX = 0;
+      let startY = 0;
+      let moved = false;
+      function visible() { const w = outer.offsetWidth; return w < 720 ? 2.28 : w < 920 ? 4 : 6; }
+      function gap() { return window.innerWidth <= 720 ? 10 : 12; }
+      function width() { return (outer.offsetWidth - gap() * (visible() - 1)) / visible(); }
+      function max() { return Math.max(0, Math.ceil($$('.product-card', track).length - visible())); }
+      function go(value) { index = Math.max(0, Math.min(value, max())); track.style.transition = 'transform .24s ease'; track.style.transform = `translateX(-${index * (width() + gap())}px)`; if (prev) prev.disabled = index === 0; if (next) next.disabled = index >= max(); }
+      function size() { const w = width(); track.style.gap = `${gap()}px`; $$('.product-card', track).forEach(card => { card.style.flex = `0 0 ${w}px`; card.style.width = `${w}px`; }); go(index); }
+      prev?.addEventListener('click', () => go(index - 1));
+      next?.addEventListener('click', () => go(index + 1));
+      outer.addEventListener('touchstart', event => { if (!event.touches.length) return; startX = event.touches[0].clientX; startY = event.touches[0].clientY; moved = false; }, { passive: true });
+      outer.addEventListener('touchmove', event => { if (!event.touches.length) return; const dx = event.touches[0].clientX - startX; const dy = event.touches[0].clientY - startY; if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) moved = true; }, { passive: true });
+      outer.addEventListener('touchend', event => { if (!moved) return; const touch = event.changedTouches[0]; const dx = touch.clientX - startX; if (Math.abs(dx) > 38) go(index + (dx < 0 ? 1 : -1)); });
+      window.addEventListener('resize', size);
+      size();
+    });
   }
   function initProductPage() {
     const detail = $('.product-detail'), heading = detail?.querySelector('h1');
