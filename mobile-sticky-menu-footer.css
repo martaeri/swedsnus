@@ -62,41 +62,68 @@
   }
 
   .mobile-menu-header {
-    justify-content: space-between;
+    position: relative;
+    display: flex;
     align-items: center;
-    min-height: 62px;
+    justify-content: center;
+    min-height: 68px;
+    padding: .85rem 4rem .85rem 1rem;
   }
 
   .mobile-menu-logo {
-    justify-self: start !important;
-    text-align: left !important;
+    width: auto;
+    min-height: auto;
+    margin: 0 auto;
+    display: inline-flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    justify-self: center !important;
+    text-align: center !important;
     color: var(--color-text) !important;
+    line-height: 1.05;
   }
 
   .mobile-menu-logo span {
     display: block;
+    margin-top: .18rem;
+    text-align: center;
+  }
+
+  .mobile-menu-close {
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
   }
 
   .mobile-menu-content {
+    display: grid;
     gap: .9rem;
     padding-top: .8rem;
   }
 
   .mobile-menu-section {
+    display: grid;
     gap: .05rem;
     justify-items: stretch;
   }
 
   .mobile-menu-link {
-    justify-content: flex-start !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between !important;
+    width: 100%;
     text-align: left;
   }
 
-  .mobile-menu-link::after,
-  .mobile-menu-sub-link::after,
-  .mobile-menu-main-link::after,
-  .mobile-menu-secondary-link::after {
-    content: none !important;
+  .mobile-menu-link::after {
+    content: '›';
+    margin-left: auto;
+    color: var(--color-border);
+    font-size: 1.45rem;
+    font-weight: 600;
+    line-height: 1;
   }
 
   .mobile-menu-main-link {
@@ -109,6 +136,12 @@
 
   .mobile-menu-static {
     cursor: default;
+    pointer-events: none;
+  }
+
+  .mobile-menu-static::after,
+  .mobile-menu-secondary-link::after {
+    content: none !important;
   }
 
   .mobile-submenu {
@@ -116,7 +149,7 @@
     gap: .08rem;
     width: 100%;
     margin: -.2rem 0 .4rem;
-    padding-left: 1rem;
+    padding-left: 3.1rem;
   }
 
   .mobile-menu-sub-link {
@@ -128,12 +161,7 @@
   }
 
   .mobile-menu-sub-link::before {
-    content: '';
-    width: 4px;
-    height: 4px;
-    margin-right: .48rem;
-    border-radius: 999px;
-    background: var(--color-border);
+    content: none !important;
   }
 
   .mobile-menu-secondary-section {
@@ -148,6 +176,7 @@
     color: var(--color-text-muted);
     font-size: .92rem;
     font-weight: 700;
+    justify-content: flex-start !important;
   }
 
   .mobile-menu-category-link,
