@@ -212,7 +212,7 @@
     padding-bottom: .45rem !important;
   }
 
-  .site-logo {
+  .site-header .site-logo {
     align-self: center !important;
     justify-self: start !important;
     min-height: 28px;
@@ -223,21 +223,21 @@
     line-height: 1.05;
   }
 
-  .site-logo span {
+  .site-header .site-logo span {
     margin-top: 1px;
     line-height: 1.1;
   }
 
-  .header-icons {
+  .site-header .header-icons {
     align-self: center !important;
     min-height: 28px;
   }
 
-  .header-icon-btn {
+  .site-header .header-icon-btn {
     flex: 0 0 28px;
   }
 
-  .header-icons .nav-toggle {
+  .site-header .header-icons .nav-toggle {
     display: inline-flex !important;
     align-self: center !important;
     order: 4;
@@ -247,34 +247,10 @@
     padding: 0;
   }
 
-  .mobile-menu-parent-link {
-    min-height: 34px;
-    margin-top: .25rem;
-    color: var(--color-text-muted);
-    font-size: .78rem;
-    font-weight: 900;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-  }
-
-  .mobile-menu-category-link {
-    justify-content: flex-start;
-    gap: .5rem;
-    padding-left: .85rem;
-    font-size: .96rem;
-  }
-
+  .mobile-menu-parent-link,
   .mobile-menu-category-link::before {
-    content: '';
-    width: 4px;
-    height: 4px;
-    flex: 0 0 auto;
-    border-radius: 999px;
-    background: var(--color-border);
-  }
-
-  .mobile-menu-category-link::after {
-    margin-left: auto;
+    display: none !important;
+    content: none !important;
   }
 
   .carousel-track-outer,
