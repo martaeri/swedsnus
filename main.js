@@ -16,7 +16,7 @@
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
   function loadStyles() {
-    ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css', 'mobile-polish.css', 'account.css', 'support.css'].forEach(href => {
+    ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css', 'mobile-polish.css', 'account.css', 'support.css', 'category-extra.css'].forEach(href => {
       if (!$(`link[href="${href}"]`)) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
@@ -321,6 +321,32 @@
       dot.addEventListener('click', () => { const theme = dot.dataset.theme; document.documentElement.className = theme === '1' ? '' : `theme-${theme}`; $$('.theme-dot').forEach(item => item.classList.toggle('active', item === dot)); localStorage.setItem('swedsnus-theme', theme); });
     });
   }
+
+  function insertAfter(reference, node) {
+    reference?.parentNode?.insertBefore(node, reference.nextSibling);
+  }
+
+  function ensureVittSnusLinks() {
+    $$('.sub-dropdown').forEach(dropdown => {
+      if (!$('a[href="vitt-snus.html"]', dropdown)) {
+        const li = document.createElement('li');
+        li.innerHTML = '<a href="vitt-snus.html">Vitt snus</a>';
+        const los = $$('a', dropdown).find(link => link.getAttribute('href') === 'los.html')?.closest('li');
+        los ? insertAfter(los, li) : dropdown.appendChild(li);
+      }
+    });
+
+    $$('.subnav-inner').forEach(nav => {
+      if (!$('a[href="vitt-snus.html"]', nav)) {
+        const link = document.createElement('a');
+        link.href = 'vitt-snus.html';
+        link.textContent = 'Vitt snus';
+        const los = $$('a', nav).find(item => item.getAttribute('href') === 'los.html');
+        los ? insertAfter(los, link) : nav.appendChild(link);
+      }
+    });
+  }
+  
   function uniqueLinks(links) { const seen = new Set(); return links.filter(link => { if (seen.has(link.href)) return false; seen.add(link.href); return true; }); }
   function initMobileMenu() {
     if ($('.mobile-menu-panel')) return;
@@ -340,11 +366,23 @@
     $$('a', panel).forEach(link => link.addEventListener('click', close));
   }
   function initNavigation() {
+    ensureVittSnusLinks();
     $$('a[href="#"]').forEach(link => { if (link.textContent.trim().toLowerCase() === 'kontakt') link.href = 'contact.html'; });
     $$('a[href="portion.html#gor-eget"], a[href="index.html#gor-eget"], a[href$="#gor-eget"]').forEach(link => link.href = 'gor-eget.html');
     const file = window.location.pathname.split('/').pop() || 'index.html';
     $$('.subheader-inner a, .subnav-inner a, .main-nav a').forEach(link => { const href = (link.getAttribute('href') || '').split('#')[0].split('/').pop(); if (href && href === file) link.classList.add('active'); });
     initMobileMenu();
+  }
+  function initVittShowcase() {
+    const file = window.location.pathname.split('/').pop() || 'index.html';
+    if (file !== 'index.html' || $('.vitt-showcase-section')) return;
+    const feature = $('.feature-strip-fullbleed');
+    if (!feature) return;
+
+    const section = document.createElement('section');
+    section.className = 'vitt-showcase-section';
+    section.innerHTML = `<div class="vitt-showcase-shell"><div class="vitt-showcase-copy"><span class="vitt-showcase-kicker">Ny produktgrupp</span><h2>Vitt snus</h2><p>En egen yta för kommande tobaksfria produkter. Layouten skiljer sig från de övriga karusellerna med en friare, horisontell produktvisning.</p><div class="vitt-tag-row"><span>Normal</span><span>Slim</span><span>Mini</span><span>Compact</span><span>Large</span></div><div class="btn-row"><a class="btn btn-primary" href="vitt-snus.html">Se vitt snus</a></div></div><div class="vitt-showcase-track-wrap"><div class="vitt-showcase-track"><div class="product-card" data-href="vitt-snus.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Normal</span><p class="product-card-name">Vitt Snus Normal Mint</p><p class="product-card-meta">Format: <span>Normal</span></p><p class="product-card-meta">Smak: <span>Mint</span></p><div class="product-card-actions"><select class="pack-select"><option data-price="249 kr" data-pack="1-pack">1-pack — 249 kr</option></select><button class="add-to-cart-btn">+</button></div><p class="product-card-price">249 kr <small>1-pack</small></p></div></div><div class="product-card" data-href="vitt-snus.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Slim</span><p class="product-card-name">Vitt Snus Slim Citrus</p><p class="product-card-meta">Format: <span>Slim</span></p><p class="product-card-meta">Smak: <span>Klassisk</span></p><div class="product-card-actions"><select class="pack-select"><option data-price="259 kr" data-pack="1-pack">1-pack — 259 kr</option></select><button class="add-to-cart-btn">+</button></div><p class="product-card-price">259 kr <small>1-pack</small></p></div></div><div class="product-card" data-href="vitt-snus.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Compact</span><p class="product-card-name">Vitt Snus Compact Berry</p><p class="product-card-meta">Format: <span>Compact</span></p><p class="product-card-meta">Smak: <span>Bergamott</span></p><div class="product-card-actions"><select class="pack-select"><option data-price="239 kr" data-pack="1-pack">1-pack — 239 kr</option></select><button class="add-to-cart-btn">+</button></div><p class="product-card-price">239 kr <small>1-pack</small></p></div></div></div></div></div>`;
+    insertAfter(feature, section);
   }
   function initCatalogControls() {
     $$('.catalog-page[data-catalog-filter]').forEach(catalog => {
@@ -402,6 +440,6 @@
       const card = event.target.closest('.product-card'); if (card && !event.target.closest('.pack-select')) window.location.href = card.dataset.href || 'product.html';
     });
   }
-  function init() { loadStyles(); syncAccountState(); initThemeSwitcher(); initNavigation(); initFilters(); initCatalogControls(); initCarousels(); renderLoginPage(); renderAccountPage(); renderOrderPage(); renderBookmarksPage(); normalizeCards(); initProductPage(); updateCartPanel(); renderCartPage(); bindAuth(); bindLogout(); bindSupportForm(); handleClicks(); }
+  function init() { loadStyles(); syncAccountState(); initThemeSwitcher(); initNavigation(); initVittShowcase(); initFilters(); initCatalogControls(); initCarousels(); renderLoginPage(); renderAccountPage(); renderOrderPage(); renderBookmarksPage(); normalizeCards(); initProductPage(); updateCartPanel(); renderCartPage(); bindAuth(); bindLogout(); bindSupportForm(); handleClicks(); }
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
 })();
