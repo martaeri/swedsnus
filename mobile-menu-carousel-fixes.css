@@ -237,22 +237,6 @@
     flex: 0 0 28px;
   }
 
-  .site-header .header-icons .nav-toggle {
-    display: inline-flex !important;
-    align-self: center !important;
-    order: 4;
-    width: 28px;
-    height: 28px;
-    margin: 0 0 0 .08rem;
-    padding: 0;
-  }
-
-  .mobile-menu-parent-link,
-  .mobile-menu-category-link::before {
-    display: none !important;
-    content: none !important;
-  }
-
   .carousel-track-outer,
   .carousel-track {
     touch-action: pan-y;
