@@ -86,6 +86,69 @@
   transition: padding .24s ease;
 }
 
+.fullbleed-section .fullbleed-inner:has(.btn-row) {
+  align-items: stretch;
+}
+
+.fullbleed-section .fullbleed-inner:has(.btn-row) > div:first-child {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+}
+
+.fullbleed-section .btn-row {
+  width: 100%;
+  margin-top: auto;
+  padding-top: clamp(.75rem, 2vw, 1.15rem);
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+
+.fullbleed-section .btn-row .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .36rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  box-shadow: none;
+  font-size: .72rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: .02em;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+}
+
+.fullbleed-section.light .btn-row .btn {
+  color: var(--color-primary);
+}
+
+.fullbleed-section .btn-row .btn::after {
+  content: '→';
+  display: inline-block;
+  flex: 0 0 auto;
+  font-size: .98em;
+  line-height: 1;
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.fullbleed-section .btn-row .btn:hover {
+  background: transparent;
+  color: inherit;
+  opacity: .78;
+}
+
+.fullbleed-section.light .btn-row .btn:hover {
+  color: var(--color-primary);
+}
+
 @media (max-width: 720px) {
   .site-header {
     position: sticky !important;
@@ -353,6 +416,14 @@
   .fullbleed-inner,
   .fullbleed-inner.thirds {
     gap: 1.1rem !important;
+  }
+
+  .fullbleed-section .btn-row {
+    padding-top: .65rem;
+  }
+
+  .fullbleed-section .btn-row .btn {
+    font-size: .68rem;
   }
 
   .has-collapsible-copy .banner-copy-collapse {
