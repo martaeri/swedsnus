@@ -1,3 +1,17 @@
+.auth-dialog:has([data-auth-tab="login"].active) [data-auth-panel="login"],
+.auth-page-card:has([data-auth-tab="login"].active) [data-auth-panel="login"],
+.auth-dialog:has([data-auth-tab="register"].active) [data-auth-panel="register"],
+.auth-page-card:has([data-auth-tab="register"].active) [data-auth-panel="register"] {
+  display: block !important;
+}
+
+.auth-dialog:has([data-auth-tab="login"].active) [data-auth-panel="register"],
+.auth-page-card:has([data-auth-tab="login"].active) [data-auth-panel="register"],
+.auth-dialog:has([data-auth-tab="register"].active) [data-auth-panel="login"],
+.auth-page-card:has([data-auth-tab="register"].active) [data-auth-panel="login"] {
+  display: none !important;
+}
+
 @media (max-width: 720px) {
   .header-topbar,
   .header-inner {
