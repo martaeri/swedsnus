@@ -114,7 +114,50 @@
     });
   }
 
+  function initHomepageBannerCollapse() {
+    $('.hero .hero-tabs')?.remove();
+
+    const blocks = [
+      ...$$('.feature-strip-intro'),
+      ...$$('.fullbleed-section .fullbleed-inner > div:first-child')
+    ];
+
+    blocks.forEach(block => {
+      if (block.dataset.bannerCollapse === 'true') return;
+      const paragraphs = $$(':scope > p', block).filter(paragraph => !paragraph.classList.contains('tagline'));
+      const text = paragraphs.map(paragraph => paragraph.textContent.trim()).join(' ');
+
+      if (paragraphs.length === 0 || text.length < 95) return;
+
+      const collapse = document.createElement('div');
+      collapse.className = 'banner-copy-collapse';
+      paragraphs[0].insertAdjacentElement('beforebegin', collapse);
+      paragraphs.forEach(paragraph => collapse.appendChild(paragraph));
+
+      const button = document.createElement('button');
+      button.className = 'banner-copy-toggle';
+      button.type = 'button';
+      button.setAttribute('aria-expanded', 'false');
+      button.textContent = 'Se mer';
+      collapse.insertAdjacentElement('afterend', button);
+
+      button.addEventListener('click', () => {
+        const expanded = block.classList.toggle('is-expanded');
+        button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        button.textContent = expanded ? 'Visa mindre' : 'Se mer';
+      });
+
+      block.classList.add('has-collapsible-copy');
+      block.dataset.bannerCollapse = 'true';
+    });
+  }
+
+  function init() {
+    initHamburgerMenu();
+    initHomepageBannerCollapse();
+  }
+
   document.readyState === 'loading'
-    ? document.addEventListener('DOMContentLoaded', initHamburgerMenu)
-    : initHamburgerMenu();
+    ? document.addEventListener('DOMContentLoaded', init)
+    : init();
 })();
