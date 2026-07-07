@@ -255,14 +255,8 @@
   }
 
   function rebuildMobileMenu() {
-    const panel = $('.mobile-menu-panel');
-    if (!panel) return;
-    panel.innerHTML = `<div class="mobile-menu-header"><a href="index.html" class="site-logo mobile-menu-logo">Swedsnus<span>Tillverkare · Hemsjö, Sverige</span></a><button class="mobile-menu-close" type="button" aria-label="Stäng meny">×</button></div><div class="mobile-menu-content"><nav class="mobile-menu-section mobile-menu-primary-section" aria-label="Mobil huvudnavigation">${mobileLink('index.html', 'Hem', 'mobile-menu-main-link')}${mobileLink('', 'Sortiment', 'mobile-menu-main-link mobile-menu-static')}<div class="mobile-submenu">${mobileLink('portion.html', 'Portionssnus', 'mobile-menu-sub-link')}${mobileLink('los.html', 'Lössnus', 'mobile-menu-sub-link')}${mobileLink('vitt-snus.html', 'Vitt snus', 'mobile-menu-sub-link')}${mobileLink('gor-eget.html', 'Gör Eget', 'mobile-menu-sub-link')}${mobileLink('tillbehor.html', 'Tillbehör', 'mobile-menu-sub-link')}</div>${mobileLink('about.html', 'Om Oss', 'mobile-menu-main-link')}${mobileLink('guide.html', 'Guide', 'mobile-menu-main-link')}</nav><nav class="mobile-menu-section mobile-menu-secondary-section" aria-label="Mobil kontonavigation">${mobileLink('account.html', 'Mina Sidor', 'mobile-menu-secondary-link')}${mobileLink('contact.html', 'Kundservice', 'mobile-menu-secondary-link')}</nav></div>`;
-    const staticSortiment = $('.mobile-menu-static', panel);
-    staticSortiment?.removeAttribute('href');
-    $('.mobile-menu-close', panel)?.addEventListener('click', closeMobileMenu);
-    $$('a', panel).forEach(link => link.addEventListener('click', closeMobileMenu));
-  }
+  return;
+}
 
   function syncStickyHeaderOffset() {
     const header = $('.site-header');
