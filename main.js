@@ -11,11 +11,10 @@
     { id: 'SW-10224', date: '2026-04-03', status: 'Returnerad', current: false, total: '289 kr', items: ['White RX Slim 15 dosor'], eta: 'Retur hanterad 2026-04-12', tracking: 'PN-690122-SW' }
   ];
   let pendingLoginAction = null;
-
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
-  function loadStyles() {
+  function loadAssets() {
     ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css', 'mobile-polish.css', 'mobile-menu-carousel-fixes.css', 'account.css', 'support.css', 'category-extra.css'].forEach(href => {
       if (!$(`link[href="${href}"]`)) {
         const link = document.createElement('link');
@@ -24,6 +23,12 @@
         document.head.appendChild(link);
       }
     });
+    if (!$('script[src="product-experience.js"]')) {
+      const script = document.createElement('script');
+      script.src = 'product-experience.js';
+      script.defer = true;
+      document.body.appendChild(script);
+    }
   }
 
   function readStore(key) {
@@ -34,7 +39,6 @@
       return [];
     }
   }
-
   function writeStore(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
   function loggedIn() { return sessionStorage.getItem(AUTH_KEY) === 'true'; }
   function setLoggedIn(value) { value ? sessionStorage.setItem(AUTH_KEY, 'true') : sessionStorage.removeItem(AUTH_KEY); syncAccountState(); }
@@ -43,7 +47,10 @@
   function parsePrice(value) { const match = String(value || '').replace(/\s/g, '').match(/[0-9]+/); return match ? parseInt(match[0], 10) : 0; }
 
   function selectedOption(card) { return card?.querySelector?.('.pack-select option:checked') || null; }
-  function selectedPack(card) { const option = selectedOption(card); return option?.dataset.pack || option?.textContent?.split('—')[0]?.trim() || $('.pack-option.selected')?.dataset.pack || '1-pack'; }
+  function selectedPack(card) {
+    const option = selectedOption(card);
+    return option?.dataset.pack || option?.textContent?.split('—')[0]?.trim() || $('.pack-option.selected')?.dataset.pack || '1-pack';
+  }
   function selectedPrice(card) {
     const option = selectedOption(card);
     if (option?.dataset.price) return option.dataset.price;
@@ -60,7 +67,6 @@
     const amount = parseInt((pack.match(/[0-9]+/) || ['1'])[0], 10) || 1;
     return price ? `${Math.round(price / amount).toLocaleString('sv-SE')} kr/st` : '';
   }
-
   function cardMeta(card) { return $$('.product-card-meta', card).map(item => item.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean); }
   function productFromCard(card) {
     const name = $('.product-card-name', card)?.textContent?.trim() || 'Produkt';
@@ -209,7 +215,6 @@
     clearTimeout(toast._timer);
     toast._timer = setTimeout(() => toast.classList.remove('show'), 2200);
   }
-
   function authButtons(mode) {
     const text = mode === 'register' ? 'Skapa testkonto' : 'Fortsätt som demokund';
     const help = mode === 'register' ? 'Skapar endast en tillfällig prototyp-session. Inga uppgifter sparas.' : 'Loggar in i prototypläge utan riktiga uppgifter.';
@@ -262,7 +267,7 @@
       tab.addEventListener('click', () => {
         const wrap = tab.closest('.auth-modal, .auth-page-card');
         $$('[data-auth-tab]', wrap).forEach(item => item.classList.toggle('active', item === tab));
-        $$('[data-auth-panel]', wrap).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.authPanel !== tab.datasetAuthTab));
+        $$('[data-auth-panel]', wrap).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.authPanel !== tab.dataset.authTab));
       });
     });
     $$('[data-auth-close]', root).forEach(button => button.addEventListener('click', closeAuth));
@@ -286,7 +291,6 @@
       : `<div class="auth-page-card"><span class="account-kicker">Mina sidor</span><h1>Logga in eller skapa konto</h1><p>Det här är en prototyp. Du kan fortsätta utan riktiga uppgifter för att testa sparade produkter och Mina sidor.</p>${authPanels()}</div>`;
     bindAuth(page); bindLogout(page);
   }
-
   function orderItemsText(order) { return Array.isArray(order.items) ? order.items.join(', ') : order.items; }
   function orderMarkup(order, compact = false) {
     return `<article class="order-card"><div><span class="order-id">${escapeHtml(order.id)}</span><h3>${escapeHtml(order.status)}</h3><p>${escapeHtml(orderItemsText(order))}</p><small>${escapeHtml(order.date)} · ${escapeHtml(order.total)}</small></div><div class="order-actions"><a class="btn btn-outline btn-small" href="order.html?id=${encodeURIComponent(order.id)}">Visa order</a>${order.current ? '<a class="btn btn-outline btn-small" href="order.html?id=' + encodeURIComponent(order.id) + '">Spåra</a>' : compact ? '' : '<a class="btn btn-outline btn-small" href="order.html?id=' + encodeURIComponent(order.id) + '">Hantera retur</a>'}</div></article>`;
@@ -312,61 +316,23 @@
   }
   function bindAccountTabs(root) { $$('[data-account-tab]', root).forEach(tab => tab.addEventListener('click', () => { $$('[data-account-tab]', root).forEach(item => item.classList.toggle('active', item === tab)); $$('[data-account-panel]', root).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.accountPanel !== tab.dataset.accountTab)); })); }
   function bindLogout(root = document) { $$('[data-logout]', root).forEach(button => { if (button.dataset.bound) return; button.dataset.bound = 'true'; button.addEventListener('click', () => { setLoggedIn(false); showToast('Du är utloggad'); renderLoginPage(); renderAccountPage(); renderBookmarksPage(); renderOrderPage(); }); }); }
-
   function initThemeSwitcher() {
     const saved = localStorage.getItem('swedsnus-theme') || '1';
     document.documentElement.className = saved === '1' ? '' : `theme-${saved}`;
-    $$('.theme-dot').forEach(dot => {
-      dot.classList.toggle('active', dot.dataset.theme === saved);
-      dot.addEventListener('click', () => { const theme = dot.dataset.theme; document.documentElement.className = theme === '1' ? '' : `theme-${theme}`; $$('.theme-dot').forEach(item => item.classList.toggle('active', item === dot)); localStorage.setItem('swedsnus-theme', theme); });
-    });
+    $$('.theme-dot').forEach(dot => { dot.classList.toggle('active', dot.dataset.theme === saved); dot.addEventListener('click', () => { const theme = dot.dataset.theme; document.documentElement.className = theme === '1' ? '' : `theme-${theme}`; $$('.theme-dot').forEach(item => item.classList.toggle('active', item === dot)); localStorage.setItem('swedsnus-theme', theme); }); });
   }
-
-  function insertAfter(reference, node) {
-    reference?.parentNode?.insertBefore(node, reference.nextSibling);
-  }
-
+  function insertAfter(reference, node) { reference?.parentNode?.insertBefore(node, reference.nextSibling); }
   function ensureVittSnusLinks() {
-    $$('.sub-dropdown').forEach(dropdown => {
-      if (!$('a[href="vitt-snus.html"]', dropdown)) {
-        const li = document.createElement('li');
-        li.innerHTML = '<a href="vitt-snus.html">Vitt snus</a>';
-        const los = $$('a', dropdown).find(link => link.getAttribute('href') === 'los.html')?.closest('li');
-        los ? insertAfter(los, li) : dropdown.appendChild(li);
-      }
-    });
-
-    $$('.subnav-inner').forEach(nav => {
-      if (!$('a[href="vitt-snus.html"]', nav)) {
-        const link = document.createElement('a');
-        link.href = 'vitt-snus.html';
-        link.textContent = 'Vitt snus';
-        const los = $$('a', nav).find(item => item.getAttribute('href') === 'los.html');
-        los ? insertAfter(los, link) : nav.appendChild(link);
-      }
-    });
+    $$('.sub-dropdown').forEach(dropdown => { if (!$('a[href="vitt-snus.html"]', dropdown)) { const li = document.createElement('li'); li.innerHTML = '<a href="vitt-snus.html">Vitt snus</a>'; const los = $$('a', dropdown).find(link => link.getAttribute('href') === 'los.html')?.closest('li'); los ? insertAfter(los, li) : dropdown.appendChild(li); } });
+    $$('.subnav-inner').forEach(nav => { if (!$('a[href="vitt-snus.html"]', nav)) { const link = document.createElement('a'); link.href = 'vitt-snus.html'; link.textContent = 'Vitt snus'; const los = $$('a', nav).find(item => item.getAttribute('href') === 'los.html'); los ? insertAfter(los, link) : nav.appendChild(link); } });
   }
-
   function mobileMenuLink(href, text, extra = '') { return `<a class="mobile-menu-link${extra ? ` ${extra}` : ''}" href="${href}">${text}</a>`; }
   function initMobileMenu() {
     if ($('.mobile-menu-panel')) return;
     const overlay = document.createElement('div'); overlay.className = 'mobile-menu-overlay';
     const panel = document.createElement('aside'); panel.className = 'mobile-menu-panel'; panel.setAttribute('aria-hidden', 'true');
-    const primaryLinks = [
-      ['index.html', 'Hem', 'mobile-menu-top-link'],
-      ['portion.html', 'Sortiment', 'mobile-menu-parent-link'],
-      ['portion.html', 'Portionssnus', 'mobile-menu-category-link'],
-      ['los.html', 'Lössnus', 'mobile-menu-category-link'],
-      ['vitt-snus.html', 'Vitt snus', 'mobile-menu-category-link'],
-      ['gor-eget.html', 'Gör Eget', 'mobile-menu-category-link'],
-      ['tillbehor.html', 'Tillbehör', 'mobile-menu-category-link'],
-      ['about.html', 'Om oss', 'mobile-menu-top-link'],
-      ['guide.html', 'Guide', 'mobile-menu-top-link']
-    ];
-    const secondaryLinks = [
-      ['account.html', 'Mina sidor', 'secondary'],
-      ['contact.html', 'Kundservice', 'secondary']
-    ];
+    const primaryLinks = [['index.html', 'Hem', 'mobile-menu-top-link'], ['portion.html', 'Sortiment', 'mobile-menu-parent-link'], ['portion.html', 'Portionssnus', 'mobile-menu-category-link'], ['los.html', 'Lössnus', 'mobile-menu-category-link'], ['vitt-snus.html', 'Vitt snus', 'mobile-menu-category-link'], ['gor-eget.html', 'Gör Eget', 'mobile-menu-category-link'], ['tillbehor.html', 'Tillbehör', 'mobile-menu-category-link'], ['about.html', 'Om oss', 'mobile-menu-top-link'], ['guide.html', 'Guide', 'mobile-menu-top-link']];
+    const secondaryLinks = [['account.html', 'Mina sidor', 'secondary'], ['contact.html', 'Kundservice', 'secondary']];
     panel.innerHTML = `<div class="mobile-menu-header"><span class="mobile-menu-title">Meny</span><button class="mobile-menu-close" type="button" aria-label="Stäng meny">×</button></div><div class="mobile-menu-content"><nav class="mobile-menu-section">${primaryLinks.map(([href, text, extra]) => mobileMenuLink(href, text, extra)).join('')}</nav><nav class="mobile-menu-section">${secondaryLinks.map(([href, text, extra]) => mobileMenuLink(href, text, extra)).join('')}</nav></div>`;
     document.body.append(overlay, panel);
     const toggle = $('.nav-toggle');
@@ -390,7 +356,6 @@
     if (file !== 'index.html' || $('.vitt-showcase-section')) return;
     const feature = $('.feature-strip-fullbleed');
     if (!feature) return;
-
     const section = document.createElement('section');
     section.className = 'vitt-showcase-section';
     section.innerHTML = `<div class="vitt-showcase-shell"><div class="vitt-showcase-copy"><span class="vitt-showcase-kicker">Ny produktgrupp</span><h2>Vitt snus</h2><p>En egen yta för kommande tobaksfria produkter. Layouten skiljer sig från de övriga karusellerna med en friare, horisontell produktvisning.</p><div class="vitt-tag-row"><span>Normal</span><span>Slim</span><span>Mini</span><span>Compact</span><span>Large</span></div><div class="btn-row"><a class="btn btn-primary" href="vitt-snus.html">Se vitt snus</a></div></div><div class="vitt-showcase-track-wrap"><div class="vitt-showcase-track"><div class="product-card" data-href="vitt-snus.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Normal</span><p class="product-card-name">Vitt Snus Normal Mint</p><p class="product-card-meta">Format: <span>Normal</span></p><p class="product-card-meta">Smak: <span>Mint</span></p><div class="product-card-actions"><select class="pack-select"><option data-price="249 kr" data-pack="1-pack">1-pack — 249 kr</option></select><button class="add-to-cart-btn">+</button></div><p class="product-card-price">249 kr <small>1-pack</small></p></div></div><div class="product-card" data-href="vitt-snus.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Slim</span><p class="product-card-name">Vitt Snus Slim Citrus</p><p class="product-card-meta">Format: <span>Slim</span></p><p class="product-card-meta">Smak: <span>Klassisk</span></p><div class="product-card-actions"><select class="pack-select"><option data-price="259 kr" data-pack="1-pack">1-pack — 259 kr</option></select><button class="add-to-cart-btn">+</button></div><p class="product-card-price">259 kr <small>1-pack</small></p></div></div><div class="product-card" data-href="vitt-snus.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Compact</span><p class="product-card-name">Vitt Snus Compact Berry</p><p class="product-card-meta">Format: <span>Compact</span></p><p class="product-card-meta">Smak: <span>Bergamott</span></p><div class="product-card-actions"><select class="pack-select"><option data-price="239 kr" data-pack="1-pack">1-pack — 239 kr</option></select><button class="add-to-cart-btn">+</button></div><p class="product-card-price">239 kr <small>1-pack</small></p></div></div></div></div></div>`;
@@ -424,23 +389,18 @@
       const track = $('.carousel-track', wrapper), outer = $('.carousel-track-outer', wrapper);
       if (!track || !outer) return;
       const prev = $('.carousel-btn-prev', wrapper), next = $('.carousel-btn-next', wrapper);
-      let index = 0;
-      let startX = 0;
-      let startY = 0;
-      let moved = false;
+      let index = 0, startX = 0, startY = 0, moved = false;
       function visible() { const w = outer.offsetWidth; return w < 720 ? 2.28 : w < 920 ? 4 : 6; }
       function gap() { return window.innerWidth <= 720 ? 10 : 12; }
       function width() { return (outer.offsetWidth - gap() * (visible() - 1)) / visible(); }
       function max() { return Math.max(0, Math.ceil($$('.product-card', track).length - visible())); }
       function go(value) { index = Math.max(0, Math.min(value, max())); track.style.transition = 'transform .24s ease'; track.style.transform = `translateX(-${index * (width() + gap())}px)`; if (prev) prev.disabled = index === 0; if (next) next.disabled = index >= max(); }
       function size() { const w = width(); track.style.gap = `${gap()}px`; $$('.product-card', track).forEach(card => { card.style.flex = `0 0 ${w}px`; card.style.width = `${w}px`; }); go(index); }
-      prev?.addEventListener('click', () => go(index - 1));
-      next?.addEventListener('click', () => go(index + 1));
+      prev?.addEventListener('click', () => go(index - 1)); next?.addEventListener('click', () => go(index + 1));
       outer.addEventListener('touchstart', event => { if (!event.touches.length) return; startX = event.touches[0].clientX; startY = event.touches[0].clientY; moved = false; }, { passive: true });
       outer.addEventListener('touchmove', event => { if (!event.touches.length) return; const dx = event.touches[0].clientX - startX; const dy = event.touches[0].clientY - startY; if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) moved = true; }, { passive: true });
-      outer.addEventListener('touchend', event => { if (!moved) return; const touch = event.changedTouches[0]; const dx = touch.clientX - startX; if (Math.abs(dx) > 38) go(index + (dx < 0 ? 1 : -1)); });
-      window.addEventListener('resize', size);
-      size();
+      outer.addEventListener('touchend', event => { if (!moved) return; const dx = event.changedTouches[0].clientX - startX; if (Math.abs(dx) > 38) go(index + (dx < 0 ? 1 : -1)); });
+      window.addEventListener('resize', size); size();
     });
   }
   function initProductPage() {
@@ -450,13 +410,7 @@
     $$('.pack-option').forEach(option => option.addEventListener('click', () => { $$('.pack-option').forEach(item => item.classList.remove('selected')); option.classList.add('selected'); const radio = $('input[type=radio]', option); if (radio) radio.checked = true; const price = $('.product-detail-price'); if (price && option.dataset.price) price.innerHTML = `${option.dataset.price} <small>${option.dataset.pack || '1-pack'}</small>`; }));
     $('.add-to-cart-main .btn-primary')?.addEventListener('click', event => { event.preventDefault(); addCartItem(productFromPage(), parseInt(qty?.value || '1', 10) || 1); showToast('Tillagd i kundvagnen'); });
   }
-  function bindSupportForm() {
-    $$('[data-support-form]').forEach(form => {
-      if (form.dataset.bound) return;
-      form.dataset.bound = 'true';
-      form.addEventListener('submit', event => { event.preventDefault(); showToast('Kundserviceärende markerat i prototypen'); form.reset(); });
-    });
-  }
+  function bindSupportForm() { $$('[data-support-form]').forEach(form => { if (form.dataset.bound) return; form.dataset.bound = 'true'; form.addEventListener('submit', event => { event.preventDefault(); showToast('Kundserviceärende markerat i prototypen'); form.reset(); }); }); }
   function handleClicks() {
     document.addEventListener('change', event => { const select = event.target.closest('.pack-select'); if (select) { const card = select.closest('.product-card'); if (card) { delete card.dataset.normalized; normalizeProductCard(card); } } });
     document.addEventListener('click', event => {
@@ -474,6 +428,6 @@
       const card = event.target.closest('.product-card'); if (card && !event.target.closest('.pack-select')) window.location.href = card.dataset.href || 'product.html';
     });
   }
-  function init() { loadStyles(); syncAccountState(); initThemeSwitcher(); initNavigation(); initVittShowcase(); initFilters(); initCatalogControls(); initCarousels(); renderLoginPage(); renderAccountPage(); renderOrderPage(); renderBookmarksPage(); normalizeCards(); initProductPage(); updateCartPanel(); renderCartPage(); bindAuth(); bindLogout(); bindSupportForm(); handleClicks(); }
+  function init() { loadAssets(); syncAccountState(); initThemeSwitcher(); initNavigation(); initVittShowcase(); initFilters(); initCatalogControls(); initCarousels(); renderLoginPage(); renderAccountPage(); renderOrderPage(); renderBookmarksPage(); normalizeCards(); initProductPage(); updateCartPanel(); renderCartPage(); bindAuth(); bindLogout(); bindSupportForm(); handleClicks(); }
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
 })();
