@@ -2,6 +2,8 @@
   const BOOKMARKS_KEY = 'swedsnus-bookmarks';
   const AUTH_KEY = 'swedsnus-demo-session';
   const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+  const ARROW_LEFT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
+  const ARROW_RIGHT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
@@ -253,11 +255,68 @@
   }
 
   function rebuildMobileMenu() {
-    const content = $('.mobile-menu-content');
-    if (!content || content.dataset.structured === 'true') return;
-    content.dataset.structured = 'true';
+    const panel = $('.mobile-menu-panel');
+    const header = $('.mobile-menu-header', panel);
+    const content = $('.mobile-menu-content', panel);
+    if (!panel || !header || !content) return;
+    header.innerHTML = `<a href="index.html" class="site-logo mobile-menu-logo">Swedsnus<span>Tillverkare · Hemsjö, Sverige</span></a><button class="mobile-menu-close" type="button" aria-label="Stäng meny">×</button>`;
     content.innerHTML = `<nav class="mobile-menu-section mobile-menu-primary-section" aria-label="Mobil huvudnavigation">${mobileLink('index.html', 'Hem', 'mobile-menu-main-link')}<span class="mobile-menu-link mobile-menu-main-link mobile-menu-static">Sortiment</span><div class="mobile-submenu">${mobileLink('portion.html', 'Portionssnus', 'mobile-menu-sub-link')}${mobileLink('los.html', 'Lössnus', 'mobile-menu-sub-link')}${mobileLink('vitt-snus.html', 'Vitt snus', 'mobile-menu-sub-link')}${mobileLink('gor-eget.html', 'Gör Eget', 'mobile-menu-sub-link')}${mobileLink('tillbehor.html', 'Tillbehör', 'mobile-menu-sub-link')}</div>${mobileLink('about.html', 'Om Oss', 'mobile-menu-main-link')}${mobileLink('guide.html', 'Guide', 'mobile-menu-main-link')}</nav><nav class="mobile-menu-section mobile-menu-secondary-section" aria-label="Mobil kontonavigation">${mobileLink('account.html', 'Mina Sidor', 'mobile-menu-secondary-link')}${mobileLink('contact.html', 'Kundservice', 'mobile-menu-secondary-link')}</nav>`;
-    $$('a', content).forEach(link => link.addEventListener('click', closeMobileMenu));
+    $('.mobile-menu-close', header)?.addEventListener('click', closeMobileMenu);
+    $$('a', panel).forEach(link => link.addEventListener('click', closeMobileMenu));
+  }
+
+  function syncStickyHeaderOffset() {
+    const header = $('.site-header');
+    if (!header) return;
+    const setOffset = () => document.documentElement.style.setProperty('--mobile-sticky-header-offset', `${Math.ceil(header.getBoundingClientRect().height)}px`);
+    setOffset();
+    window.addEventListener('resize', setOffset);
+    if ('ResizeObserver' in window) new ResizeObserver(setOffset).observe(header);
+  }
+
+  function enhanceFluidCarousels() {
+    $$('.carousel-wrapper').forEach(wrapper => {
+      if (wrapper.dataset.fluidCarousel === 'true') return;
+      const outer = $('.carousel-track-outer', wrapper);
+      const prev = $('.carousel-btn-prev', wrapper);
+      const next = $('.carousel-btn-next', wrapper);
+      if (!outer) return;
+      wrapper.dataset.fluidCarousel = 'true';
+      wrapper.classList.add('carousel-fluid-scroll');
+      const scrollStep = () => Math.max(outer.clientWidth * .72, 150);
+      prev?.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        outer.scrollBy({ left: -scrollStep(), behavior: 'smooth' });
+      }, true);
+      next?.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        outer.scrollBy({ left: scrollStep(), behavior: 'smooth' });
+      }, true);
+    });
+  }
+
+  function enhanceVittShowcaseControls() {
+    const wrap = $('.vitt-showcase-track-wrap');
+    const track = $('.vitt-showcase-track', wrap);
+    if (!wrap || !track || wrap.dataset.vittControls === 'true') return;
+    wrap.dataset.vittControls = 'true';
+    wrap.classList.add('vitt-showcase-enhanced-wrap');
+    const prev = document.createElement('button');
+    const next = document.createElement('button');
+    prev.type = 'button';
+    next.type = 'button';
+    prev.className = 'vitt-showcase-btn vitt-showcase-btn-prev';
+    next.className = 'vitt-showcase-btn vitt-showcase-btn-next';
+    prev.setAttribute('aria-label', 'Föregående produkter');
+    next.setAttribute('aria-label', 'Nästa produkter');
+    prev.innerHTML = ARROW_LEFT;
+    next.innerHTML = ARROW_RIGHT;
+    wrap.append(prev, next);
+    const step = () => Math.max(track.clientWidth * .68, 150);
+    prev.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }));
+    next.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }));
   }
 
   function init() {
@@ -267,8 +326,11 @@
     enhanceCards();
     enhanceProductPage();
     rebuildMobileMenu();
+    syncStickyHeaderOffset();
+    enhanceFluidCarousels();
+    enhanceVittShowcaseControls();
     updateSavedBadge();
-    document.addEventListener('click', () => setTimeout(() => { updateSavedBadge(); enhanceCards(); rebuildMobileMenu(); updateFilterPills(); }, 60));
+    document.addEventListener('click', () => setTimeout(() => { updateSavedBadge(); enhanceCards(); rebuildMobileMenu(); updateFilterPills(); enhanceVittShowcaseControls(); }, 60));
     window.addEventListener('storage', updateSavedBadge);
     window.addEventListener('focus', updateSavedBadge);
   }
