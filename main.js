@@ -327,86 +327,13 @@
     $$('.subnav-inner').forEach(nav => { if (!$('a[href="vitt-snus.html"]', nav)) { const link = document.createElement('a'); link.href = 'vitt-snus.html'; link.textContent = 'Vitt snus'; const los = $$('a', nav).find(item => item.getAttribute('href') === 'los.html'); los ? insertAfter(los, link) : nav.appendChild(link); } });
   }
   function mobileMenuLink(href, text, extra = '') { return `<a class="mobile-menu-link${extra ? ` ${extra}` : ''}" href="${href}">${text}</a>`; }
-  function initMobileMenu() {
-  if ($('.mobile-menu-panel')) return;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'mobile-menu-overlay';
-
-  const panel = document.createElement('aside');
-  panel.className = 'mobile-menu-panel';
-  panel.setAttribute('aria-hidden', 'true');
-
-  panel.innerHTML = `
-    <div class="mobile-menu-header">
-      <a href="index.html" class="site-logo mobile-menu-logo">
-        Swedsnus
-        <span>Tillverkare · Hemsjö, Sverige</span>
-      </a>
-      <button class="mobile-menu-close" type="button" aria-label="Stäng meny">×</button>
-    </div>
-
-    <div class="mobile-menu-content">
-      <nav class="mobile-menu-section mobile-menu-primary-section" aria-label="Mobil huvudnavigation">
-        <a class="mobile-menu-link mobile-menu-main-link" href="index.html">Hem</a>
-
-        <span class="mobile-menu-link mobile-menu-main-link mobile-menu-static">Sortiment</span>
-
-        <div class="mobile-submenu">
-          <a class="mobile-menu-link mobile-menu-sub-link" href="portion.html">Portionssnus</a>
-          <a class="mobile-menu-link mobile-menu-sub-link" href="los.html">Lössnus</a>
-          <a class="mobile-menu-link mobile-menu-sub-link" href="vitt-snus.html">Vitt snus</a>
-          <a class="mobile-menu-link mobile-menu-sub-link" href="gor-eget.html">Gör Eget</a>
-          <a class="mobile-menu-link mobile-menu-sub-link" href="tillbehor.html">Tillbehör</a>
-        </div>
-
-        <a class="mobile-menu-link mobile-menu-main-link" href="about.html">Om Oss</a>
-        <a class="mobile-menu-link mobile-menu-main-link" href="guide.html">Guide</a>
-      </nav>
-
-      <nav class="mobile-menu-section mobile-menu-secondary-section" aria-label="Mobil kontonavigation">
-        <a class="mobile-menu-link mobile-menu-secondary-link" href="account.html">Mina Sidor</a>
-        <a class="mobile-menu-link mobile-menu-secondary-link" href="contact.html">Kundservice</a>
-      </nav>
-    </div>
-  `;
-
-  document.body.append(overlay, panel);
-
-  const toggle = $('.nav-toggle');
-
-  const close = () => {
-    panel.classList.remove('open');
-    overlay.classList.remove('show');
-    document.body.classList.remove('mobile-menu-open');
-    panel.setAttribute('aria-hidden', 'true');
-    toggle?.setAttribute('aria-expanded', 'false');
-  };
-
-  const open = () => {
-    panel.classList.add('open');
-    overlay.classList.add('show');
-    document.body.classList.add('mobile-menu-open');
-    panel.setAttribute('aria-hidden', 'false');
-    toggle?.setAttribute('aria-expanded', 'true');
-  };
-
-  toggle?.addEventListener('click', event => {
-    event.preventDefault();
-    panel.classList.contains('open') ? close() : open();
-  });
-
-  $('.mobile-menu-close', panel)?.addEventListener('click', close);
-  overlay.addEventListener('click', close);
-  $$('a', panel).forEach(link => link.addEventListener('click', close));
-}
+  
   function initNavigation() {
     ensureVittSnusLinks();
     $$('a[href="#"]').forEach(link => { if (link.textContent.trim().toLowerCase() === 'kontakt') link.href = 'contact.html'; });
     $$('a[href="portion.html#gor-eget"], a[href="index.html#gor-eget"], a[href$="#gor-eget"]').forEach(link => link.href = 'gor-eget.html');
     const file = window.location.pathname.split('/').pop() || 'index.html';
     $$('.subheader-inner a, .subnav-inner a, .main-nav a').forEach(link => { const href = (link.getAttribute('href') || '').split('#')[0].split('/').pop(); if (href && href === file) link.classList.add('active'); });
-    initMobileMenu();
   }
   function initVittShowcase() {
     const file = window.location.pathname.split('/').pop() || 'index.html';
