@@ -22,6 +22,14 @@
     return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'produkt';
   }
 
+  function loadMobileFixStyles() {
+    if ($('link[href="mobile-sticky-menu-footer.css"]')) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'mobile-sticky-menu-footer.css';
+    document.head.appendChild(link);
+  }
+
   function updateSavedBadge() {
     const count = loggedIn() ? readBookmarks().length : 0;
     $$('a[href="bookmarks.html"]').forEach(link => {
@@ -179,12 +187,37 @@
     });
   }
 
+  function mobileLink(href, text, className) {
+    return `<a class="mobile-menu-link ${className}" href="${href}">${text}</a>`;
+  }
+
+  function closeMobileMenu() {
+    const panel = $('.mobile-menu-panel');
+    const overlay = $('.mobile-menu-overlay');
+    const toggle = $('.nav-toggle');
+    panel?.classList.remove('open');
+    overlay?.classList.remove('show');
+    document.body.classList.remove('mobile-menu-open');
+    panel?.setAttribute('aria-hidden', 'true');
+    toggle?.setAttribute('aria-expanded', 'false');
+  }
+
+  function rebuildMobileMenu() {
+    const content = $('.mobile-menu-content');
+    if (!content || content.dataset.structured === 'true') return;
+    content.dataset.structured = 'true';
+    content.innerHTML = `<nav class="mobile-menu-section mobile-menu-primary-section" aria-label="Mobil huvudnavigation">${mobileLink('index.html', 'Hem', 'mobile-menu-main-link')}<span class="mobile-menu-link mobile-menu-main-link mobile-menu-static">Sortiment</span><div class="mobile-submenu">${mobileLink('portion.html', 'Portionssnus', 'mobile-menu-sub-link')}${mobileLink('los.html', 'Lössnus', 'mobile-menu-sub-link')}${mobileLink('vitt-snus.html', 'Vitt snus', 'mobile-menu-sub-link')}${mobileLink('gor-eget.html', 'Gör Eget', 'mobile-menu-sub-link')}${mobileLink('tillbehor.html', 'Tillbehör', 'mobile-menu-sub-link')}</div>${mobileLink('about.html', 'Om Oss', 'mobile-menu-main-link')}${mobileLink('guide.html', 'Guide', 'mobile-menu-main-link')}</nav><nav class="mobile-menu-section mobile-menu-secondary-section" aria-label="Mobil kontonavigation">${mobileLink('account.html', 'Mina Sidor', 'mobile-menu-secondary-link')}${mobileLink('contact.html', 'Kundservice', 'mobile-menu-secondary-link')}</nav>`;
+    $$('a', content).forEach(link => link.addEventListener('click', closeMobileMenu));
+  }
+
   function init() {
+    loadMobileFixStyles();
     repairAuthTabs();
     enhanceCards();
     enhanceProductPage();
+    rebuildMobileMenu();
     updateSavedBadge();
-    document.addEventListener('click', () => setTimeout(() => { updateSavedBadge(); enhanceCards(); }, 60));
+    document.addEventListener('click', () => setTimeout(() => { updateSavedBadge(); enhanceCards(); rebuildMobileMenu(); }, 60));
     window.addEventListener('storage', updateSavedBadge);
     window.addEventListener('focus', updateSavedBadge);
   }
