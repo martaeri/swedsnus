@@ -151,6 +151,10 @@
   padding: clamp(2rem, 5vw, 4rem) 1rem;
 }
 
+.order-page-wrap {
+  padding-top: clamp(1.1rem, 3vw, 1.7rem);
+}
+
 .auth-page-card,
 .account-locked {
   max-width: 640px;
@@ -239,6 +243,57 @@
   margin-top: 1.8rem;
 }
 
+.order-context-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.order-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  color: var(--color-text);
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.order-back-link svg {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.order-back-link:hover svg {
+  background: var(--color-surface-2);
+}
+
+.order-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  color: var(--color-text-muted);
+  font-size: .76rem;
+  font-weight: 700;
+}
+
+.order-breadcrumb a {
+  color: var(--color-text);
+}
+
+.order-breadcrumb a:hover {
+  color: var(--color-accent);
+}
+
 .order-card {
   display: flex;
   justify-content: space-between;
@@ -318,6 +373,10 @@
 }
 
 body.is-logged-in .header-icon-btn[href="account.html"] {
+  background: transparent;
+}
+
+body.is-logged-in .header-icon-btn[href="account.html"]:hover {
   background: var(--color-surface-2);
 }
 
@@ -334,6 +393,11 @@ body.is-logged-in .header-icon-btn[href="account.html"] {
   .account-stat-grid,
   .account-help-grid {
     grid-template-columns: 1fr;
+  }
+
+  .order-context-nav {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .order-card {
