@@ -1,3 +1,37 @@
+.snus-card-enhanced .product-card-body {
+  position: relative;
+  padding-top: .95rem;
+}
+
+.snus-card-enhanced .product-card-name {
+  padding-right: 3.15rem;
+}
+
+.snus-card-enhanced .snus-card-summary {
+  padding-right: 3.15rem;
+}
+
+.product-card-strength-row {
+  position: absolute;
+  top: .92rem;
+  right: 1rem;
+  width: auto;
+  justify-content: flex-end;
+}
+
+.product-card-strength-row > span:not(.strength-dots) {
+  display: none;
+}
+
+.product-card-strength-row .strength-dots {
+  gap: .2rem;
+}
+
+.product-card-strength-row .strength-dots span {
+  width: 7px;
+  height: 7px;
+}
+
 @media (max-width: 720px) {
   .site-header {
     position: sticky;
