@@ -84,6 +84,17 @@
   }
 
   .carousel-track .product-card {
+    flex: 0 0 calc((100% - 1rem) / 2.28) !important;
+    width: calc((100% - 1rem) / 2.28) !important;
+    min-width: calc((100% - 1rem) / 2.28) !important;
     min-height: clamp(252px, 68vw, 330px);
+  }
+}
+
+@media (max-width: 360px) {
+  .carousel-track .product-card {
+    flex-basis: calc((100% - .8rem) / 2.18) !important;
+    width: calc((100% - .8rem) / 2.18) !important;
+    min-width: calc((100% - .8rem) / 2.18) !important;
   }
 }
