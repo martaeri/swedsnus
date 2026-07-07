@@ -25,11 +25,19 @@
   }
 
   function loadMobileFixStyles() {
-    if ($('link[href="mobile-sticky-menu-footer.css"]')) return;
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'mobile-sticky-menu-footer.css';
-    document.head.appendChild(link);
+    if (!$('link[href="mobile-sticky-menu-footer.css"]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'mobile-sticky-menu-footer.css';
+      document.head.appendChild(link);
+    }
+
+    if (!$('script[src="hamburger-menu.js"]')) {
+      const script = document.createElement('script');
+      script.src = 'hamburger-menu.js';
+      script.defer = true;
+      document.body.appendChild(script);
+    }
   }
 
   function updateSavedBadge() {
@@ -239,25 +247,6 @@
     });
   }
 
-  function mobileLink(href, text, className) {
-    return `<a class="mobile-menu-link ${className}" href="${href}">${text}</a>`;
-  }
-
-  function closeMobileMenu() {
-    const panel = $('.mobile-menu-panel');
-    const overlay = $('.mobile-menu-overlay');
-    const toggle = $('.nav-toggle');
-    panel?.classList.remove('open');
-    overlay?.classList.remove('show');
-    document.body.classList.remove('mobile-menu-open');
-    panel?.setAttribute('aria-hidden', 'true');
-    toggle?.setAttribute('aria-expanded', 'false');
-  }
-
-  function rebuildMobileMenu() {
-  return;
-}
-
   function syncStickyHeaderOffset() {
     const header = $('.site-header');
     if (!header) return;
@@ -318,12 +307,11 @@
     updateFilterPills();
     enhanceCards();
     enhanceProductPage();
-    rebuildMobileMenu();
     syncStickyHeaderOffset();
     enhanceFluidCarousels();
     enhanceVittShowcaseControls();
     updateSavedBadge();
-    document.addEventListener('click', () => setTimeout(() => { updateSavedBadge(); enhanceCards(); rebuildMobileMenu(); updateFilterPills(); enhanceVittShowcaseControls(); }, 60));
+    document.addEventListener('click', () => setTimeout(() => { updateSavedBadge(); enhanceCards(); updateFilterPills(); enhanceVittShowcaseControls(); }, 60));
     window.addEventListener('storage', updateSavedBadge);
     window.addEventListener('focus', updateSavedBadge);
   }
