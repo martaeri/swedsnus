@@ -1,7 +1,11 @@
 (() => {
   const MENU_ID = 'swedsnus-hamburger-menu';
   const TRIGGER_SELECTOR = '.nav-toggle';
-  const EXTRA_THEMES = [
+  const THEME_OPTIONS = [
+    { id: '1', className: 'theme-dot-1', title: 'Classic Dark Brown' },
+    { id: '2', className: 'theme-dot-2', title: 'White & Forest Green' },
+    { id: '3', className: 'theme-dot-3', title: 'Slate & Gold' },
+    { id: '4', className: 'theme-dot-4', title: 'Nordic Light Blue' },
     { id: '5', className: 'theme-dot-5', title: 'Classy Factory Burgundy' },
     { id: '6', className: 'theme-dot-6', title: 'Robust Workshop Rust' },
     { id: '7', className: 'theme-dot-7', title: 'Nordic Local Craft' }
@@ -35,23 +39,22 @@
     const switcher = $('.theme-switcher');
     if (!switcher) return;
 
-    EXTRA_THEMES.forEach(theme => {
-      if ($(`.theme-dot[data-theme="${theme.id}"]`, switcher)) return;
+    const label = $('p', switcher) || document.createElement('p');
+    label.textContent = 'Tema';
+    switcher.innerHTML = '';
+    switcher.appendChild(label);
+
+    const saved = localStorage.getItem('swedsnus-theme') || '1';
+    THEME_OPTIONS.forEach(theme => {
       const button = document.createElement('button');
       button.className = `theme-dot ${theme.className}`;
       button.type = 'button';
       button.dataset.theme = theme.id;
       button.title = theme.title;
       button.setAttribute('aria-label', theme.title);
+      button.classList.toggle('active', theme.id === saved);
+      button.addEventListener('click', () => applyTheme(theme.id));
       switcher.appendChild(button);
-    });
-
-    const saved = localStorage.getItem('swedsnus-theme') || '1';
-    $$('.theme-dot', switcher).forEach(dot => {
-      dot.classList.toggle('active', dot.dataset.theme === saved);
-      if (dot.dataset.expandedThemeBound === 'true') return;
-      dot.dataset.expandedThemeBound = 'true';
-      dot.addEventListener('click', () => applyTheme(dot.dataset.theme || '1'));
     });
   }
 
