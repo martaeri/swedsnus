@@ -1,4 +1,50 @@
+.hero .hero-tabs {
+  display: none !important;
+}
+
+.has-collapsible-copy .banner-copy-collapse {
+  max-height: 3.75rem;
+  overflow: hidden;
+  transition: max-height .24s ease;
+}
+
+.has-collapsible-copy.is-expanded .banner-copy-collapse {
+  max-height: 28rem;
+}
+
+.banner-copy-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: .25rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  padding: .34rem .78rem;
+  font-family: var(--font-body);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.fullbleed-section.light .banner-copy-toggle {
+  color: var(--color-primary);
+}
+
+.feature-strip-fullbleed,
+.fullbleed-section {
+  transition: padding .24s ease;
+}
+
 @media (max-width: 720px) {
+  .site-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1800 !important;
+  }
+
   body.hamburger-is-open {
     overflow: hidden;
   }
@@ -25,6 +71,41 @@
     margin: 0;
     border-radius: 999px;
     background: currentColor;
+  }
+
+  .carousel-track .product-card,
+  .product-grid .product-card {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    height: auto !important;
+  }
+
+  .carousel-track .product-card .img-placeholder.product,
+  .product-grid .product-card .img-placeholder.product {
+    display: flex !important;
+    position: relative !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-height: clamp(96px, 36vw, 148px) !important;
+    aspect-ratio: 1 / .78 !important;
+    margin: 0 !important;
+    z-index: 1 !important;
+  }
+
+  .carousel-track .product-card .product-card-body,
+  .product-grid .product-card .product-card-body {
+    position: relative !important;
+    z-index: 2 !important;
+    flex: 1 1 auto !important;
+    padding-top: .78rem !important;
+    background: var(--color-surface) !important;
+  }
+
+  .carousel-track .product-card .product-card-name,
+  .product-grid .product-card .product-card-name {
+    margin-top: 0 !important;
+    clear: both !important;
   }
 
   .hamburger-backdrop {
@@ -210,6 +291,24 @@
 
   .hamburger-link-static .hamburger-arrow {
     display: none;
+  }
+
+  .feature-strip-fullbleed {
+    padding: 2rem 0;
+  }
+
+  .fullbleed-section {
+    padding: 2.45rem 0;
+  }
+
+  .feature-strip-inner,
+  .fullbleed-inner,
+  .fullbleed-inner.thirds {
+    gap: 1.1rem !important;
+  }
+
+  .has-collapsible-copy .banner-copy-collapse {
+    max-height: 3.25rem;
   }
 }
 
