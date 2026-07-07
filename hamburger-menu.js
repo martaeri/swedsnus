@@ -1,6 +1,11 @@
 (() => {
   const MENU_ID = 'swedsnus-hamburger-menu';
   const TRIGGER_SELECTOR = '.nav-toggle';
+  const EXTRA_THEMES = [
+    { id: '5', className: 'theme-dot-5', title: 'Classy Factory Burgundy' },
+    { id: '6', className: 'theme-dot-6', title: 'Robust Workshop Rust' },
+    { id: '7', className: 'theme-dot-7', title: 'Nordic Local Craft' }
+  ];
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -11,6 +16,44 @@
       <span class="hamburger-arrow" aria-hidden="true">›</span>
     </a>
   `;
+
+  function loadExpandedThemeStyles() {
+    if ($('link[href="expanded-themes.css"]')) return;
+    const linkElement = document.createElement('link');
+    linkElement.rel = 'stylesheet';
+    linkElement.href = 'expanded-themes.css';
+    document.head.appendChild(linkElement);
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.className = theme === '1' ? '' : `theme-${theme}`;
+    $$('.theme-dot').forEach(dot => dot.classList.toggle('active', dot.dataset.theme === theme));
+    localStorage.setItem('swedsnus-theme', theme);
+  }
+
+  function initExpandedThemeSwitcher() {
+    const switcher = $('.theme-switcher');
+    if (!switcher) return;
+
+    EXTRA_THEMES.forEach(theme => {
+      if ($(`.theme-dot[data-theme="${theme.id}"]`, switcher)) return;
+      const button = document.createElement('button');
+      button.className = `theme-dot ${theme.className}`;
+      button.type = 'button';
+      button.dataset.theme = theme.id;
+      button.title = theme.title;
+      button.setAttribute('aria-label', theme.title);
+      switcher.appendChild(button);
+    });
+
+    const saved = localStorage.getItem('swedsnus-theme') || '1';
+    $$('.theme-dot', switcher).forEach(dot => {
+      dot.classList.toggle('active', dot.dataset.theme === saved);
+      if (dot.dataset.expandedThemeBound === 'true') return;
+      dot.dataset.expandedThemeBound = 'true';
+      dot.addEventListener('click', () => applyTheme(dot.dataset.theme || '1'));
+    });
+  }
 
   function removeLegacyMenu() {
     $$('.mobile-menu-overlay, .mobile-menu-panel').forEach(element => element.remove());
@@ -171,6 +214,8 @@
   }
 
   function init() {
+    loadExpandedThemeStyles();
+    initExpandedThemeSwitcher();
     initHamburgerMenu();
     initHomepageBannerCollapse();
   }
