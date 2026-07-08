@@ -11,6 +11,7 @@
     { id: '7', className: 'theme-dot-7', title: 'Nordic Local Craft' },
     { id: '8', className: 'theme-dot-8', title: 'Simple Navy White' }
   ];
+  const PORTION_COUNTS = { '300': '15 dosor', '400': '20 dosor', '500': '25 dosor' };
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -23,11 +24,19 @@
   `;
 
   function loadExpandedThemeStyles() {
-    if ($('link[href="expanded-themes.css"]')) return;
-    const linkElement = document.createElement('link');
-    linkElement.rel = 'stylesheet';
-    linkElement.href = 'expanded-themes.css';
-    document.head.appendChild(linkElement);
+    if (!$('link[href="expanded-themes.css"]')) {
+      const linkElement = document.createElement('link');
+      linkElement.rel = 'stylesheet';
+      linkElement.href = 'expanded-themes.css';
+      document.head.appendChild(linkElement);
+    }
+
+    if (!$('link[href="product-family-pages.css"]')) {
+      const linkElement = document.createElement('link');
+      linkElement.rel = 'stylesheet';
+      linkElement.href = 'product-family-pages.css';
+      document.head.appendChild(linkElement);
+    }
   }
 
   function applyTheme(theme) {
@@ -161,6 +170,54 @@
     });
   }
 
+  function normalizePortionCountTitle(name) {
+    return String(name || '').replace(/\b(300|400|500)\b(?!\s*dosor)/g, match => PORTION_COUNTS[match] || match);
+  }
+
+  function currentFile() {
+    return window.location.pathname.split('/').pop() || 'index.html';
+  }
+
+  function classifyProductCard(card) {
+    const file = currentFile();
+    const name = $('.product-card-name', card)?.textContent || '';
+    const badge = $('.product-card-badge', card)?.textContent || '';
+    const meta = $$('.product-card-meta', card).map(item => item.textContent).join(' ');
+    const text = `${file} ${name} ${badge} ${meta} ${card.dataset.series || ''}`.toLowerCase();
+
+    if (text.includes('expressarom') || text.includes('super dry arom') || /\barom\b/.test(text)) return 'arom';
+    if (file === 'tillbehor.html' || text.includes('tillbehör') || text.includes('tillbehor')) return 'tillbehor';
+    if (file === 'los.html' || text.includes('lössnus') || text.includes('lossnus') || ((text.includes('instant') || text.includes('express')) && !text.includes('portion'))) return 'los';
+    return 'portion';
+  }
+
+  function hrefForFamily(family) {
+    if (family === 'los') return 'product-los.html';
+    if (family === 'arom') return 'product-arom.html';
+    if (family === 'tillbehor') return 'product-tillbehor.html';
+    return 'product-portion.html';
+  }
+
+  function updateProductCards() {
+    $$('.product-card').forEach(card => {
+      const name = $('.product-card-name', card);
+      if (name) {
+        const next = normalizePortionCountTitle(name.textContent);
+        if (name.textContent !== next) name.textContent = next;
+      }
+
+      const family = classifyProductCard(card);
+      card.dataset.productFamily = family;
+      card.dataset.href = hrefForFamily(family);
+    });
+  }
+
+  function initProductFamilyRouting() {
+    updateProductCards();
+    const observer = new MutationObserver(() => updateProductCards());
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
   function unwrapBannerCopy(block, collapse, paragraphs, button) {
     paragraphs.forEach(paragraph => collapse.insertAdjacentElement('beforebegin', paragraph));
     button.remove();
@@ -221,6 +278,7 @@
     loadExpandedThemeStyles();
     initExpandedThemeSwitcher();
     initHamburgerMenu();
+    initProductFamilyRouting();
     initHomepageBannerCollapse();
   }
 
