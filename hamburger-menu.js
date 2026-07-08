@@ -9,7 +9,9 @@
     { id: '5', className: 'theme-dot-5', title: 'Classy Factory Burgundy' },
     { id: '6', className: 'theme-dot-6', title: 'Robust Workshop Rust' },
     { id: '7', className: 'theme-dot-7', title: 'Nordic Local Craft' },
-    { id: '8', className: 'theme-dot-8', title: 'Simple Navy White' }
+    { id: '8', className: 'theme-dot-8', title: 'Simple Navy White' },
+    { id: '9', className: 'theme-dot-9', title: 'Factory Stamp' },
+    { id: '10', className: 'theme-dot-10', title: 'Dark Navy White' }
   ];
   const PORTION_COUNTS = { '300': '15 dosor', '400': '20 dosor', '500': '25 dosor' };
 
@@ -23,20 +25,18 @@
     </a>
   `;
 
-  function loadExpandedThemeStyles() {
-    if (!$('link[href="expanded-themes.css"]')) {
-      const linkElement = document.createElement('link');
-      linkElement.rel = 'stylesheet';
-      linkElement.href = 'expanded-themes.css';
-      document.head.appendChild(linkElement);
-    }
+  function loadStylesheet(href) {
+    if ($(`link[href="${href}"]`)) return;
+    const linkElement = document.createElement('link');
+    linkElement.rel = 'stylesheet';
+    linkElement.href = href;
+    document.head.appendChild(linkElement);
+  }
 
-    if (!$('link[href="product-family-pages.css"]')) {
-      const linkElement = document.createElement('link');
-      linkElement.rel = 'stylesheet';
-      linkElement.href = 'product-family-pages.css';
-      document.head.appendChild(linkElement);
-    }
+  function loadExpandedThemeStyles() {
+    loadStylesheet('expanded-themes.css');
+    loadStylesheet('advanced-themes.css');
+    loadStylesheet('product-family-pages.css');
   }
 
   function applyTheme(theme) {
