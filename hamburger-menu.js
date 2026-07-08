@@ -8,7 +8,8 @@
     { id: '4', className: 'theme-dot-4', title: 'Nordic Light Blue' },
     { id: '5', className: 'theme-dot-5', title: 'Classy Factory Burgundy' },
     { id: '6', className: 'theme-dot-6', title: 'Robust Workshop Rust' },
-    { id: '7', className: 'theme-dot-7', title: 'Nordic Local Craft' }
+    { id: '7', className: 'theme-dot-7', title: 'Nordic Local Craft' },
+    { id: '8', className: 'theme-dot-8', title: 'Simple Navy White' }
   ];
 
   const $ = (selector, root = document) => root.querySelector(selector);
