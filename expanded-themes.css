@@ -232,6 +232,22 @@
   grid-template-columns: 1fr;
 }
 
+.site-header:has(.cart-wrapper:hover),
+.site-header:has(.cart-wrapper:focus-within),
+.site-header:has(.cart-panel:hover) {
+  z-index: 5000 !important;
+}
+
+.cart-wrapper:hover,
+.cart-wrapper:focus-within,
+.cart-panel:hover {
+  z-index: 5001 !important;
+}
+
+.cart-panel {
+  z-index: 5002 !important;
+}
+
 @media (max-width: 720px) {
   .theme-switcher {
     max-height: calc(100dvh - 1.4rem);
