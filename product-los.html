@@ -27,21 +27,25 @@
         <dl class="product-detail-meta">
           <div class="product-detail-meta-row"><dt>Typ</dt><dd>Instant</dd></div>
           <div class="product-detail-meta-row"><dt>Smak</dt><dd>Klassisk, Bär, Citrus</dd></div>
-          <div class="product-detail-meta-row"><dt>Malningsgrad</dt><dd>Standard</dd></div>
-          <div class="product-detail-meta-row"><dt>Styrka</dt><dd><div class="strength-bar" style="display:inline-flex;"><span class="filled"></span><span class="filled"></span><span></span><span></span></div></dd></div>
+          <div class="product-detail-meta-row"><dt>Malningsgrad</dt><dd data-loose-grind-value>Standard</dd></div>
+          <div class="product-detail-meta-row"><dt>Styrka</dt><dd><div class="strength-bar" data-loose-strength-bar style="display:inline-flex;"><span class="filled"></span><span class="filled"></span><span></span><span></span></div></dd></div>
           <div class="product-detail-meta-row"><dt>Tillverkning</dt><dd>Hemsjö, Sverige</dd></div>
         </dl>
 
         <section class="product-choice-panel" aria-label="Produktval">
           <p class="product-choice-panel-title">Produktval</p>
-          <div class="product-choice-grid single"><div class="product-choice-field"><label for="loose-amount">Mängd</label><select id="loose-amount" data-loose-amount><option>10 dosor</option><option>20 dosor</option><option selected>40 dosor</option></select></div></div>
+          <div class="product-choice-grid">
+            <div class="product-choice-field"><label for="loose-amount">Mängd</label><select id="loose-amount" data-loose-amount><option>10 dosor</option><option>20 dosor</option><option selected>40 dosor</option></select></div>
+            <div class="product-choice-field"><label for="loose-grind">Malningsgrad</label><select id="loose-grind" data-loose-grind><option>Finmald</option><option selected>Standard</option><option>Grov</option></select></div>
+            <div class="product-choice-field"><label for="loose-strength">Styrka</label><select id="loose-strength" data-loose-strength><option selected>Normal</option><option>Strong</option><option>Extra Strong</option></select></div>
+          </div>
         </section>
 
         <p class="pack-picker-label">Välj köpantal</p>
         <div class="pack-picker-options"><label class="pack-option selected" data-price="699 kr" data-pack="1-pack"><input type="radio" name="pack" value="1" checked /><span class="pack-option-label">1-pack</span><span class="pack-option-price">699 kr</span><span class="pack-option-per">699 kr/st</span></label><label class="pack-option" data-price="1 299 kr" data-pack="2-pack"><input type="radio" name="pack" value="2" /><span class="pack-option-label">2-pack</span><span class="pack-option-price">1 299 kr</span><span class="pack-option-per">650 kr/st</span></label></div>
         <div class="add-to-cart-main"><div class="qty-btn-group"><button class="qty-btn qty-minus" aria-label="Minska antal">−</button><input class="qty-display" type="number" value="1" min="1" readonly aria-label="Antal" /><button class="qty-btn qty-plus" aria-label="Öka antal">+</button></div><a href="cart.html" class="btn btn-primary" style="flex:1;justify-content:center;">Lägg i kundvagn</a></div>
         <p class="product-desc">Paré Blue Instant är en mallprodukt för lössnus och instant-lössnus. Produkten används för att visa hur lössnusfamiljens produktsida skiljer sig från portionssnus.</p>
-        <table class="product-spec-table"><thead><tr><th colspan="2">Produktspecifikation</th></tr></thead><tbody><tr><td>Produktlinje</td><td>Paré Blue</td></tr><tr><td>Produkttyp</td><td>Instant lössnus</td></tr><tr><td>Smak</td><td>Klassisk, Bär, Citrus</td></tr><tr><td>Malningsgrad</td><td>Standard</td></tr><tr><td>Styrka</td><td>2/4</td></tr><tr><td>Mängd</td><td data-spec-amount>40 dosor</td></tr><tr><td>Tillverkningsort</td><td>Hemsjö, Sverige</td></tr></tbody></table>
+        <table class="product-spec-table"><thead><tr><th colspan="2">Produktspecifikation</th></tr></thead><tbody><tr><td>Produktlinje</td><td>Paré Blue</td></tr><tr><td>Produkttyp</td><td>Instant lössnus</td></tr><tr><td>Smak</td><td>Klassisk, Bär, Citrus</td></tr><tr><td>Malningsgrad</td><td data-spec-grind>Standard</td></tr><tr><td>Styrka</td><td data-spec-strength>Normal</td></tr><tr><td>Mängd</td><td data-spec-amount>40 dosor</td></tr><tr><td>Tillverkningsort</td><td>Hemsjö, Sverige</td></tr></tbody></table>
       </div>
     </div>
   </main>
@@ -52,18 +56,29 @@
     (() => {
       const root = document.querySelector('[data-loose-product]');
       if (!root) return;
-      const select = root.querySelector('[data-loose-amount]');
+      const amount = root.querySelector('[data-loose-amount]');
+      const grind = root.querySelector('[data-loose-grind]');
+      const strength = root.querySelector('[data-loose-strength]');
       const title = root.querySelector('[data-product-title]');
       const breadcrumb = document.querySelector('[data-product-breadcrumb]');
+      const grindMeta = root.querySelector('[data-loose-grind-value]');
+      const strengthBar = root.querySelector('[data-loose-strength-bar]');
       const specAmount = root.querySelector('[data-spec-amount]');
+      const specGrind = root.querySelector('[data-spec-grind]');
+      const specStrength = root.querySelector('[data-spec-strength]');
+      const levels = { 'Normal': 2, 'Strong': 3, 'Extra Strong': 4 };
       function update() {
-        const name = `Paré Blue Instant ${select.value}`;
+        const name = `Paré Blue Instant ${amount.value}`;
         title.textContent = name;
         document.title = `${name} — Swedsnus`;
         if (breadcrumb) breadcrumb.textContent = name;
-        if (specAmount) specAmount.textContent = select.value;
+        if (grindMeta) grindMeta.textContent = grind.value;
+        if (specAmount) specAmount.textContent = amount.value;
+        if (specGrind) specGrind.textContent = grind.value;
+        if (specStrength) specStrength.textContent = strength.value;
+        if (strengthBar) Array.from(strengthBar.children).forEach((dot, index) => dot.classList.toggle('filled', index < levels[strength.value]));
       }
-      select.addEventListener('change', update);
+      [amount, grind, strength].forEach(select => select.addEventListener('change', update));
       update();
     })();
   </script>
