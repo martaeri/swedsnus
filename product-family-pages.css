@@ -1,0 +1,73 @@
+.product-choice-panel {
+  display: grid;
+  gap: .8rem;
+  margin: 1rem 0 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: 0 8px 18px var(--color-card-shadow);
+}
+
+.product-choice-panel-title {
+  color: var(--color-text-muted);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.product-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .7rem;
+}
+
+.product-choice-grid.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.product-choice-field {
+  display: grid;
+  gap: .28rem;
+}
+
+.product-choice-field label {
+  color: var(--color-text-muted);
+  font-size: .64rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.product-choice-field select {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  padding: .52rem .75rem;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.product-detail-meta-row .strength-bar {
+  margin: 0;
+  vertical-align: middle;
+}
+
+.product-family-note {
+  color: var(--color-text-muted);
+  font-size: .76rem;
+  margin: -.35rem 0 1rem;
+}
+
+@media (max-width: 720px) {
+  .product-choice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-choice-panel {
+    padding: .85rem;
+  }
+}
