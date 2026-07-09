@@ -21,7 +21,7 @@
     <div class="product-layout">
       <div class="product-gallery"><div class="img-placeholder main-img">Produktbild</div><div class="thumb-row"><div class="thumb active"></div><div class="thumb"></div><div class="thumb"></div></div></div>
       <div class="product-detail" data-loose-product>
-        <div class="product-detail-badge"><span class="product-card-badge">Instant</span><span class="product-card-badge" style="background:var(--color-accent);">Lössnus</span></div>
+        <div class="product-detail-badge"><span class="product-card-badge" data-loose-line-badge>Instant</span><span class="product-card-badge" style="background:var(--color-accent);">Lössnus</span></div>
         <h1 data-product-title>Paré Blue Instant 40 dosor</h1>
         <p class="product-detail-price" id="main-price">699 kr <small>1-pack</small></p>
         <dl class="product-detail-meta">
@@ -45,7 +45,7 @@
         <div class="pack-picker-options"><label class="pack-option selected" data-price="699 kr" data-pack="1-pack"><input type="radio" name="pack" value="1" checked /><span class="pack-option-label">1-pack</span><span class="pack-option-price">699 kr</span><span class="pack-option-per">699 kr/st</span></label><label class="pack-option" data-price="1 299 kr" data-pack="2-pack"><input type="radio" name="pack" value="2" /><span class="pack-option-label">2-pack</span><span class="pack-option-price">1 299 kr</span><span class="pack-option-per">650 kr/st</span></label></div>
         <div class="add-to-cart-main"><div class="qty-btn-group"><button class="qty-btn qty-minus" aria-label="Minska antal">−</button><input class="qty-display" type="number" value="1" min="1" readonly aria-label="Antal" /><button class="qty-btn qty-plus" aria-label="Öka antal">+</button></div><a href="cart.html" class="btn btn-primary" style="flex:1;justify-content:center;">Lägg i kundvagn</a></div>
         <p class="product-desc">Paré Blue Instant är en mallprodukt för lössnus och instant-lössnus. Produkten används för att visa hur lössnusfamiljens produktsida skiljer sig från portionssnus.</p>
-        <table class="product-spec-table"><thead><tr><th colspan="2">Produktspecifikation</th></tr></thead><tbody><tr><td>Produktlinje</td><td>Paré Blue</td></tr><tr><td>Produkttyp</td><td>Instant lössnus</td></tr><tr><td>Smak</td><td>Klassisk, Bär, Citrus</td></tr><tr><td>Malningsgrad</td><td data-spec-grind>Standard</td></tr><tr><td>Styrka</td><td data-spec-strength>Normal</td></tr><tr><td>Mängd</td><td data-spec-amount>40 dosor</td></tr><tr><td>Tillverkningsort</td><td>Hemsjö, Sverige</td></tr></tbody></table>
+        <table class="product-spec-table"><thead><tr><th colspan="2">Produktspecifikation</th></tr></thead><tbody><tr><td>Produktlinje</td><td data-spec-product-line>Lössnus Instant</td></tr><tr><td>Smak</td><td>Klassisk, Bär, Citrus</td></tr><tr><td>Malningsgrad</td><td data-spec-grind>Standard</td></tr><tr><td>Styrka</td><td data-spec-strength>Normal, 13mg/g</td></tr><tr><td>Förpackningsstorlek</td><td data-spec-amount>40 dosor</td></tr><tr><td>Hållbarhet</td><td>3 år i obruten förpackning</td></tr><tr><td>Tillverkningsort</td><td>Hemsjö, Sverige</td></tr></tbody></table>
       </div>
     </div>
   </main>
@@ -61,21 +61,33 @@
       const strength = root.querySelector('[data-loose-strength]');
       const title = root.querySelector('[data-product-title]');
       const breadcrumb = document.querySelector('[data-product-breadcrumb]');
+      const lineBadge = root.querySelector('[data-loose-line-badge]');
       const grindMeta = root.querySelector('[data-loose-grind-value]');
       const strengthBar = root.querySelector('[data-loose-strength-bar]');
+      const specProductLine = root.querySelector('[data-spec-product-line]');
       const specAmount = root.querySelector('[data-spec-amount]');
       const specGrind = root.querySelector('[data-spec-grind]');
       const specStrength = root.querySelector('[data-spec-strength]');
       const levels = { 'Normal': 2, 'Strong': 3, 'Extra Strong': 4 };
+      const strengthSpecs = { 'Normal': 'Normal, 13mg/g', 'Strong': 'Strong 17mg/g', 'Extra Strong': 'Extra Strong 20 mg/g' };
+      function productLine() {
+        const value = (lineBadge?.textContent || 'Instant').trim().toLowerCase();
+        return value.includes('express') ? 'Lössnus Express' : 'Lössnus Instant';
+      }
       function update() {
-        const name = `Paré Blue Instant ${amount.value}`;
+        const parts = ['Paré Blue Instant'];
+        if (grind.value !== 'Standard') parts.push(grind.value);
+        if (strength.value !== 'Normal') parts.push(strength.value);
+        parts.push(amount.value);
+        const name = parts.join(' ');
         title.textContent = name;
         document.title = `${name} — Swedsnus`;
         if (breadcrumb) breadcrumb.textContent = name;
         if (grindMeta) grindMeta.textContent = grind.value;
+        if (specProductLine) specProductLine.textContent = productLine();
         if (specAmount) specAmount.textContent = amount.value;
         if (specGrind) specGrind.textContent = grind.value;
-        if (specStrength) specStrength.textContent = strength.value;
+        if (specStrength) specStrength.textContent = strengthSpecs[strength.value];
         if (strengthBar) Array.from(strengthBar.children).forEach((dot, index) => dot.classList.toggle('filled', index < levels[strength.value]));
       }
       [amount, grind, strength].forEach(select => select.addEventListener('change', update));

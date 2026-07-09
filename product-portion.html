@@ -31,7 +31,7 @@
     <div class="product-layout">
       <div class="product-gallery"><div class="img-placeholder main-img">Produktbild</div><div class="thumb-row"><div class="thumb active"></div><div class="thumb"></div><div class="thumb"></div></div></div>
       <div class="product-detail" data-portion-product>
-        <div class="product-detail-badge"><span class="product-card-badge" data-format-badge>Rebell</span><span class="product-card-badge" style="background:var(--color-accent);">White Portion</span></div>
+        <div class="product-detail-badge"><span class="product-card-badge" data-format-badge>Rebell</span><span class="product-card-badge" style="background:var(--color-accent);" data-product-line-badge>White Portion</span></div>
         <h1 data-product-title>Spacemint Extra Strong Rebell 20 dosor</h1>
         <p class="product-detail-price" id="main-price">299 kr <small>1-pack</small></p>
         <dl class="product-detail-meta">
@@ -44,7 +44,7 @@
         <section class="product-choice-panel" aria-label="Produktval">
           <p class="product-choice-panel-title">Produktval</p>
           <div class="product-choice-grid">
-            <div class="product-choice-field"><label for="portion-format">Format</label><select id="portion-format" data-portion-field="format"><option>Premium</option><option selected>Rebell</option><option>Compact</option><option>Mini</option><option>RX Slim</option><option>Instant</option></select></div>
+            <div class="product-choice-field"><label for="portion-format">Format</label><select id="portion-format" data-portion-field="format"><option>Premium</option><option selected>Rebell</option><option>Compact</option><option>Mini</option><option>RX Slim</option><option>Instant</option><option>LARGE</option></select></div>
             <div class="product-choice-field"><label for="portion-amount">Portioner</label><select id="portion-amount" data-portion-field="amount"><option value="15 dosor">15 dosor (300 portioner)</option><option value="20 dosor" selected>20 dosor (400 portioner)</option><option value="25 dosor">25 dosor (500 portioner)</option></select></div>
             <div class="product-choice-field"><label for="portion-strength">Styrka</label><select id="portion-strength" data-portion-field="strength"><option>Normal</option><option>Strong</option><option selected>Extra Strong</option></select></div>
           </div>
@@ -54,7 +54,7 @@
         <div class="pack-picker-options"><label class="pack-option selected" data-price="299 kr" data-pack="1-pack"><input type="radio" name="pack" value="1" checked /><span class="pack-option-label">1-pack</span><span class="pack-option-price">299 kr</span><span class="pack-option-per">299 kr/st</span></label><label class="pack-option" data-price="549 kr" data-pack="2-pack"><input type="radio" name="pack" value="2" /><span class="pack-option-label">2-pack</span><span class="pack-option-price">549 kr</span><span class="pack-option-per">274 kr/st</span></label></div>
         <div class="add-to-cart-main"><div class="qty-btn-group"><button class="qty-btn qty-minus" aria-label="Minska antal">−</button><input class="qty-display" type="number" value="1" min="1" readonly aria-label="Antal" /><button class="qty-btn qty-plus" aria-label="Öka antal">+</button></div><a href="cart.html" class="btn btn-primary" style="flex:1;justify-content:center;">Lägg i kundvagn</a></div>
         <p class="product-desc">Spacemint Extra Strong Rebell är ett portionssnus med tydlig mintkaraktär och extra stark styrka. Denna mall används för portionsprodukter, instant portion, super dry, white portion och vitt snus.</p>
-        <table class="product-spec-table"><thead><tr><th colspan="2">Produktspecifikation</th></tr></thead><tbody><tr><td>Produktlinje</td><td data-spec-format>Rebell</td></tr><tr><td>Format</td><td data-spec-format-long>White Portion Rebell</td></tr><tr><td>Smak</td><td>Mint</td></tr><tr><td>Styrka</td><td data-spec-strength>Extra Strong</td></tr><tr><td>Förpackningsstorlek</td><td data-spec-amount>20 dosor (400 portioner)</td></tr><tr><td>Tillverkningsort</td><td>Hemsjö, Sverige</td></tr></tbody></table>
+        <table class="product-spec-table"><thead><tr><th colspan="2">Produktspecifikation</th></tr></thead><tbody><tr><td>Produktlinje</td><td data-spec-product-line>White portion</td></tr><tr><td>Format</td><td data-spec-format-long>Rebell, 17 x 30 mm</td></tr><tr><td>Fyllnad</td><td data-spec-filling>Standard</td></tr><tr><td>Smak</td><td>Mint</td></tr><tr><td>Styrka</td><td data-spec-strength>Extra Strong 20 mg/g</td></tr><tr><td>Nikotinhalt</td><td data-spec-nicotine>7,5 mg/portion</td></tr><tr><td>Förpackningsstorlek</td><td data-spec-amount>20 dosor (400 portioner)</td></tr><tr><td>Hållbarhet</td><td data-spec-shelf-life>1 år i obruten förpackning</td></tr><tr><td>Tillverkningsort</td><td>Hemsjö, Sverige</td></tr></tbody></table>
         <div class="btn-row"><a href="guide.html" class="btn btn-outline btn-sm">Beredningsguide</a></div>
       </div>
     </div>
@@ -72,23 +72,40 @@
       const amount = root.querySelector('[data-portion-field="amount"]');
       const strength = root.querySelector('[data-portion-field="strength"]');
       const badge = root.querySelector('[data-format-badge]');
+      const lineBadge = root.querySelector('[data-product-line-badge]');
       const bar = root.querySelector('[data-strength-bar]');
-      const specFormat = root.querySelector('[data-spec-format]');
+      const specProductLine = root.querySelector('[data-spec-product-line]');
       const specFormatLong = root.querySelector('[data-spec-format-long]');
+      const specFilling = root.querySelector('[data-spec-filling]');
       const specStrength = root.querySelector('[data-spec-strength]');
+      const specNicotine = root.querySelector('[data-spec-nicotine]');
       const specAmount = root.querySelector('[data-spec-amount]');
+      const specShelfLife = root.querySelector('[data-spec-shelf-life]');
       const portions = { '15 dosor': '300 portioner', '20 dosor': '400 portioner', '25 dosor': '500 portioner' };
       const levels = { 'Normal': 2, 'Strong': 3, 'Extra Strong': 4 };
+      const formatSpecs = { 'Premium': 'Premium, 18 x 33 mm', 'Rebell': 'Rebell, 17 x 30 mm', 'Compact': 'Compact, 16 x 30 mm', 'Mini': 'Mini, 12 x 29 mm', 'RX Slim': 'RX Slim, 14 x 33mm', 'Instant': 'Instant, 18 x 32 mm', 'LARGE': 'LARGE, 18 x 34 mm' };
+      const strengthSpecs = { 'Normal': 'Normal, 13mg/g', 'Strong': 'Strong 17mg/g', 'Extra Strong': 'Extra Strong 20 mg/g' };
+      const nicotineSpecs = { 'Normal': '5mg/portion', 'Strong': '6.5 mg/portion', 'Extra Strong': '7,5 mg/portion' };
+      function productLine() {
+        const value = (lineBadge?.textContent || 'White portion').trim().toLowerCase();
+        if (value.includes('instant')) return 'Instant portion';
+        if (value.includes('super dry')) return 'Super dry';
+        return 'White portion';
+      }
       function update() {
+        const line = productLine();
         const name = `Spacemint ${strength.value} ${format.value} ${amount.value}`;
         title.textContent = name;
         document.title = `${name} — Swedsnus`;
         if (breadcrumb) breadcrumb.textContent = name;
         if (badge) badge.textContent = format.value;
-        if (specFormat) specFormat.textContent = format.value;
-        if (specFormatLong) specFormatLong.textContent = `White Portion ${format.value}`;
-        if (specStrength) specStrength.textContent = strength.value;
+        if (specProductLine) specProductLine.textContent = line;
+        if (specFormatLong) specFormatLong.textContent = formatSpecs[format.value];
+        if (specFilling) specFilling.textContent = format.value === 'LARGE' ? 'ca 25% extra' : 'Standard';
+        if (specStrength) specStrength.textContent = strengthSpecs[strength.value];
+        if (specNicotine) specNicotine.textContent = nicotineSpecs[strength.value];
         if (specAmount) specAmount.textContent = `${amount.value} (${portions[amount.value]})`;
+        if (specShelfLife) specShelfLife.textContent = line === 'White portion' ? '1 år i obruten förpackning' : '3 år i obruten förpackning';
         if (bar) Array.from(bar.children).forEach((dot, index) => dot.classList.toggle('filled', index < levels[strength.value]));
       }
       [format, amount, strength].forEach(select => select.addEventListener('change', update));
