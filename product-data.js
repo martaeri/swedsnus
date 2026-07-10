@@ -3,6 +3,9 @@
   window.__swedsnusProductDataLoaded = true;
 
   const DATA_URL = 'data/products.json';
+  const CART_KEY = 'swedsnus-cart';
+  const BOOKMARKS_KEY = 'swedsnus-bookmarks';
+  const PRODUCT_PAGE = 'product.html';
   const CART_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
   const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -72,14 +75,25 @@
     return 'product';
   }
 
-  function pageFor(row) {
-    if (row.product_family === 'Lössnus') return 'product-los.html';
-    if (row.product_family === 'Aromer') return 'product-arom.html';
-    if (row.product_family === 'Tillbehör') return 'product-tillbehor.html';
-    return 'product-portion.html';
+  function categoryUrl(row) {
+    if (row.product_family === 'Lössnus') return 'los.html';
+    if (row.product_family === 'Aromer') return row.aroma_type === 'Expressarom' ? 'los.html' : 'gor-eget.html';
+    if (row.product_family === 'Tillbehör') return 'tillbehor.html';
+    if (row.tobacco_type === 'Tobaksfri' || row.site_section === 'Vitt snus') return 'vitt-snus.html';
+    if (row.site_section === 'Gör eget') return 'gor-eget.html';
+    return 'portion.html';
   }
 
-  function urlFor(row) { return `${pageFor(row)}?id=${encodeURIComponent(rowKey(row))}`; }
+  function categoryLabel(row) {
+    if (row.product_family === 'Lössnus') return 'Lössnus';
+    if (row.product_family === 'Aromer') return row.aroma_type === 'Expressarom' ? 'Lössnus' : 'Gör Eget';
+    if (row.product_family === 'Tillbehör') return 'Tillbehör';
+    if (row.tobacco_type === 'Tobaksfri' || row.site_section === 'Vitt snus') return 'Vitt snus';
+    if (row.site_section === 'Gör eget') return 'Gör Eget';
+    return 'Portionssnus';
+  }
+
+  function urlFor(row) { return `${PRODUCT_PAGE}?id=${encodeURIComponent(rowKey(row))}`; }
 
   function strengthDots(row) {
     if (!row.strength || row.product_family === 'Aromer' || row.product_family === 'Tillbehör') return '';
@@ -171,9 +185,44 @@
 
   function productFields(row) {
     if (row.product_family === 'Lössnus') return [['amount', 'Mängd'], ['grind', 'Malningsgrad'], ['strength', 'Styrka']];
+    if (row.product_family === 'Aromer') return [['amount', 'Mängd'], ['aroma_type', 'Typ']];
+    if (row.product_family === 'Tillbehör') return [['package_quantity', 'Antal'], ['material', 'Material'], ['design_color', 'Färg']];
     return [['format', 'Format'], ['amount', 'Portioner'], ['strength', 'Styrka']];
   }
+
   function fieldValue(row, field) { return field === 'amount' ? amount(row) : row[field] || ''; }
+
+  function rowMatches(row, product = {}) {
+    const id = String(product.id || '').trim();
+    const nameValue = String(product.name || '').trim();
+    const hrefId = idFromHref(product.href);
+    const slug = slugify(nameValue);
+    const keys = [
+      rowKey(row),
+      row.product_id,
+      row.variant_id,
+      row.sku_draft,
+      row.article_number,
+      row.generated_name,
+      row.source_title,
+      row.taste_name && row.format && row.amount_dosor ? `${row.taste_name} ${row.format} ${row.amount_dosor} dosor` : '',
+      row.taste_name && row.product_line && row.amount_dosor ? `${row.taste_name} ${row.product_line} ${row.amount_dosor} dosor` : ''
+    ].filter(Boolean);
+    return keys.some(key => String(key) === id || String(key) === hrefId || slugify(key) === id || slugify(key) === hrefId || slugify(key) === slug);
+  }
+
+  function idFromHref(href) {
+    try {
+      const url = new URL(String(href || ''), location.href);
+      return url.searchParams.get('id') || '';
+    } catch (error) {
+      return '';
+    }
+  }
+
+  function findRow(product = {}) {
+    return state.rows.find(row => rowMatches(row, product)) || null;
+  }
 
   function currentRow() {
     const query = new URLSearchParams(location.search);
@@ -181,7 +230,7 @@
     const product = query.get('product');
     const variant = query.get('variant');
     if (id) {
-      const found = state.rows.find(row => rowKey(row) === id);
+      const found = state.rows.find(row => rowKey(row) === id || slugify(rowKey(row)) === slugify(id));
       if (found) return found;
     }
     if (product && variant) {
@@ -192,30 +241,37 @@
       const found = state.rows.find(row => row.product_id === product);
       if (found) return found;
     }
-    const fallback = page() === 'product-los.html' ? row => row.product_family === 'Lössnus' : row => row.product_family === 'Portionssnus';
-    return state.rows.find(row => visible(row) && fallback(row));
+    return null;
   }
 
   function rowSpecs(row) {
-    return [['Produktlinje', row.product_line], ['Tobakstyp', row.tobacco_type && row.tobacco_type !== 'Ej tillämpligt' ? row.tobacco_type : ''], ['Format', [row.format, row.format_dimensions].filter(Boolean).join(', ')], ['Fyllnad', row.fill_level], ['Smak', row.taste_display], ['Malningsgrad', row.grind], ['Styrka', [row.strength, row.strength_mg_g].filter(Boolean).join(', ')], ['Nikotinhalt', row.nicotine_per_portion], ['Förpackningsstorlek', row.portions_total ? `${row.amount_dosor} dosor (${row.portions_total} portioner)` : row.amount_dosor ? amount(row) : ''], ['Hållbarhet', row.shelf_life], ['Tillverkningsort', row.manufacturing_location]];
+    return [['Produktlinje', row.product_line], ['Tobakstyp', row.tobacco_type && row.tobacco_type !== 'Ej tillämpligt' ? row.tobacco_type : ''], ['Format', [row.format, row.format_dimensions].filter(Boolean).join(', ')], ['Fyllnad', row.fill_level], ['Smak', row.taste_display], ['Malningsgrad', row.grind], ['Styrka', [row.strength, row.strength_mg_g].filter(Boolean).join(', ')], ['Nikotinhalt', row.nicotine_per_portion], ['Förpackningsstorlek', row.portions_total ? `${row.amount_dosor} dosor (${row.portions_total} portioner)` : row.amount_dosor ? amount(row) : row.package_quantity ? `${row.package_quantity}-pack` : ''], ['Hållbarhet', row.shelf_life], ['Tillverkningsort', row.manufacturing_location]];
   }
 
   function renderDetail(row) {
     const detail = $('.product-detail');
     if (!detail || !row) return;
     detail.dataset.productId = rowKey(row);
+    detail.dataset.href = urlFor(row);
+    const category = categoryLabel(row);
+    const categoryHref = categoryUrl(row);
     const title = $('[data-product-title]', detail) || $('h1', detail);
     if (title) title.textContent = name(row);
     document.title = `${name(row)} — Swedsnus`;
     const breadcrumb = $('[data-product-breadcrumb]');
     if (breadcrumb) breadcrumb.textContent = name(row);
+    const categoryLink = $('[data-product-category-link]');
+    if (categoryLink) {
+      categoryLink.href = categoryHref;
+      categoryLink.textContent = category;
+    }
     const badge = $('.product-detail-badge', detail);
-    if (badge) badge.innerHTML = `<span class="product-card-badge">${escapeHtml(row.format || row.product_line || row.product_family)}</span>${row.tobacco_type === 'Tobaksfri' ? '<span class="product-card-badge" style="background:var(--color-accent);">Tobaksfri</span>' : ''}`;
+    if (badge) badge.innerHTML = `<span class="product-card-badge">${escapeHtml(row.format || row.product_line || row.aroma_type || row.accessory_type || row.product_family)}</span>${row.tobacco_type === 'Tobaksfri' ? '<span class="product-card-badge" style="background:var(--color-accent);">Tobaksfri</span>' : ''}`;
     const priceEl = $('.product-detail-price', detail);
     if (priceEl) priceEl.innerHTML = `${escapeHtml(price(row))} <small>1-pack</small>`;
     const desc = $('.product-desc', detail);
     if (desc) desc.textContent = row.short_description || `${name(row)} visas från produktdatan.`;
-    const metaRows = [['Typ', row.product_line || row.product_family], ['Smak', row.taste_display], ['Format', row.format], ['Malningsgrad', row.grind], ['Styrka', row.strength], ['Tobak', row.tobacco_type === 'Tobaksfri' ? 'Tobaksfri' : ''], ['Tillverkning', row.manufacturing_location]];
+    const metaRows = [['Typ', row.product_line || row.aroma_type || row.accessory_type || row.product_family], ['Smak', row.taste_display], ['Format', row.format], ['Malningsgrad', row.grind], ['Styrka', row.strength], ['Tobak', row.tobacco_type === 'Tobaksfri' ? 'Tobaksfri' : ''], ['Tillverkning', row.manufacturing_location]];
     const metaEl = $('.product-detail-meta', detail);
     if (metaEl) metaEl.innerHTML = metaRows.filter(item => item[1]).slice(0, 5).map(([label, val]) => `<div class="product-detail-meta-row"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(val)}</dd></div>`).join('');
     const spec = $('.product-spec-table tbody', detail);
@@ -223,6 +279,16 @@
     const pack = $('.pack-picker-options', detail);
     if (pack) pack.innerHTML = `<label class="pack-option selected" data-price="${escapeHtml(price(row))}" data-pack="1-pack"><input type="radio" name="pack" value="1" checked /><span class="pack-option-label">1-pack</span><span class="pack-option-price">${escapeHtml(price(row))}</span><span class="pack-option-per">${escapeHtml(price(row))}/st</span></label>`;
     $$('.bookmark-toggle', detail).forEach(button => { button.dataset.productId = rowKey(row); });
+  }
+
+  function renderMissingProduct() {
+    const detail = $('.product-detail');
+    if (!detail) return;
+    document.title = 'Produkt hittades inte — Swedsnus';
+    detail.innerHTML = '<div class="product-detail-badge"><span class="product-card-badge">Produktdata saknas</span></div><h1>Produkt hittades inte</h1><p class="product-desc">Produktlänken kunde inte matchas mot data/products.json.</p><div class="btn-row"><a href="portion.html" class="btn btn-primary">Till sortimentet</a></div>';
+    $('.product-gallery')?.classList.add('is-hidden');
+    const breadcrumb = $('[data-product-breadcrumb]');
+    if (breadcrumb) breadcrumb.textContent = 'Produkt hittades inte';
   }
 
   function matchingVariant(group, selected, changed, current) {
@@ -233,9 +299,12 @@
   }
 
   function renderProductPage() {
-    if (!['product-portion.html', 'product-los.html'].includes(page())) return;
+    if (page() !== PRODUCT_PAGE) return;
     const row = currentRow();
-    if (!row) return;
+    if (!row) {
+      renderMissingProduct();
+      return;
+    }
     const group = state.groups.get(row.product_id) || [row];
     const detail = $('.product-detail');
     if (!detail) return;
@@ -285,6 +354,63 @@
     if (showcase) showcase.innerHTML = state.rows.filter(row => visible(row) && (row.tobacco_type === 'Tobaksfri' || row.site_section === 'Vitt snus')).slice(0, 6).map(productCard).join('');
   }
 
+  function normalizeProductHref(product = {}) {
+    const row = findRow(product);
+    if (row) return urlFor(row);
+    const existingId = product.id || idFromHref(product.href);
+    return existingId ? `${PRODUCT_PAGE}?id=${encodeURIComponent(existingId)}` : product.href || '';
+  }
+
+  function migrateStore(key) {
+    try {
+      const items = JSON.parse(localStorage.getItem(key) || '[]');
+      if (!Array.isArray(items)) return;
+      let changed = false;
+      const next = items.map(item => {
+        const href = normalizeProductHref(item);
+        if (href && href !== item.href) {
+          changed = true;
+          return { ...item, href };
+        }
+        return item;
+      });
+      if (changed) localStorage.setItem(key, JSON.stringify(next));
+    } catch (error) {
+    }
+  }
+
+  function syncProductCard(card) {
+    const product = {
+      id: card.dataset.productId || card.dataset.productGroup || '',
+      name: $('.product-card-name', card)?.textContent?.trim() || '',
+      href: card.dataset.href || $('.product-card-main-link', card)?.getAttribute('href') || ''
+    };
+    const row = findRow(product);
+    if (!row) return;
+    const href = urlFor(row);
+    const id = rowKey(row);
+    card.dataset.href = href;
+    card.dataset.productId = id;
+    card.dataset.productGroup = row.product_id || card.dataset.productGroup || '';
+    card.dataset.variantId = row.variant_id || card.dataset.variantId || '';
+    const link = $('.product-card-main-link', card);
+    if (link) link.href = href;
+    $$('.bookmark-toggle', card).forEach(button => { button.dataset.productId = id; });
+  }
+
+  function syncTextLink(link) {
+    const text = link.textContent?.trim() || link.closest('.cart-panel-item, .cart-page-item')?.querySelector('.cart-panel-item-name, h3 a')?.textContent?.trim() || '';
+    const row = findRow({ name: text, href: link.getAttribute('href') || '' });
+    if (row) link.href = urlFor(row);
+  }
+
+  function syncExistingProductLinks() {
+    migrateStore(BOOKMARKS_KEY);
+    migrateStore(CART_KEY);
+    $$('.product-card').forEach(syncProductCard);
+    $$('a[href*="product-portion.html"], a[href*="product-los.html"], a[href*="product-arom.html"], a[href*="product-tillbehor.html"], a[href="product.html"], .cart-panel-item, .cart-page-img, .cart-page-main h3 a').forEach(syncTextLink);
+  }
+
   function bindProductCardNavigation() {
     if (window.__swedsnusProductCardNavigationBound) return;
     window.__swedsnusProductCardNavigationBound = true;
@@ -292,7 +418,7 @@
     document.addEventListener('click', event => {
       const card = event.target.closest('.product-card[data-href]');
       if (!card || event.target.closest(interactive)) return;
-      const href = card.dataset.href;
+      const href = card.dataset.href || $('.product-card-main-link', card)?.getAttribute('href');
       if (!href) return;
       event.preventDefault();
       event.stopImmediatePropagation();
@@ -302,7 +428,7 @@
       if (!['Enter', ' '].includes(event.key)) return;
       const card = event.target.closest('.product-card[data-href]');
       if (!card || event.target.closest(interactive)) return;
-      const href = card.dataset.href;
+      const href = card.dataset.href || $('.product-card-main-link', card)?.getAttribute('href');
       if (!href) return;
       event.preventDefault();
       location.href = href;
@@ -315,11 +441,14 @@
       const response = await fetch(DATA_URL, { cache: 'no-cache' });
       state.rows = expandData(await response.json()).filter(visible);
       state.groups = groupRows(state.rows);
-      window.SwedsnusProducts = { rows: state.rows, groups: state.groups, rowKey, urlFor, productCard };
+      window.SwedsnusProducts = { rows: state.rows, groups: state.groups, rowKey, urlFor, productCard, findRow, syncExistingProductLinks };
       renderCatalog();
       renderProductPage();
       renderIndex();
+      syncExistingProductLinks();
       document.dispatchEvent(new CustomEvent('swedsnus:products-rendered'));
+      setTimeout(syncExistingProductLinks, 0);
+      setTimeout(syncExistingProductLinks, 120);
     } catch (error) {
       document.documentElement.classList.add('product-data-load-failed');
       console.error(error);
