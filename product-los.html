@@ -31,7 +31,6 @@
           <div class="product-detail-meta-row"><dt>Styrka</dt><dd><div class="strength-bar" data-loose-strength-bar style="display:inline-flex;"><span class="filled"></span><span class="filled"></span><span></span><span></span></div></dd></div>
           <div class="product-detail-meta-row"><dt>Tillverkning</dt><dd>Hemsjö, Sverige</dd></div>
         </dl>
-
         <section class="product-choice-panel" aria-label="Produktval">
           <p class="product-choice-panel-title">Produktval</p>
           <div class="product-choice-grid">
@@ -40,11 +39,10 @@
             <div class="product-choice-field"><label for="loose-strength">Styrka</label><select id="loose-strength" data-loose-strength><option selected>Normal</option><option>Strong</option><option>Extra Strong</option></select></div>
           </div>
         </section>
-
         <p class="pack-picker-label">Välj köpantal</p>
         <div class="pack-picker-options"><label class="pack-option selected" data-price="699 kr" data-pack="1-pack"><input type="radio" name="pack" value="1" checked /><span class="pack-option-label">1-pack</span><span class="pack-option-price">699 kr</span><span class="pack-option-per">699 kr/st</span></label><label class="pack-option" data-price="1 299 kr" data-pack="2-pack"><input type="radio" name="pack" value="2" /><span class="pack-option-label">2-pack</span><span class="pack-option-price">1 299 kr</span><span class="pack-option-per">650 kr/st</span></label></div>
         <div class="add-to-cart-main"><div class="qty-btn-group"><button class="qty-btn qty-minus" aria-label="Minska antal">−</button><input class="qty-display" type="number" value="1" min="1" readonly aria-label="Antal" /><button class="qty-btn qty-plus" aria-label="Öka antal">+</button></div><a href="cart.html" class="btn btn-primary" style="flex:1;justify-content:center;">Lägg i kundvagn</a></div>
-        <p class="product-desc">Paré Blue Instant är en mallprodukt för lössnus och instant-lössnus. Produkten används för att visa hur lössnusfamiljens produktsida skiljer sig från portionssnus.</p>
+        <p class="product-desc">Paré Blue Instant är en mallprodukt för lössnus och instant-lössnus.</p>
         <table class="product-spec-table"><thead><tr><th colspan="2">Produktspecifikation</th></tr></thead><tbody><tr><td>Produktlinje</td><td data-spec-product-line>Lössnus Instant</td></tr><tr><td>Smak</td><td>Klassisk, Bär, Citrus</td></tr><tr><td>Malningsgrad</td><td data-spec-grind>Standard</td></tr><tr><td>Styrka</td><td data-spec-strength>Normal, 13mg/g</td></tr><tr><td>Förpackningsstorlek</td><td data-spec-amount>40 dosor</td></tr><tr><td>Hållbarhet</td><td>3 år i obruten förpackning</td></tr><tr><td>Tillverkningsort</td><td>Hemsjö, Sverige</td></tr></tbody></table>
       </div>
     </div>
@@ -52,48 +50,7 @@
 
   <footer class="site-footer"><div class="footer-inner"><div class="footer-grid"><div class="footer-brand"><div class="site-logo">Swedsnus.nu</div><p>Tillverkare av portionssnus och lössnus. Hemsjö, Sverige.</p></div><div class="footer-col"><h4>Produkter</h4><ul><li><a href="portion.html">Portionssnus</a></li><li><a href="los.html">Lössnus</a></li><li><a href="vitt-snus.html">Vitt snus</a></li><li><a href="gor-eget.html">Gör Eget</a></li><li><a href="tillbehor.html">Tillbehör</a></li></ul></div><div class="footer-col"><h4>Information</h4><ul><li><a href="about.html">Om oss</a></li><li><a href="guide.html">Guide</a></li><li><a href="#">Villkor</a></li><li><a href="#">Integritetspolicy</a></li></ul></div><div class="footer-col"><h4>Kundservice</h4><ul><li><a href="#">Kontakt</a></li><li><a href="#">Leveransinfo</a></li><li><a href="#">Returer</a></li><li><a href="#">FAQ</a></li></ul></div></div><div class="footer-bottom"><span>© 2024 Swedsnus AB · Hemsjö, Sverige · Åldersgräns 18 år</span><div class="payment-icons"><span class="payment-icon">Visa</span><span class="payment-icon">Mastercard</span><span class="payment-icon">Klarna</span><span class="payment-icon">Swish</span></div></div></div></footer>
   <div class="theme-switcher"><p>Tema</p></div>
-  <script>
-    (() => {
-      const root = document.querySelector('[data-loose-product]');
-      if (!root) return;
-      const amount = root.querySelector('[data-loose-amount]');
-      const grind = root.querySelector('[data-loose-grind]');
-      const strength = root.querySelector('[data-loose-strength]');
-      const title = root.querySelector('[data-product-title]');
-      const breadcrumb = document.querySelector('[data-product-breadcrumb]');
-      const lineBadge = root.querySelector('[data-loose-line-badge]');
-      const grindMeta = root.querySelector('[data-loose-grind-value]');
-      const strengthBar = root.querySelector('[data-loose-strength-bar]');
-      const specProductLine = root.querySelector('[data-spec-product-line]');
-      const specAmount = root.querySelector('[data-spec-amount]');
-      const specGrind = root.querySelector('[data-spec-grind]');
-      const specStrength = root.querySelector('[data-spec-strength]');
-      const levels = { 'Normal': 2, 'Strong': 3, 'Extra Strong': 4 };
-      const strengthSpecs = { 'Normal': 'Normal, 13mg/g', 'Strong': 'Strong 17mg/g', 'Extra Strong': 'Extra Strong 20 mg/g' };
-      function productLine() {
-        const value = (lineBadge?.textContent || 'Instant').trim().toLowerCase();
-        return value.includes('express') ? 'Lössnus Express' : 'Lössnus Instant';
-      }
-      function update() {
-        const parts = ['Paré Blue Instant'];
-        if (grind.value !== 'Standard') parts.push(grind.value);
-        if (strength.value !== 'Normal') parts.push(strength.value);
-        parts.push(amount.value);
-        const name = parts.join(' ');
-        title.textContent = name;
-        document.title = `${name} — Swedsnus`;
-        if (breadcrumb) breadcrumb.textContent = name;
-        if (grindMeta) grindMeta.textContent = grind.value;
-        if (specProductLine) specProductLine.textContent = productLine();
-        if (specAmount) specAmount.textContent = amount.value;
-        if (specGrind) specGrind.textContent = grind.value;
-        if (specStrength) specStrength.textContent = strengthSpecs[strength.value];
-        if (strengthBar) Array.from(strengthBar.children).forEach((dot, index) => dot.classList.toggle('filled', index < levels[strength.value]));
-      }
-      [amount, grind, strength].forEach(select => select.addEventListener('change', update));
-      update();
-    })();
-  </script>
+  <script src="product-data.js"></script>
   <script src="main.js"></script>
 </body>
 </html>
