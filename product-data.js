@@ -7,8 +7,8 @@
   const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
-
   const state = { rows: [], groups: new Map(), series: null, filters: {} };
+
   const routes = {
     'portion.html': { title: 'Alla portionsprodukter', filter: row => row.product_family === 'Portionssnus' && row.site_section === 'Portionssnus' && row.tobacco_type !== 'Tobaksfri', pills: [['white', 'White Portion', 'Färdigt portionssnus'], ['instant', 'Instant Portion', 'Färdig att snusa'], ['superdry', 'Super Dry', 'Osmaksatt bas']] },
     'los.html': { title: 'Alla lössnusprodukter', filter: row => row.site_section === 'Lössnus' || row.aroma_type === 'Expressarom', pills: [['instant', 'Instant', 'Färdig att snusa'], ['express', 'Express', 'Snussats'], ['aromer', 'Expressaromer', 'Smaksättning']] },
@@ -16,9 +16,8 @@
     'vitt-snus.html': { title: 'Alla tobaksfria produkter', filter: row => row.tobacco_type === 'Tobaksfri' || row.site_section === 'Vitt snus', pills: [['rebell', 'Rebell', 'Tobaksfri portion'], ['rx-slim', 'RX Slim', 'Tobaksfri slim'], ['compact-mini', 'Compact & Mini', 'Tobaksfria mindre format']] },
     'tillbehor.html': { title: 'Alla tillbehör', filter: row => row.product_family === 'Tillbehör', pills: [['portion', 'Portionssnus', 'Tillbehör till portionssnus'], ['lossnus', 'Lössnus', 'Tillbehör till lössnus'], ['general', 'Övrigt', 'Övriga tillbehör']] }
   };
-  const dynamicProductPages = new Set(['product-portion.html', 'product-los.html']);
 
-  const page = () => window.location.pathname.split('/').pop() || 'index.html';
+  const page = () => location.pathname.split('/').pop() || 'index.html';
   const escapeHtml = value => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   const slugify = value => String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'produkt';
   const splitList = value => String(value || '').split(',').map(item => item.trim()).filter(Boolean);
@@ -99,7 +98,7 @@
   function productCard(row) {
     const href = urlFor(row);
     const id = rowKey(row);
-    return `<div class="product-card" role="link" tabindex="0" data-product-source="json" data-experience-enhanced="true" data-product-id="${escapeHtml(id)}" data-product-group="${escapeHtml(row.product_id)}" data-variant-id="${escapeHtml(row.variant_id || '')}" data-series="${escapeHtml(series(row))}" data-taste="${escapeHtml(splitList(row.taste_variables).join('|'))}" data-type="${escapeHtml(row.product_line || row.aroma_type || row.accessory_type || '')}" data-format="${escapeHtml(row.format || row.grind || row.aroma_type || row.accessory_type || '')}" data-strength="${escapeHtml(row.strength || '')}" data-amount="${escapeHtml(amount(row))}" data-href="${escapeHtml(href)}"><button class="bookmark-toggle requires-login" data-product-id="${escapeHtml(id)}" type="button" aria-label="Spara produkt" aria-pressed="false">${BOOKMARK_ICON}</button><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">${escapeHtml(row.format || row.product_line || row.aroma_type || row.accessory_type || 'Produkt')}</span><p class="product-card-name">${escapeHtml(name(row))}</p>${cardMeta(row)}${strengthDots(row)}<div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="${escapeHtml(price(row))}" data-pack="1-pack">1-pack — ${escapeHtml(price(row))}</option></select></div><div class="product-card-bottom"><p class="product-card-price"><span class="unit-price">${escapeHtml(price(row))}</span><small>per produkt</small></p><button class="add-to-cart-btn" type="button" aria-label="Lägg i kundvagn">${CART_ICON}</button></div></div></div>`;
+    return `<div class="product-card" role="link" tabindex="0" data-product-source="json" data-experience-enhanced="true" data-product-id="${escapeHtml(id)}" data-product-group="${escapeHtml(row.product_id)}" data-variant-id="${escapeHtml(row.variant_id || '')}" data-series="${escapeHtml(series(row))}" data-taste="${escapeHtml(splitList(row.taste_variables).join('|'))}" data-type="${escapeHtml(row.product_line || row.aroma_type || row.accessory_type || '')}" data-format="${escapeHtml(row.format || row.grind || row.aroma_type || row.accessory_type || '')}" data-strength="${escapeHtml(row.strength || '')}" data-amount="${escapeHtml(amount(row))}" data-href="${escapeHtml(href)}"><button class="bookmark-toggle requires-login" data-product-id="${escapeHtml(id)}" type="button" aria-label="Spara produkt" aria-pressed="false">${BOOKMARK_ICON}</button><a class="product-card-main-link" href="${escapeHtml(href)}" aria-label="Visa ${escapeHtml(name(row))}" style="color:inherit;text-decoration:none;"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">${escapeHtml(row.format || row.product_line || row.aroma_type || row.accessory_type || 'Produkt')}</span><p class="product-card-name">${escapeHtml(name(row))}</p>${cardMeta(row)}${strengthDots(row)}</div></a><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="${escapeHtml(price(row))}" data-pack="1-pack">1-pack — ${escapeHtml(price(row))}</option></select></div><div class="product-card-bottom"><p class="product-card-price"><span class="unit-price">${escapeHtml(price(row))}</span><small>per produkt</small></p><button class="add-to-cart-btn" type="button" aria-label="Lägg i kundvagn">${CART_ICON}</button></div></div>`;
   }
 
   function filterGroup(title, key, values) {
@@ -174,11 +173,10 @@
     if (row.product_family === 'Lössnus') return [['amount', 'Mängd'], ['grind', 'Malningsgrad'], ['strength', 'Styrka']];
     return [['format', 'Format'], ['amount', 'Portioner'], ['strength', 'Styrka']];
   }
-
   function fieldValue(row, field) { return field === 'amount' ? amount(row) : row[field] || ''; }
 
   function currentRow() {
-    const query = new URLSearchParams(window.location.search);
+    const query = new URLSearchParams(location.search);
     const id = query.get('id');
     const product = query.get('product');
     const variant = query.get('variant');
@@ -235,7 +233,7 @@
   }
 
   function renderProductPage() {
-    if (!dynamicProductPages.has(page())) return;
+    if (!['product-portion.html', 'product-los.html'].includes(page())) return;
     const row = currentRow();
     if (!row) return;
     const group = state.groups.get(row.product_id) || [row];
@@ -256,7 +254,7 @@
         select.addEventListener('change', () => {
           const selected = Object.fromEntries(fields.map(([itemField]) => [itemField, $(`[data-data-field="${itemField}"]`, panel)?.value || '']));
           const target = matchingVariant(group, selected, field, row);
-          if (rowKey(target) !== rowKey(row)) window.location.href = urlFor(target);
+          if (rowKey(target) !== rowKey(row)) location.href = urlFor(target);
         });
       });
     } else if (panel) {
@@ -265,13 +263,26 @@
     renderDetail(row);
   }
 
+  function rowsForCarousel(title) {
+    const text = String(title || '').toLowerCase();
+    const rows = state.rows.filter(visible);
+    if (text.includes('portion')) return rows.filter(row => row.product_family === 'Portionssnus' && row.site_section === 'Portionssnus' && row.tobacco_type !== 'Tobaksfri').slice(0, 12);
+    if (text.includes('lössnus') || text.includes('lossnus')) return rows.filter(row => row.site_section === 'Lössnus' || row.product_family === 'Lössnus').slice(0, 12);
+    if (text.includes('gör eget') || text.includes('gor eget')) return rows.filter(row => row.site_section === 'Gör eget' || row.aroma_type === 'Super Dry Arom').slice(0, 12);
+    if (text.includes('tillbehör') || text.includes('tillbehor')) return rows.filter(row => row.product_family === 'Tillbehör').slice(0, 12);
+    if (text.includes('vitt')) return rows.filter(row => row.tobacco_type === 'Tobaksfri' || row.site_section === 'Vitt snus').slice(0, 12);
+    return rows.slice(0, 12);
+  }
+
   function renderIndex() {
     if (page() !== 'index.html') return;
-    const rows = state.rows.filter(visible);
-    const track = $('.carousel-track');
-    if (track) track.innerHTML = rows.slice(0, 12).map(productCard).join('');
+    $$('.carousel-section').forEach(section => {
+      const title = $('.section-heading', section)?.textContent || '';
+      const track = $('.carousel-track', section);
+      if (track) track.innerHTML = rowsForCarousel(title).map(productCard).join('');
+    });
     const showcase = $('.vitt-showcase-track');
-    if (showcase) showcase.innerHTML = rows.filter(row => row.tobacco_type === 'Tobaksfri').slice(0, 6).map(productCard).join('');
+    if (showcase) showcase.innerHTML = state.rows.filter(row => visible(row) && (row.tobacco_type === 'Tobaksfri' || row.site_section === 'Vitt snus')).slice(0, 6).map(productCard).join('');
   }
 
   function bindProductCardNavigation() {
@@ -279,22 +290,22 @@
     window.__swedsnusProductCardNavigationBound = true;
     const interactive = 'a, button, input, select, textarea, label, .pack-select, .bookmark-toggle, .add-to-cart-btn, [data-cart-action], [data-demo-action]';
     document.addEventListener('click', event => {
-      const card = event.target.closest('.product-card[data-product-source="json"]');
+      const card = event.target.closest('.product-card[data-href]');
       if (!card || event.target.closest(interactive)) return;
       const href = card.dataset.href;
       if (!href) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      window.location.href = href;
+      location.href = href;
     }, true);
     document.addEventListener('keydown', event => {
       if (!['Enter', ' '].includes(event.key)) return;
-      const card = event.target.closest('.product-card[data-product-source="json"]');
+      const card = event.target.closest('.product-card[data-href]');
       if (!card || event.target.closest(interactive)) return;
       const href = card.dataset.href;
       if (!href) return;
       event.preventDefault();
-      window.location.href = href;
+      location.href = href;
     });
   }
 
@@ -304,7 +315,7 @@
       const response = await fetch(DATA_URL, { cache: 'no-cache' });
       state.rows = expandData(await response.json()).filter(visible);
       state.groups = groupRows(state.rows);
-      window.SwedsnusProducts = { rows: state.rows, groups: state.groups, rowKey, urlFor };
+      window.SwedsnusProducts = { rows: state.rows, groups: state.groups, rowKey, urlFor, productCard };
       renderCatalog();
       renderProductPage();
       renderIndex();
