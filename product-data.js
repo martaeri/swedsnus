@@ -1,242 +1,27 @@
-(() => {
-  const DATA_URL = 'data/products.json';
-  const CART_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
-  const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
-  const $ = (selector, root = document) => root.querySelector(selector);
-  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
-  const state = { rows: [], groups: new Map(), series: null, filters: {} };
-  const routes = {
-    'portion.html': { title: 'Alla portionsprodukter', filter: row => row.product_family === 'Portionssnus' && row.site_section === 'Portionssnus' && row.tobacco_type !== 'Tobaksfri', pills: [['white', 'White Portion', 'Färdigt portionssnus'], ['instant', 'Instant Portion', 'Färdig att snusa'], ['superdry', 'Super Dry', 'Osmaksatt bas']] },
-    'los.html': { title: 'Alla lössnusprodukter', filter: row => row.site_section === 'Lössnus' || row.aroma_type === 'Expressarom', pills: [['instant', 'Instant', 'Färdig att snusa'], ['express', 'Express', 'Snussats'], ['aromer', 'Expressaromer', 'Smaksättning']] },
-    'gor-eget.html': { title: 'Alla produkter för Gör Eget', filter: row => row.site_section === 'Gör eget' || row.aroma_type === 'Super Dry Arom', pills: [['instant', 'Instant Portion', 'Färdig att snusa'], ['superdry', 'Super Dry', 'Osmaksatt bas'], ['aromer', 'Super Dry Aromer', 'Smaksättning']] },
-    'vitt-snus.html': { title: 'Alla tobaksfria produkter', filter: row => row.tobacco_type === 'Tobaksfri' || row.site_section === 'Vitt snus', pills: [['rebell', 'Rebell', 'Tobaksfri portion'], ['rx-slim', 'RX Slim', 'Tobaksfri slim'], ['compact-mini', 'Compact & Mini', 'Tobaksfria mindre format']] },
-    'tillbehor.html': { title: 'Alla tillbehör', filter: row => row.product_family === 'Tillbehör', pills: [['portion', 'Portionssnus', 'Tillbehör till portionssnus'], ['lossnus', 'Lössnus', 'Tillbehör till lössnus'], ['general', 'Övrigt', 'Övriga tillbehör']] }
-  };
-  const productPages = new Set(['product-portion.html', 'product-los.html', 'product-arom.html', 'product-tillbehor.html']);
-
-  function page() { return window.location.pathname.split('/').pop() || 'index.html'; }
-  function escapeHtml(value) { return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
-  function slugify(value) { return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'produkt'; }
-  function split(value) { return String(value || '').split(',').map(item => item.trim()).filter(Boolean); }
-  function unique(values) { return [...new Set(values.filter(Boolean).map(value => String(value).trim()))]; }
-  function yes(value) { return String(value || '').toLowerCase() !== 'no'; }
-  function price(row) { return row.price_sek ? `${Number(row.price_sek).toLocaleString('sv-SE')} kr` : ''; }
-  function amount(row) { return row.amount_dosor ? `${row.amount_dosor} dosor` : row.package_quantity ? `${row.package_quantity}-pack` : '1-pack'; }
-  function portions(row) { return row.portions_total ? `${row.amount_dosor} dosor (${row.portions_total} portioner)` : amount(row); }
-  function name(row) { return row.generated_name || [row.taste_name, row.product_line, row.strength !== 'Normal' ? row.strength : '', row.format, row.grind !== 'Standard' ? row.grind : '', row.amount_dosor ? `${row.amount_dosor} dosor` : ''].filter(Boolean).join(' '); }
-  function dots(row) { if (!row.strength) return ''; const level = row.strength === 'Extra Strong' ? 4 : row.strength === 'Strong' ? 3 : 2; return `<div class="strength-bar">${[1, 2, 3, 4].map(index => `<span${index <= level ? ' class="filled"' : ''}></span>`).join('')}</div>`; }
-
-  function groupRows(rows) {
-    const groups = new Map();
-    rows.filter(row => row.product_id && yes(row.visible_on_site)).forEach(row => {
-      if (!groups.has(row.product_id)) groups.set(row.product_id, []);
-      groups.get(row.product_id).push(row);
-    });
-    return groups;
-  }
-
-  function representative(group) {
-    return group.slice().sort((a, b) => name(a).localeCompare(name(b), 'sv'))[0];
-  }
-
-  function series(row) {
-    const line = String(row.product_line || '').toLowerCase();
-    const family = String(row.product_family || '').toLowerCase();
-    const aroma = String(row.aroma_type || '').toLowerCase();
-    const format = slugify(row.format || '');
-    const text = slugify(`${row.generated_name || ''} ${row.accessory_type || ''}`);
-    if (row.tobacco_type === 'Tobaksfri') return format === 'rx-slim' ? 'rx-slim' : ['compact', 'mini'].includes(format) ? 'compact-mini' : format || 'rebell';
-    if (family === 'aromer' || aroma.includes('arom')) return 'aromer';
-    if (line.includes('super dry')) return 'superdry';
-    if (line.includes('instant')) return 'instant';
-    if (line.includes('express')) return 'express';
-    if (line.includes('white')) return 'white';
-    if (family === 'tillbehör' || family === 'tillbehor') return text.includes('los') || text.includes('lossnus') ? 'lossnus' : text.includes('portion') ? 'portion' : 'general';
-    return 'product';
-  }
-
-  function pageFor(row) {
-    if (row.product_family === 'Lössnus') return 'product-los.html';
-    if (row.product_family === 'Aromer') return 'product-arom.html';
-    if (row.product_family === 'Tillbehör') return 'product-tillbehor.html';
-    return 'product-portion.html';
-  }
-
-  function meta(row) {
-    return [['Typ', row.product_line || row.aroma_type || row.accessory_type], ['Smak', row.taste_display], ['Format', row.format], ['Malningsgrad', row.grind], ['Tobak', row.tobacco_type === 'Tobaksfri' ? 'Tobaksfri' : '']].filter(item => item[1]).slice(0, 3).map(([label, value]) => `<p class="product-card-meta">${escapeHtml(label)}: <span>${escapeHtml(value)}</span></p>`).join('');
-  }
-
-  function card(row, group) {
-    const href = `${pageFor(row)}?product=${encodeURIComponent(row.product_id)}`;
-    return `<div class="product-card" data-product-source="json" data-experience-enhanced="true" data-product-id="${escapeHtml(row.product_id)}" data-series="${escapeHtml(series(row))}" data-taste="${escapeHtml(split(row.taste_variables).join('|'))}" data-type="${escapeHtml(row.product_line || row.aroma_type || row.accessory_type || '')}" data-format="${escapeHtml(row.format || row.grind || row.aroma_type || row.accessory_type || '')}" data-strength="${escapeHtml(row.strength || '')}" data-amount="${escapeHtml(amount(row))}" data-href="${escapeHtml(href)}"><button class="bookmark-toggle requires-login" data-product-id="${escapeHtml(row.product_id)}" type="button" aria-label="Spara produkt" aria-pressed="false">${BOOKMARK_ICON}</button><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">${escapeHtml(row.format || row.product_line || row.aroma_type || row.accessory_type || 'Produkt')}</span><p class="product-card-name">${escapeHtml(name(row))}</p>${meta(row)}${dots(row)}<div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="${escapeHtml(price(row))}" data-pack="1-pack">1-pack — ${escapeHtml(price(row))}</option></select></div><div class="product-card-bottom"><p class="product-card-price"><span class="unit-price">${escapeHtml(price(row))}</span><small>${group.length > 1 ? `${group.length} varianter` : 'per produkt'}</small></p><button class="add-to-cart-btn" type="button" aria-label="Lägg i kundvagn">${CART_ICON}</button></div></div></div>`;
-  }
-
-  function buildPills(route) {
-    const wrap = $('.category-pills');
-    if (!wrap) return;
-    wrap.innerHTML = route.pills.map(([value, title, subtitle]) => `<button class="filter-pill" data-series="${escapeHtml(value)}" type="button"><span class="filter-pill-icon"></span><span class="filter-pill-copy"><span class="filter-pill-title">${escapeHtml(title)}</span><span class="filter-pill-subtitle">${escapeHtml(subtitle)}</span></span><span class="filter-pill-close">×</span></button>`).join('');
-  }
-
-  function filterGroup(title, key, values) {
-    return values.length ? `<div class="sidebar-group" data-filter-group="${escapeHtml(key)}"><h4>${escapeHtml(title)}</h4>${values.map(value => `<label class="sidebar-check"><input type="checkbox" value="${escapeHtml(value)}" />${escapeHtml(value)}</label>`).join('')}</div>` : '';
-  }
-
-  function renderSidebar(groups) {
-    const values = { taste: [], type: [], format: [], strength: [], amount: [] };
-    groups.forEach(group => group.forEach(row => {
-      values.taste.push(...split(row.taste_variables));
-      values.type.push(row.product_line || row.aroma_type || row.accessory_type);
-      values.format.push(row.format || row.grind || row.aroma_type || row.accessory_type);
-      values.strength.push(row.strength);
-      values.amount.push(amount(row));
-    }));
-    const sidebar = $('.filter-sidebar');
-    if (sidebar) sidebar.innerHTML = filterGroup('Smak', 'taste', unique(values.taste).sort()) + filterGroup('Typ', 'type', unique(values.type).sort()) + filterGroup('Format', 'format', unique(values.format).sort()) + filterGroup('Styrka', 'strength', unique(values.strength).sort()) + filterGroup('Mängd', 'amount', unique(values.amount).sort());
-  }
-
-  function applyFilters() {
-    const cards = $$('.catalog-page .product-card');
-    const count = $('.catalog-count');
-    const empty = $('.catalog-empty');
-    let visible = 0;
-    cards.forEach(card => {
-      const seriesMatch = !state.series || card.dataset.series === state.series;
-      const filterMatch = Object.entries(state.filters).every(([key, selected]) => {
-        if (!selected.size) return true;
-        const value = card.dataset[key] || '';
-        return key === 'taste' ? [...selected].some(item => value.split('|').includes(item)) : selected.has(value);
-      });
-      const show = seriesMatch && filterMatch;
-      card.classList.toggle('is-hidden', !show);
-      if (show) visible += 1;
-    });
-    if (count) count.textContent = `${visible} ${visible === 1 ? 'produkt' : 'produkter'}`;
-    if (empty) empty.classList.toggle('show', visible === 0);
-  }
-
-  function bindFilters() {
-    $$('.filter-pill[data-series]').forEach(button => button.addEventListener('click', () => {
-      state.series = state.series === button.dataset.series ? null : button.dataset.series;
-      $$('.filter-pill[data-series]').forEach(item => item.classList.toggle('active', state.series === item.dataset.series));
-      applyFilters();
-    }));
-    $$('.filter-sidebar [data-filter-group]').forEach(group => {
-      const key = group.dataset.filterGroup;
-      state.filters[key] = new Set();
-      $$('input', group).forEach(input => input.addEventListener('change', () => {
-        state.filters[key] = new Set($$('input:checked', group).map(item => item.value));
-        applyFilters();
-      }));
-    });
-  }
-
-  function renderCatalog() {
-    const route = routes[page()];
-    const grid = $('.catalog-page .product-grid');
-    if (!route || !grid) return;
-    const groups = groupRows(state.rows.filter(route.filter));
-    buildPills(route);
-    renderSidebar(groups);
-    grid.innerHTML = [...groups.values()].map(group => card(representative(group), group)).join('');
-    const header = $('.catalog-results-header span:first-child');
-    if (header) header.innerHTML = `<strong>${escapeHtml(route.title)}</strong>`;
-    state.series = null;
-    state.filters = {};
-    bindFilters();
-    applyFilters();
-  }
-
-  function fields(row) {
-    if (row.product_family === 'Lössnus') return [['amount', 'Mängd'], ['grind', 'Malningsgrad'], ['strength', 'Styrka']];
-    if (row.product_family === 'Aromer') return [['aroma_type', 'Typ']];
-    if (row.product_family === 'Tillbehör') return [];
-    return [['format', 'Format'], ['amount', 'Portioner'], ['strength', 'Styrka']];
-  }
-
-  function value(row, field) { return field === 'amount' ? amount(row) : row[field] || ''; }
-  function match(group, selected) { return group.find(row => Object.entries(selected).every(([key, val]) => !val || value(row, key) === val)) || group[0]; }
-
-  function renderDetail(row) {
-    const detail = $('.product-detail');
-    if (!detail || !row) return;
-    const title = $('[data-product-title]', detail) || $('h1', detail);
-    if (title) title.textContent = name(row);
-    document.title = `${name(row)} — Swedsnus`;
-    const breadcrumb = $('[data-product-breadcrumb]');
-    if (breadcrumb) breadcrumb.textContent = name(row);
-    const badge = $('.product-detail-badge', detail);
-    if (badge) badge.innerHTML = `<span class="product-card-badge">${escapeHtml(row.format || row.product_line || row.aroma_type || row.accessory_type || row.product_family)}</span>${row.tobacco_type === 'Tobaksfri' ? '<span class="product-card-badge" style="background:var(--color-accent);">Tobaksfri</span>' : ''}`;
-    const priceEl = $('.product-detail-price', detail);
-    if (priceEl) priceEl.innerHTML = `${escapeHtml(price(row))} <small>1-pack</small>`;
-    const desc = $('.product-desc', detail);
-    if (desc) desc.textContent = row.short_description || `${name(row)} visas från produktdatan.`;
-    const metaRows = [['Typ', row.product_line || row.aroma_type || row.accessory_type || row.product_family], ['Smak', row.taste_display], ['Format', row.format], ['Malningsgrad', row.grind], ['Styrka', row.strength], ['Tobak', row.tobacco_type === 'Tobaksfri' ? 'Tobaksfri' : ''], ['Tillverkning', row.manufacturing_location]];
-    const metaEl = $('.product-detail-meta', detail);
-    if (metaEl) metaEl.innerHTML = metaRows.filter(item => item[1]).slice(0, 5).map(([label, val]) => `<div class="product-detail-meta-row"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(val)}</dd></div>`).join('');
-    const specRows = [['Produktlinje', row.product_line], ['Aromtyp', row.aroma_type], ['Tillbehörstyp', row.accessory_type], ['Tobakstyp', row.tobacco_type && row.tobacco_type !== 'Ej tillämpligt' ? row.tobacco_type : ''], ['Format', [row.format, row.format_dimensions].filter(Boolean).join(', ')], ['Fyllnad', row.fill_level], ['Smak', row.taste_display], ['Malningsgrad', row.grind], ['Styrka', [row.strength, row.strength_mg_g].filter(Boolean).join(', ')], ['Nikotinhalt', row.nicotine_per_portion], ['Förpackningsstorlek', row.portions_total ? portions(row) : row.amount_dosor ? amount(row) : ''], ['Hållbarhet', row.shelf_life], ['Tillverkningsort', row.manufacturing_location]];
-    const spec = $('.product-spec-table tbody', detail);
-    if (spec) spec.innerHTML = specRows.filter(item => item[1]).map(([label, val]) => `<tr><td>${escapeHtml(label)}</td><td>${escapeHtml(val)}</td></tr>`).join('');
-    const pack = $('.pack-picker-options', detail);
-    if (pack) pack.innerHTML = `<label class="pack-option selected" data-price="${escapeHtml(price(row))}" data-pack="1-pack"><input type="radio" name="pack" value="1" checked /><span class="pack-option-label">1-pack</span><span class="pack-option-price">${escapeHtml(price(row))}</span><span class="pack-option-per">${escapeHtml(price(row))}/st</span></label>`;
-  }
-
-  function renderProductPage() {
-    if (!productPages.has(page())) return;
-    const productId = new URLSearchParams(window.location.search).get('product');
-    const fallback = page() === 'product-los.html' ? row => row.product_family === 'Lössnus' : page() === 'product-arom.html' ? row => row.product_family === 'Aromer' : page() === 'product-tillbehor.html' ? row => row.product_family === 'Tillbehör' : row => row.product_family === 'Portionssnus';
-    const group = productId ? state.groups.get(productId) : [...state.groups.values()].find(items => items.some(fallback));
-    if (!group?.length) return;
-    const detail = $('.product-detail');
-    const productFields = fields(group[0]);
-    let panel = $('.product-choice-panel', detail);
-    const selected = {};
-    if (productFields.length) {
-      if (!panel) { panel = document.createElement('section'); panel.className = 'product-choice-panel'; $('.pack-picker-label', detail)?.insertAdjacentElement('beforebegin', panel); }
-      panel.innerHTML = `<p class="product-choice-panel-title">Produktval</p><div class="product-choice-grid">${productFields.map(([key, label]) => `<div class="product-choice-field"><label>${escapeHtml(label)}</label><select data-data-field="${escapeHtml(key)}"></select></div>`).join('')}</div>`;
-      const update = changed => {
-        productFields.forEach(([key]) => { const select = $(`[data-data-field="${key}"]`, panel); if (select && changed === key) selected[key] = select.value; });
-        productFields.forEach(([key]) => {
-          const select = $(`[data-data-field="${key}"]`, panel);
-          const options = unique(group.filter(row => Object.entries(selected).every(([field, val]) => field === key || !val || value(row, field) === val)).map(row => value(row, key)));
-          const previous = select.value;
-          select.innerHTML = options.map(option => `<option${option === previous ? ' selected' : ''}>${escapeHtml(option)}</option>`).join('');
-          if (!options.includes(previous)) select.value = options[0] || '';
-          selected[key] = select.value;
-        });
-        renderDetail(match(group, selected));
-      };
-      productFields.forEach(([key]) => $(`[data-data-field="${key}"]`, panel)?.addEventListener('change', () => update(key)));
-      update(null);
-    } else {
-      panel?.remove();
-      renderDetail(group[0]);
-    }
-  }
-
-  function renderIndex() {
-    if (page() !== 'index.html') return;
-    const groups = [...state.groups.values()];
-    const track = $('.carousel-track');
-    if (track) track.innerHTML = groups.slice(0, 8).map(group => card(representative(group), group)).join('');
-    const showcase = $('.vitt-showcase-track');
-    if (showcase) showcase.innerHTML = groups.filter(group => group.some(row => row.tobacco_type === 'Tobaksfri')).slice(0, 3).map(group => card(representative(group), group)).join('');
-  }
-
-  async function init() {
-    try {
-      const response = await fetch(DATA_URL, { cache: 'no-cache' });
-      state.rows = await response.json();
-      state.groups = groupRows(state.rows);
-      window.SwedsnusProducts = { rows: state.rows, groups: state.groups };
-      renderCatalog();
-      renderProductPage();
-      renderIndex();
-      document.dispatchEvent(new CustomEvent('swedsnus:products-rendered'));
-    } catch (error) {
-      document.documentElement.classList.add('product-data-load-failed');
-      console.error(error);
-    }
-  }
-
-  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
+(()=>{
+const DATA_URL='data/products.json',CART='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>',BOOK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',$=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)],st={rows:[],groups:new Map(),series:null,filters:{}};
+const routes={'portion.html':{title:'Alla portionsprodukter',f:r=>r.product_family==='Portionssnus'&&r.site_section==='Portionssnus'&&r.tobacco_type!=='Tobaksfri',p:[['white','White Portion','Färdigt portionssnus'],['instant','Instant Portion','Färdig att snusa'],['superdry','Super Dry','Osmaksatt bas']]},'los.html':{title:'Alla lössnusprodukter',f:r=>r.site_section==='Lössnus'||r.aroma_type==='Expressarom',p:[['instant','Instant','Färdig att snusa'],['express','Express','Snussats'],['aromer','Expressaromer','Smaksättning']]},'gor-eget.html':{title:'Alla produkter för Gör Eget',f:r=>r.site_section==='Gör eget'||r.aroma_type==='Super Dry Arom',p:[['instant','Instant Portion','Färdig att snusa'],['superdry','Super Dry','Osmaksatt bas'],['aromer','Super Dry Aromer','Smaksättning']]},'vitt-snus.html':{title:'Alla tobaksfria produkter',f:r=>r.tobacco_type==='Tobaksfri'||r.site_section==='Vitt snus',p:[['rebell','Rebell','Tobaksfri portion'],['rx-slim','RX Slim','Tobaksfri slim'],['compact-mini','Compact & Mini','Tobaksfria mindre format']]},'tillbehor.html':{title:'Alla tillbehör',f:r=>r.product_family==='Tillbehör',p:[['portion','Portionssnus','Tillbehör till portionssnus'],['lossnus','Lössnus','Tillbehör till lössnus'],['general','Övrigt','Övriga tillbehör']]} };
+const prodPages=new Set(['product-portion.html','product-los.html','product-arom.html','product-tillbehor.html']);
+const pg=()=>location.pathname.split('/').pop()||'index.html',esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'),slug=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'produkt',sp=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean),uniq=a=>[...new Set(a.filter(Boolean).map(x=>String(x).trim()))],vis=r=>r.product_id&&String(r.visible_on_site||'Yes').toLowerCase()!=='no',pr=r=>r.price_sek?`${Number(r.price_sek).toLocaleString('sv-SE')} kr`:'',amt=r=>r.amount_dosor?`${r.amount_dosor} dosor`:r.package_quantity?`${r.package_quantity}-pack`:'1-pack',nm=r=>r.generated_name||[r.taste_name,r.product_line,r.strength!=='Normal'?r.strength:'',r.format,r.grind!=='Standard'?r.grind:'',r.amount_dosor?`${r.amount_dosor} dosor`:''].filter(Boolean).join(' '),key=r=>`${r.product_id}__${r.variant_id||r.sku_draft||slug(nm(r))}`;
+function dec(v,d){if(v==='')return null;if(String(v).startsWith('~'))return d[Number(String(v).slice(1))]??null;let x=decodeURIComponent(String(v));return/^-?\d+(\.\d+)?$/.test(x)?Number(x):x}
+function expand(x){if(Array.isArray(x))return x;if(Array.isArray(x?.headers)&&Array.isArray(x?.rows))return x.rows.map(r=>Object.fromEntries(x.headers.map((h,i)=>[h,r[i]??null])));if(Array.isArray(x?.cols)&&typeof x.rows==='string')return x.rows.split('\n').filter(Boolean).map(line=>{let a=line.split('|');return Object.fromEntries(x.cols.map((h,i)=>[h,dec(a[i]??'',x.dict||[])]))});return[]}
+function group(rows){let m=new Map;rows.filter(vis).forEach(r=>{if(!m.has(r.product_id))m.set(r.product_id,[]);m.get(r.product_id).push(r)});return m}
+function ser(r){let l=String(r.product_line||'').toLowerCase(),f=String(r.product_family||'').toLowerCase(),a=String(r.aroma_type||'').toLowerCase(),fo=slug(r.format||''),t=slug(`${r.generated_name||''} ${r.accessory_type||''}`);if(r.tobacco_type==='Tobaksfri')return fo==='rx-slim'?'rx-slim':['compact','mini'].includes(fo)?'compact-mini':fo||'rebell';if(f==='aromer'||a.includes('arom'))return'aromer';if(l.includes('super dry'))return'superdry';if(l.includes('instant'))return'instant';if(l.includes('express'))return'express';if(l.includes('white'))return'white';if(f==='tillbehör'||f==='tillbehor')return t.includes('los')||t.includes('lossnus')?'lossnus':t.includes('portion')?'portion':'general';return'product'}
+function pageFor(r){return r.product_family==='Lössnus'?'product-los.html':r.product_family==='Aromer'?'product-arom.html':r.product_family==='Tillbehör'?'product-tillbehor.html':'product-portion.html'}
+function url(r){return`${pageFor(r)}?product=${encodeURIComponent(r.product_id)}&variant=${encodeURIComponent(r.variant_id||'')}`}
+function dots(r){if(!r.strength||r.product_family==='Aromer'||r.product_family==='Tillbehör')return'';let n=r.strength==='Extra Strong'?4:r.strength==='Strong'?3:2;return`<div class="strength-bar">${[1,2,3,4].map(i=>`<span${i<=n?' class="filled"':''}></span>`).join('')}</div>`}
+function meta(r){return[['Typ',r.product_line||r.aroma_type||r.accessory_type],['Smak',r.taste_display],['Format',r.format],['Malningsgrad',r.grind],['Tobak',r.tobacco_type==='Tobaksfri'?'Tobaksfri':'']].filter(x=>x[1]).slice(0,3).map(([l,v])=>`<p class="product-card-meta">${esc(l)}: <span>${esc(v)}</span></p>`).join('')}
+function card(r){return`<div class="product-card" data-product-source="json" data-experience-enhanced="true" data-product-id="${esc(key(r))}" data-product-group="${esc(r.product_id)}" data-variant-id="${esc(r.variant_id||'')}" data-series="${esc(ser(r))}" data-taste="${esc(sp(r.taste_variables).join('|'))}" data-type="${esc(r.product_line||r.aroma_type||r.accessory_type||'')}" data-format="${esc(r.format||r.grind||r.aroma_type||r.accessory_type||'')}" data-strength="${esc(r.strength||'')}" data-amount="${esc(amt(r))}" data-href="${esc(url(r))}"><button class="bookmark-toggle requires-login" data-product-id="${esc(key(r))}" type="button" aria-label="Spara produkt" aria-pressed="false">${BOOK}</button><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">${esc(r.format||r.product_line||r.aroma_type||r.accessory_type||'Produkt')}</span><p class="product-card-name">${esc(nm(r))}</p>${meta(r)}${dots(r)}<div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="${esc(pr(r))}" data-pack="1-pack">1-pack — ${esc(pr(r))}</option></select></div><div class="product-card-bottom"><p class="product-card-price"><span class="unit-price">${esc(pr(r))}</span><small>per produkt</small></p><button class="add-to-cart-btn" type="button" aria-label="Lägg i kundvagn">${CART}</button></div></div></div>`}
+function filterGroup(t,k,vals){return vals.length?`<div class="sidebar-group" data-filter-group="${esc(k)}"><h4>${esc(t)}</h4>${vals.map(v=>`<label class="sidebar-check"><input type="checkbox" value="${esc(v)}" />${esc(v)}</label>`).join('')}</div>`:''}
+function buildSide(rows){let v={taste:[],type:[],format:[],strength:[],amount:[]};rows.forEach(r=>{v.taste.push(...sp(r.taste_variables));v.type.push(r.product_line||r.aroma_type||r.accessory_type);v.format.push(r.format||r.grind||r.aroma_type||r.accessory_type);v.strength.push(r.strength);v.amount.push(amt(r))});let s=$('.filter-sidebar');if(s)s.innerHTML=filterGroup('Smak','taste',uniq(v.taste).sort())+filterGroup('Typ','type',uniq(v.type).sort())+filterGroup('Format','format',uniq(v.format).sort())+filterGroup('Styrka','strength',uniq(v.strength).sort())+filterGroup('Mängd','amount',uniq(v.amount).sort())}
+function apply(){let cards=$$('.catalog-page .product-card'),c=$('.catalog-count'),e=$('.catalog-empty'),n=0;cards.forEach(card=>{let ok=(!st.series||card.dataset.series===st.series)&&Object.entries(st.filters).every(([k,set])=>!set.size||(k==='taste'?[...set].some(x=>(card.dataset[k]||'').split('|').includes(x)):set.has(card.dataset[k]||'')));card.classList.toggle('is-hidden',!ok);if(ok)n++});if(c)c.textContent=`${n} ${n===1?'produkt':'produkter'}`;if(e)e.classList.toggle('show',n===0)}
+function bind(){ $$('.filter-pill[data-series]').forEach(b=>b.addEventListener('click',()=>{st.series=st.series===b.dataset.series?null:b.dataset.series;$$('.filter-pill[data-series]').forEach(x=>x.classList.toggle('active',st.series===x.dataset.series));apply()}));$$('.filter-sidebar [data-filter-group]').forEach(g=>{let k=g.dataset.filterGroup;st.filters[k]=new Set;$$('input',g).forEach(i=>i.addEventListener('change',()=>{st.filters[k]=new Set($$('input:checked',g).map(x=>x.value));apply()}))})}
+function catalog(){let r=routes[pg()],grid=$('.catalog-page .product-grid');if(!r||!grid)return;let rows=st.rows.filter(x=>vis(x)&&r.f(x)),p=$('.category-pills');if(p)p.innerHTML=r.p.map(([v,t,s])=>`<button class="filter-pill" data-series="${esc(v)}" type="button"><span class="filter-pill-icon"></span><span class="filter-pill-copy"><span class="filter-pill-title">${esc(t)}</span><span class="filter-pill-subtitle">${esc(s)}</span></span><span class="filter-pill-close">×</span></button>`).join('');buildSide(rows);grid.innerHTML=rows.map(card).join('');let h=$('.catalog-results-header span:first-child');if(h)h.innerHTML=`<strong>${esc(r.title)}</strong>`;st.series=null;st.filters={};bind();apply()}
+function fields(r){return r.product_family==='Lössnus'?[['amount','Mängd'],['grind','Malningsgrad'],['strength','Styrka']]:r.product_family==='Aromer'?[['amount','Mängd'],['aroma_type','Typ']]:r.product_family==='Tillbehör'?[]:[['format','Format'],['amount','Portioner'],['strength','Styrka']]}
+function val(r,f){return f==='amount'?amt(r):r[f]||''}function cur(){let q=new URLSearchParams(location.search),p=q.get('product'),v=q.get('variant'),id=q.get('id');if(id)return st.rows.find(r=>key(r)===id);if(p&&v)return st.rows.find(r=>r.product_id===p&&String(r.variant_id||'')===v);if(p)return st.rows.find(r=>r.product_id===p);let f=pg()==='product-los.html'?r=>r.product_family==='Lössnus':pg()==='product-arom.html'?r=>r.product_family==='Aromer':pg()==='product-tillbehor.html'?r=>r.product_family==='Tillbehör':r=>r.product_family==='Portionssnus';return st.rows.find(f)}
+function detail(r){let d=$('.product-detail');if(!d||!r)return;let title=$('[data-product-title]',d)||$('h1',d);if(title)title.textContent=nm(r);document.title=`${nm(r)} — Swedsnus`;let bc=$('[data-product-breadcrumb]');if(bc)bc.textContent=nm(r);let b=$('.product-detail-badge',d);if(b)b.innerHTML=`<span class="product-card-badge">${esc(r.format||r.product_line||r.aroma_type||r.accessory_type||r.product_family)}</span>${r.tobacco_type==='Tobaksfri'?'<span class="product-card-badge" style="background:var(--color-accent);">Tobaksfri</span>':''}`;let pe=$('.product-detail-price',d);if(pe)pe.innerHTML=`${esc(pr(r))} <small>1-pack</small>`;let de=$('.product-desc',d);if(de)de.textContent=r.short_description||`${nm(r)} visas från produktdatan.`;let m=[['Typ',r.product_line||r.aroma_type||r.accessory_type||r.product_family],['Smak',r.taste_display],['Format',r.format],['Malningsgrad',r.grind],['Styrka',r.strength],['Tobak',r.tobacco_type==='Tobaksfri'?'Tobaksfri':'']];let me=$('.product-detail-meta',d);if(me)me.innerHTML=m.filter(x=>x[1]).slice(0,5).map(([l,v])=>`<div class="product-detail-meta-row"><dt>${esc(l)}</dt><dd>${esc(v)}</dd></div>`).join('');let specs=[['Produktlinje',r.product_line],['Aromtyp',r.aroma_type],['Tillbehörstyp',r.accessory_type],['Tobakstyp',r.tobacco_type&&r.tobacco_type!=='Ej tillämpligt'?r.tobacco_type:''],['Format',[r.format,r.format_dimensions].filter(Boolean).join(', ')],['Fyllnad',r.fill_level],['Smak',r.taste_display],['Styrka',[r.strength,r.strength_mg_g].filter(Boolean).join(', ')],['Nikotinhalt',r.nicotine_per_portion],['Förpackningsstorlek',r.portions_total?`${r.amount_dosor} dosor (${r.portions_total} portioner)`:r.amount_dosor?amt(r):''],['Hållbarhet',r.shelf_life],['Tillverkningsort',r.manufacturing_location]];let spc=$('.product-spec-table tbody',d);if(spc)spc.innerHTML=specs.filter(x=>x[1]).map(([l,v])=>`<tr><td>${esc(l)}</td><td>${esc(v)}</td></tr>`).join('');let pack=$('.pack-picker-options',d);if(pack)pack.innerHTML=`<label class="pack-option selected" data-price="${esc(pr(r))}" data-pack="1-pack"><input type="radio" name="pack" value="1" checked /><span class="pack-option-label">1-pack</span><span class="pack-option-price">${esc(pr(r))}</span><span class="pack-option-per">${esc(pr(r))}/st</span></label>`}
+function prod(){if(!prodPages.has(pg()))return;let r=cur();if(!r)return;let g=st.groups.get(r.product_id)||[r],d=$('.product-detail');if(!d)return;let fs=fields(r).filter(([k])=>uniq(g.map(x=>val(x,k))).length>0),p=$('.product-choice-panel',d);if(fs.length){if(!p){p=document.createElement('section');p.className='product-choice-panel';$('.pack-picker-label',d)?.insertAdjacentElement('beforebegin',p)}p.innerHTML=`<p class="product-choice-panel-title">Produktval</p><div class="product-choice-grid">${fs.map(([k,l])=>`<div class="product-choice-field"><label>${esc(l)}</label><select data-data-field="${esc(k)}">${uniq(g.map(x=>val(x,k))).map(o=>`<option${o===val(r,k)?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`).join('')}</div>`;fs.forEach(([k])=>$(`[data-data-field="${k}"]`,p)?.addEventListener('change',()=>{let sel=Object.fromEntries(fs.map(([f])=>[f,$(`[data-data-field="${f}"]`,p)?.value||''])),t=g.find(x=>Object.entries(sel).every(([f,v])=>!v||val(x,f)===v))||g.find(x=>sel[k]&&val(x,k)===sel[k])||r;if(key(t)!==key(r))location.href=url(t)}))}else p?.remove();detail(r)}
+function home(){if(pg()!=='index.html')return;let rows=st.rows.filter(vis),tr=$('.carousel-track');if(tr)tr.innerHTML=rows.map(card).join('');let vs=$('.vitt-showcase-track');if(vs)vs.innerHTML=rows.filter(r=>r.tobacco_type==='Tobaksfri').map(card).join('')}
+async function init(){try{let res=await fetch(DATA_URL,{cache:'no-cache'});st.rows=expand(await res.json());st.groups=group(st.rows);window.SwedsnusProducts={rows:st.rows,groups:st.groups,rowKey:key,urlFor:url};catalog();prod();home();document.dispatchEvent(new CustomEvent('swedsnus:products-rendered'))}catch(e){document.documentElement.classList.add('product-data-load-failed');console.error(e)}}
+document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
 })();
