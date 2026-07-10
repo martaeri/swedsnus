@@ -28,8 +28,9 @@
   const visible = row => row.product_id && String(row.visible_on_site || 'Yes').toLowerCase() !== 'no';
   const price = row => row.price_sek ? `${Number(row.price_sek).toLocaleString('sv-SE')} kr` : '';
   const amount = row => row.amount_dosor ? `${row.amount_dosor} dosor` : row.package_quantity ? `${row.package_quantity}-pack` : '1-pack';
-  const name = row => row.generated_name || [row.taste_name, row.product_line, row.strength !== 'Normal' ? row.strength : '', row.format, row.grind && row.grind !== 'Standard' ? row.grind : '', row.amount_dosor ? `${row.amount_dosor} dosor` : ''].filter(Boolean).join(' ');
+  const name = row => row.generated_name || [row.taste_name, row.product_line, row.strength !== 'Normal' ? row.strength : '', row.format, row.grind && row.grind !== 'Standard' ? row.grind : '', row.amount_dosor ? `${row.amount_dosor} dosor` : row.package_quantity ? `${row.package_quantity}-pack` : ''].filter(Boolean).join(' ');
   const rowKey = row => `${row.product_id}__${row.variant_id || row.sku_draft || slugify(name(row))}`;
+  const urlFor = row => `${PRODUCT_PAGE}?id=${encodeURIComponent(rowKey(row))}`;
 
   function decodeValue(value, dict) {
     if (value === '') return null;
@@ -92,8 +93,6 @@
     if (row.site_section === 'Gör eget') return 'Gör Eget';
     return 'Portionssnus';
   }
-
-  function urlFor(row) { return `${PRODUCT_PAGE}?id=${encodeURIComponent(rowKey(row))}`; }
 
   function strengthDots(row) {
     if (!row.strength || row.product_family === 'Aromer' || row.product_family === 'Tillbehör') return '';
@@ -185,67 +184,37 @@
 
   function productFields(row) {
     if (row.product_family === 'Lössnus') return [['amount', 'Mängd'], ['grind', 'Malningsgrad'], ['strength', 'Styrka']];
-    if (row.product_family === 'Aromer') return [['amount', 'Mängd'], ['aroma_type', 'Typ']];
-    if (row.product_family === 'Tillbehör') return [['package_quantity', 'Antal'], ['material', 'Material'], ['design_color', 'Färg']];
+    if (row.product_family === 'Aromer') return [['amount', 'Mängd'], ['aroma_type', 'Aromtyp']];
+    if (row.product_family === 'Tillbehör') return [['compatible_with', 'Passar till'], ['package_quantity', 'Antal'], ['design_color', 'Färg/design']];
     return [['format', 'Format'], ['amount', 'Portioner'], ['strength', 'Styrka']];
   }
 
-  function fieldValue(row, field) { return field === 'amount' ? amount(row) : row[field] || ''; }
-
-  function rowMatches(row, product = {}) {
-    const id = String(product.id || '').trim();
-    const nameValue = String(product.name || '').trim();
-    const hrefId = idFromHref(product.href);
-    const slug = slugify(nameValue);
-    const keys = [
-      rowKey(row),
-      row.product_id,
-      row.variant_id,
-      row.sku_draft,
-      row.article_number,
-      row.generated_name,
-      row.source_title,
-      row.taste_name && row.format && row.amount_dosor ? `${row.taste_name} ${row.format} ${row.amount_dosor} dosor` : '',
-      row.taste_name && row.product_line && row.amount_dosor ? `${row.taste_name} ${row.product_line} ${row.amount_dosor} dosor` : ''
-    ].filter(Boolean);
-    return keys.some(key => String(key) === id || String(key) === hrefId || slugify(key) === id || slugify(key) === hrefId || slugify(key) === slug);
-  }
-
-  function idFromHref(href) {
-    try {
-      const url = new URL(String(href || ''), location.href);
-      return url.searchParams.get('id') || '';
-    } catch (error) {
-      return '';
-    }
+  function fieldValue(row, field) {
+    if (field === 'amount') return amount(row);
+    if (field === 'package_quantity') return row.package_quantity ? `${row.package_quantity}-pack` : '';
+    return row[field] || '';
   }
 
   function findRow(product = {}) {
-    return state.rows.find(row => rowMatches(row, product)) || null;
+    const id = String(product.id || '').trim();
+    const href = String(product.href || '').trim();
+    const hrefId = new URL(href, location.href).searchParams.get('id') || '';
+    const nameValue = String(product.name || '').trim();
+    const nameSlug = slugify(nameValue);
+    return state.rows.find(row => {
+      const keys = [rowKey(row), row.product_id, row.variant_id, row.sku_draft, row.article_number, row.generated_name, row.source_title].filter(Boolean);
+      return keys.some(key => String(key) === id || String(key) === hrefId || slugify(key) === id || slugify(key) === nameSlug);
+    }) || null;
   }
 
   function currentRow() {
     const query = new URLSearchParams(location.search);
     const id = query.get('id');
-    const product = query.get('product');
-    const variant = query.get('variant');
-    if (id) {
-      const found = state.rows.find(row => rowKey(row) === id || slugify(rowKey(row)) === slugify(id));
-      if (found) return found;
-    }
-    if (product && variant) {
-      const found = state.rows.find(row => row.product_id === product && String(row.variant_id || '') === variant);
-      if (found) return found;
-    }
-    if (product) {
-      const found = state.rows.find(row => row.product_id === product);
-      if (found) return found;
-    }
-    return null;
+    return id ? state.rows.find(row => rowKey(row) === id) : null;
   }
 
   function rowSpecs(row) {
-    return [['Produktlinje', row.product_line], ['Tobakstyp', row.tobacco_type && row.tobacco_type !== 'Ej tillämpligt' ? row.tobacco_type : ''], ['Format', [row.format, row.format_dimensions].filter(Boolean).join(', ')], ['Fyllnad', row.fill_level], ['Smak', row.taste_display], ['Malningsgrad', row.grind], ['Styrka', [row.strength, row.strength_mg_g].filter(Boolean).join(', ')], ['Nikotinhalt', row.nicotine_per_portion], ['Förpackningsstorlek', row.portions_total ? `${row.amount_dosor} dosor (${row.portions_total} portioner)` : row.amount_dosor ? amount(row) : row.package_quantity ? `${row.package_quantity}-pack` : ''], ['Hållbarhet', row.shelf_life], ['Tillverkningsort', row.manufacturing_location]];
+    return [['Produktfamilj', row.product_family], ['Produktlinje', row.product_line || row.aroma_type || row.accessory_type], ['Tobakstyp', row.tobacco_type && row.tobacco_type !== 'Ej tillämpligt' ? row.tobacco_type : ''], ['Format', [row.format, row.format_dimensions].filter(Boolean).join(', ')], ['Fyllnad', row.fill_level], ['Smak', row.taste_display], ['Malningsgrad', row.grind], ['Styrka', [row.strength, row.strength_mg_g].filter(Boolean).join(', ')], ['Nikotinhalt', row.nicotine_per_portion], ['Förpackningsstorlek', row.portions_total ? `${row.amount_dosor} dosor (${row.portions_total} portioner)` : row.amount_dosor ? amount(row) : row.package_quantity ? `${row.package_quantity}-pack` : ''], ['Material', row.material], ['Färg/design', row.design_color], ['Hållbarhet', row.shelf_life], ['Tillverkningsort', row.manufacturing_location]];
   }
 
   function renderDetail(row) {
@@ -354,11 +323,37 @@
     if (showcase) showcase.innerHTML = state.rows.filter(row => visible(row) && (row.tobacco_type === 'Tobaksfri' || row.site_section === 'Vitt snus')).slice(0, 6).map(productCard).join('');
   }
 
+  function productFromElement(element) {
+    return {
+      id: element.dataset.productId || element.dataset.productGroup || '',
+      name: $('.product-card-name', element)?.textContent?.trim() || '',
+      href: element.dataset.href || $('.product-card-main-link', element)?.getAttribute('href') || ''
+    };
+  }
+
+  function syncProductCard(card) {
+    const row = findRow(productFromElement(card));
+    if (!row) return;
+    const href = urlFor(row);
+    const id = rowKey(row);
+    card.dataset.href = href;
+    card.dataset.productId = id;
+    card.dataset.productGroup = row.product_id || card.dataset.productGroup || '';
+    card.dataset.variantId = row.variant_id || card.dataset.variantId || '';
+    const link = $('.product-card-main-link', card);
+    if (link) link.href = href;
+    $$('.bookmark-toggle', card).forEach(button => { button.dataset.productId = id; });
+  }
+
+  function syncProductTextLink(link) {
+    const text = link.textContent?.trim() || link.closest('.cart-panel-item, .cart-page-item')?.querySelector('.cart-panel-item-name, h3 a')?.textContent?.trim() || '';
+    const row = findRow({ name: text, href: link.getAttribute('href') || '' });
+    if (row) link.href = urlFor(row);
+  }
+
   function normalizeProductHref(product = {}) {
     const row = findRow(product);
-    if (row) return urlFor(row);
-    const existingId = product.id || idFromHref(product.href);
-    return existingId ? `${PRODUCT_PAGE}?id=${encodeURIComponent(existingId)}` : product.href || '';
+    return row ? urlFor(row) : product.href || '';
   }
 
   function migrateStore(key) {
@@ -379,36 +374,11 @@
     }
   }
 
-  function syncProductCard(card) {
-    const product = {
-      id: card.dataset.productId || card.dataset.productGroup || '',
-      name: $('.product-card-name', card)?.textContent?.trim() || '',
-      href: card.dataset.href || $('.product-card-main-link', card)?.getAttribute('href') || ''
-    };
-    const row = findRow(product);
-    if (!row) return;
-    const href = urlFor(row);
-    const id = rowKey(row);
-    card.dataset.href = href;
-    card.dataset.productId = id;
-    card.dataset.productGroup = row.product_id || card.dataset.productGroup || '';
-    card.dataset.variantId = row.variant_id || card.dataset.variantId || '';
-    const link = $('.product-card-main-link', card);
-    if (link) link.href = href;
-    $$('.bookmark-toggle', card).forEach(button => { button.dataset.productId = id; });
-  }
-
-  function syncTextLink(link) {
-    const text = link.textContent?.trim() || link.closest('.cart-panel-item, .cart-page-item')?.querySelector('.cart-panel-item-name, h3 a')?.textContent?.trim() || '';
-    const row = findRow({ name: text, href: link.getAttribute('href') || '' });
-    if (row) link.href = urlFor(row);
-  }
-
   function syncExistingProductLinks() {
     migrateStore(BOOKMARKS_KEY);
     migrateStore(CART_KEY);
     $$('.product-card').forEach(syncProductCard);
-    $$('a[href*="product-portion.html"], a[href*="product-los.html"], a[href*="product-arom.html"], a[href*="product-tillbehor.html"], a[href="product.html"], .cart-panel-item, .cart-page-img, .cart-page-main h3 a').forEach(syncTextLink);
+    $$('.cart-panel-item, .cart-page-img, .cart-page-main h3 a').forEach(syncProductTextLink);
   }
 
   function bindProductCardNavigation() {
@@ -441,7 +411,7 @@
       const response = await fetch(DATA_URL, { cache: 'no-cache' });
       state.rows = expandData(await response.json()).filter(visible);
       state.groups = groupRows(state.rows);
-      window.SwedsnusProducts = { rows: state.rows, groups: state.groups, rowKey, urlFor, productCard, findRow, syncExistingProductLinks };
+      window.SwedsnusProducts = { rows: state.rows, groups: state.groups, rowKey, urlFor, productCard, findRow, syncExistingProductLinks, normalizeProductHref };
       renderCatalog();
       renderProductPage();
       renderIndex();
