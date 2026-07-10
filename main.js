@@ -2,6 +2,7 @@
   const CART_KEY = 'swedsnus-cart';
   const BOOKMARKS_KEY = 'swedsnus-bookmarks';
   const AUTH_KEY = 'swedsnus-demo-session';
+  const DEFAULT_PRODUCT_HREF = 'portion.html';
   const CART_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
   const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
   const orders = [
@@ -14,21 +15,26 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
+  function loadStylesheet(href) {
+    if ($(`link[href="${href}"]`)) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    document.head.appendChild(link);
+  }
+
+  function loadScript(src) {
+    if ($(`script[src="${src}"]`)) return;
+    const script = document.createElement('script');
+    script.src = src;
+    script.defer = true;
+    document.body.appendChild(script);
+  }
+
   function loadAssets() {
-    ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css', 'mobile-polish.css', 'mobile-menu-carousel-fixes.css', 'account.css', 'support.css', 'category-extra.css'].forEach(href => {
-      if (!$(`link[href="${href}"]`)) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = href;
-        document.head.appendChild(link);
-      }
-    });
-    if (!$('script[src="product-experience.js"]')) {
-      const script = document.createElement('script');
-      script.src = 'product-experience.js';
-      script.defer = true;
-      document.body.appendChild(script);
-    }
+    ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css', 'mobile-polish.css', 'mobile-menu-carousel-fixes.css', 'account.css', 'support.css', 'category-extra.css'].forEach(loadStylesheet);
+    loadScript('product-data.js');
+    loadScript('product-experience.js');
   }
 
   function readStore(key) {
@@ -45,12 +51,8 @@
   function escapeHtml(value) { return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
   function slugify(value) { return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'produkt'; }
   function parsePrice(value) { const match = String(value || '').replace(/\s/g, '').match(/[0-9]+/); return match ? parseInt(match[0], 10) : 0; }
-
   function selectedOption(card) { return card?.querySelector?.('.pack-select option:checked') || null; }
-  function selectedPack(card) {
-    const option = selectedOption(card);
-    return option?.dataset.pack || option?.textContent?.split('—')[0]?.trim() || $('.pack-option.selected')?.dataset.pack || '1-pack';
-  }
+  function selectedPack(card) { const option = selectedOption(card); return option?.dataset.pack || option?.textContent?.split('—')[0]?.trim() || $('.pack-option.selected')?.dataset.pack || '1-pack'; }
   function selectedPrice(card) {
     const option = selectedOption(card);
     if (option?.dataset.price) return option.dataset.price;
@@ -68,19 +70,78 @@
     return price ? `${Math.round(price / amount).toLocaleString('sv-SE')} kr/st` : '';
   }
   function cardMeta(card) { return $$('.product-card-meta', card).map(item => item.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean); }
+
+  function validProductHref(value) {
+    const href = String(value || '').trim();
+    return href && href !== 'product.html' ? href : '';
+  }
+  function rowKey(row) {
+    const api = window.SwedsnusProducts;
+    return api?.rowKey ? api.rowKey(row) : `${row.product_id}__${row.variant_id || row.sku_draft || slugify(row.generated_name || row.source_title || '')}`;
+  }
+  function matchingProductRow(product = {}) {
+    const api = window.SwedsnusProducts;
+    if (!api?.rows?.length) return null;
+    const id = String(product.id || '').trim();
+    const name = String(product.name || '').trim();
+    const slug = slugify(name);
+    return api.rows.find(row => {
+      const keys = [
+        rowKey(row),
+        row.product_id,
+        row.variant_id,
+        row.sku_draft,
+        row.article_number,
+        row.generated_name,
+        row.source_title,
+        row.taste_name && row.format && row.amount_dosor ? `${row.taste_name} ${row.format} ${row.amount_dosor} dosor` : '',
+        row.taste_name && row.product_line && row.amount_dosor ? `${row.taste_name} ${row.product_line} ${row.amount_dosor} dosor` : ''
+      ].filter(Boolean);
+      return keys.some(key => String(key) === id || slugify(key) === id || slugify(key) === slug);
+    }) || null;
+  }
+  function productHref(product = {}) {
+    const existing = validProductHref(product.href);
+    if (existing) return existing;
+    const api = window.SwedsnusProducts;
+    const row = matchingProductRow(product);
+    return row && api?.urlFor ? api.urlFor(row) : DEFAULT_PRODUCT_HREF;
+  }
+  function normalizeProductRecord(product) {
+    const next = { ...product };
+    next.href = productHref(next);
+    return next;
+  }
+  function migrateProductStores() {
+    [BOOKMARKS_KEY, CART_KEY].forEach(key => {
+      const items = readStore(key);
+      let changed = false;
+      const normalized = items.map(item => {
+        const next = normalizeProductRecord(item);
+        if (next.href !== item.href) changed = true;
+        return next;
+      });
+      if (changed) writeStore(key, normalized);
+    });
+  }
+
   function productFromCard(card) {
     const name = $('.product-card-name', card)?.textContent?.trim() || 'Produkt';
-    return { id: card.dataset.productId || slugify(name), name, badge: $('.product-card-badge', card)?.textContent?.trim() || '', meta: cardMeta(card), price: selectedPrice(card), pack: selectedPack(card), href: card.dataset.href || 'product.html' };
+    const id = card.dataset.productId || slugify(name);
+    return normalizeProductRecord({ id, name, badge: $('.product-card-badge', card)?.textContent?.trim() || '', meta: cardMeta(card), price: selectedPrice(card), pack: selectedPack(card), href: card.dataset.href || $('.product-card-main-link', card)?.getAttribute('href') });
   }
   function productFromPage() {
+    const detail = $('.product-detail');
     const name = $('.product-detail h1')?.textContent?.trim() || document.title.split('—')[0].trim() || 'Produkt';
+    const id = detail?.dataset.productId || new URLSearchParams(window.location.search).get('id') || slugify(name);
     const meta = $$('.product-detail-meta-row').map(row => `${$('dt', row)?.textContent?.trim() || ''}: ${$('dd', row)?.textContent?.replace(/\s+/g, ' ')?.trim() || ''}`).filter(item => item.length > 2).slice(0, 3);
-    return { id: slugify(name), name, badge: $('.product-card-badge')?.textContent?.trim() || '', meta, price: selectedPrice(document), pack: selectedPack(document), href: 'product.html' };
+    return normalizeProductRecord({ id, name, badge: $('.product-card-badge')?.textContent?.trim() || '', meta, price: selectedPrice(document), pack: selectedPack(document) });
   }
   function isBookmarked(id) { return readStore(BOOKMARKS_KEY).some(item => item.id === id); }
   function saveBookmark(product, shouldSave) {
-    const bookmarks = readStore(BOOKMARKS_KEY).filter(item => item.id !== product.id);
-    if (shouldSave) bookmarks.unshift(product);
+    const item = normalizeProductRecord(product);
+    const bookmarks = readStore(BOOKMARKS_KEY).filter(saved => saved.id !== item.id);
+    if (shouldSave) bookmarks.unshift(item);
     writeStore(BOOKMARKS_KEY, bookmarks);
     renderBookmarksPage();
     syncBookmarkButtons();
@@ -88,8 +149,8 @@
 
   function normalizeProductCard(card) {
     if (!card || card.dataset.normalized === 'true') return;
-    if (!card.dataset.href) card.dataset.href = 'product.html';
     const product = productFromCard(card);
+    card.dataset.href = product.href;
     card.dataset.productId = product.id;
     $$('.pack-select option', card).forEach(option => {
       const pack = option.dataset.pack || option.textContent.split('—')[0].trim() || '1-pack';
@@ -144,7 +205,8 @@
     }).join('');
   }
   function productCardMarkup(product) {
-    return `<div class="product-card" data-product-id="${escapeHtml(product.id)}" data-href="${escapeHtml(product.href || 'product.html')}"><button class="bookmark-toggle active" data-product-id="${escapeHtml(product.id)}" type="button" aria-label="Spara produkt" aria-pressed="true">${BOOKMARK_ICON}</button><div class="img-placeholder product">Produktbild</div><div class="product-card-body">${product.badge ? `<span class="product-card-badge">${escapeHtml(product.badge)}</span>` : ''}<p class="product-card-name">${escapeHtml(product.name)}</p>${metaMarkup(product.meta)}<div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="${escapeHtml(product.price || '')}" data-pack="${escapeHtml(product.pack || '1-pack')}">${escapeHtml(product.pack || '1-pack')} — ${escapeHtml(product.price || '')}</option></select></div><div class="product-card-bottom"><p class="product-card-price"><span class="unit-price">${escapeHtml(product.price || '')}</span><small>per produkt</small></p><button class="add-to-cart-btn" type="button" aria-label="Lägg i kundvagn">${CART_ICON}</button></div></div></div>`;
+    const item = normalizeProductRecord(product);
+    return `<div class="product-card" data-product-id="${escapeHtml(item.id)}" data-href="${escapeHtml(item.href)}"><button class="bookmark-toggle active" data-product-id="${escapeHtml(item.id)}" type="button" aria-label="Spara produkt" aria-pressed="true">${BOOKMARK_ICON}</button><a class="product-card-main-link" href="${escapeHtml(item.href)}" aria-label="Visa ${escapeHtml(item.name)}"><div class="img-placeholder product">Produktbild</div><div class="product-card-body">${item.badge ? `<span class="product-card-badge">${escapeHtml(item.badge)}</span>` : ''}<p class="product-card-name">${escapeHtml(item.name)}</p>${metaMarkup(item.meta)}</div></a><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="${escapeHtml(item.price || '')}" data-pack="${escapeHtml(item.pack || '1-pack')}">${escapeHtml(item.pack || '1-pack')} — ${escapeHtml(item.price || '')}</option></select></div><div class="product-card-bottom"><p class="product-card-price"><span class="unit-price">${escapeHtml(item.price || '')}</span><small>per produkt</small></p><button class="add-to-cart-btn" type="button" aria-label="Lägg i kundvagn">${CART_ICON}</button></div></div>`;
   }
 
   function requireMarkup(message, redirect = 'account.html') { return `<div class="account-locked"><span class="account-kicker">Inloggning krävs</span><h2>Logga in för att fortsätta</h2><p>${escapeHtml(message)}</p><div class="account-action-row"><a class="btn btn-primary" href="${redirect}">Logga in eller skapa konto</a><a class="btn btn-outline" href="index.html">Till startsidan</a></div></div>`; }
@@ -158,7 +220,7 @@
       list.innerHTML = requireMarkup('Logga in för att se och hantera dina sparade produkter.', 'account.html');
       return;
     }
-    const bookmarks = readStore(BOOKMARKS_KEY);
+    const bookmarks = readStore(BOOKMARKS_KEY).map(normalizeProductRecord);
     const count = $('[data-bookmark-count]');
     if (count) count.textContent = `${bookmarks.length} ${bookmarks.length === 1 ? 'produkt' : 'produkter'}`;
     list.classList.add('product-grid', 'bookmarks-product-grid');
@@ -167,17 +229,18 @@
   }
 
   function addCartItem(product, quantity = 1) {
-    const cart = readStore(CART_KEY);
-    const existing = cart.find(item => item.id === product.id && item.pack === product.pack && item.price === product.price);
+    const item = normalizeProductRecord(product);
+    const cart = readStore(CART_KEY).map(normalizeProductRecord);
+    const existing = cart.find(row => row.id === item.id && row.pack === item.pack && row.price === item.price);
     if (existing) existing.quantity += quantity;
-    else cart.unshift({ ...product, quantity });
+    else cart.unshift({ ...item, quantity });
     writeStore(CART_KEY, cart);
     updateCartPanel();
     renderCartPage();
   }
   function cartTotal(cart) { return cart.reduce((sum, item) => sum + parsePrice(item.price) * (item.quantity || 1), 0); }
   function updateCartPanel() {
-    const cart = readStore(CART_KEY);
+    const cart = readStore(CART_KEY).map(normalizeProductRecord);
     const count = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
     $$('.cart-count').forEach(item => item.textContent = count);
     $$('.cart-panel-count').forEach(item => item.textContent = `${count} ${count === 1 ? 'artikel' : 'artiklar'}`);
@@ -190,13 +253,13 @@
         ($('.cart-panel-empty', panel) || panel).insertAdjacentElement('afterend', list);
       }
       $('.cart-panel-empty', panel)?.classList.toggle('is-hidden', cart.length > 0);
-      list.innerHTML = cart.slice(0, 4).map(item => `<a href="${escapeHtml(item.href || 'product.html')}" class="cart-panel-item"><span class="cart-panel-item-img"></span><span class="cart-panel-item-main"><span class="cart-panel-item-name">${escapeHtml(item.name)}</span><span class="cart-panel-item-meta">${item.quantity || 1} × ${escapeHtml(item.pack || '1-pack')}</span></span><span class="cart-panel-item-price">${escapeHtml(item.price || '')}</span></a>`).join('');
+      list.innerHTML = cart.slice(0, 4).map(item => `<a href="${escapeHtml(item.href)}" class="cart-panel-item"><span class="cart-panel-item-img"></span><span class="cart-panel-item-main"><span class="cart-panel-item-name">${escapeHtml(item.name)}</span><span class="cart-panel-item-meta">${item.quantity || 1} × ${escapeHtml(item.pack || '1-pack')}</span></span><span class="cart-panel-item-price">${escapeHtml(item.price || '')}</span></a>`).join('');
     });
   }
   function renderCartPage() {
     const page = $('[data-cart-page]');
     if (!page) return;
-    const cart = readStore(CART_KEY);
+    const cart = readStore(CART_KEY).map(normalizeProductRecord);
     const qty = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
     const summaryCount = $('[data-cart-summary-count]', page);
     const summaryTotal = $('[data-cart-summary-total]', page);
@@ -204,7 +267,7 @@
     if (summaryTotal) summaryTotal.textContent = `${cartTotal(cart).toLocaleString('sv-SE')} kr`;
     const list = $('[data-cart-items]', page);
     if (!list) return;
-    list.innerHTML = cart.length ? cart.map((item, index) => `<article class="cart-page-item"><a href="${escapeHtml(item.href || 'product.html')}" class="cart-page-img">Produktbild</a><div class="cart-page-main">${item.badge ? `<span class="product-card-badge">${escapeHtml(item.badge)}</span>` : ''}<h3><a href="${escapeHtml(item.href || 'product.html')}">${escapeHtml(item.name)}</a></h3>${metaMarkup(item.meta)}<p class="cart-page-pack">${escapeHtml(item.pack || '1-pack')}</p></div><div class="cart-page-qty"><button type="button" data-cart-action="decrease" data-index="${index}">−</button><span>${item.quantity || 1}</span><button type="button" data-cart-action="increase" data-index="${index}">+</button></div><strong class="cart-page-price">${escapeHtml(item.price || '')}</strong><button class="cart-page-remove" type="button" data-cart-action="remove" data-index="${index}" aria-label="Ta bort produkt">×</button></article>`).join('') : '<div class="cart-empty-page">Din kundvagn är tom.</div>';
+    list.innerHTML = cart.length ? cart.map((item, index) => `<article class="cart-page-item"><a href="${escapeHtml(item.href)}" class="cart-page-img">Produktbild</a><div class="cart-page-main">${item.badge ? `<span class="product-card-badge">${escapeHtml(item.badge)}</span>` : ''}<h3><a href="${escapeHtml(item.href)}">${escapeHtml(item.name)}</a></h3>${metaMarkup(item.meta)}<p class="cart-page-pack">${escapeHtml(item.pack || '1-pack')}</p></div><div class="cart-page-qty"><button type="button" data-cart-action="decrease" data-index="${index}">−</button><span>${item.quantity || 1}</span><button type="button" data-cart-action="increase" data-index="${index}">+</button></div><strong class="cart-page-price">${escapeHtml(item.price || '')}</strong><button class="cart-page-remove" type="button" data-cart-action="remove" data-index="${index}" aria-label="Ta bort produkt">×</button></article>`).join('') : '<div class="cart-empty-page">Din kundvagn är tom.</div>';
   }
 
   function showToast(message) {
@@ -267,7 +330,7 @@
       tab.addEventListener('click', () => {
         const wrap = tab.closest('.auth-modal, .auth-page-card');
         $$('[data-auth-tab]', wrap).forEach(item => item.classList.toggle('active', item === tab));
-        $$('[data-auth-panel]', wrap).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.authPanel !== tab.dataset.authTab));
+        $$('[data-auth-panel]', wrap).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.authPanel !== tab.datasetAuthTab));
       });
     });
     $$('[data-auth-close]', root).forEach(button => button.addEventListener('click', closeAuth));
@@ -292,14 +355,12 @@
     bindAuth(page); bindLogout(page);
   }
   function orderItemsText(order) { return Array.isArray(order.items) ? order.items.join(', ') : order.items; }
-  function orderMarkup(order, compact = false) {
-    return `<article class="order-card"><div><span class="order-id">${escapeHtml(order.id)}</span><h3>${escapeHtml(order.status)}</h3><p>${escapeHtml(orderItemsText(order))}</p><small>${escapeHtml(order.date)} · ${escapeHtml(order.total)}</small></div><div class="order-actions"><a class="btn btn-outline btn-small" href="order.html?id=${encodeURIComponent(order.id)}">Visa order</a>${order.current ? '<a class="btn btn-outline btn-small" href="order.html?id=' + encodeURIComponent(order.id) + '">Spåra</a>' : compact ? '' : '<a class="btn btn-outline btn-small" href="order.html?id=' + encodeURIComponent(order.id) + '">Hantera retur</a>'}</div></article>`;
-  }
+  function orderMarkup(order, compact = false) { return `<article class="order-card"><div><span class="order-id">${escapeHtml(order.id)}</span><h3>${escapeHtml(order.status)}</h3><p>${escapeHtml(orderItemsText(order))}</p><small>${escapeHtml(order.date)} · ${escapeHtml(order.total)}</small></div><div class="order-actions"><a class="btn btn-outline btn-small" href="order.html?id=${encodeURIComponent(order.id)}">Visa order</a>${order.current ? '<a class="btn btn-outline btn-small" href="order.html?id=' + encodeURIComponent(order.id) + '">Spåra</a>' : compact ? '' : '<a class="btn btn-outline btn-small" href="order.html?id=' + encodeURIComponent(order.id) + '">Hantera retur</a>'}</div></article>`; }
   function renderAccountPage() {
     const page = $('[data-account-page]');
     if (!page) return;
     if (!loggedIn()) { page.innerHTML = requireMarkup('Mina sidor visas först när du är inloggad.', 'account.html'); return; }
-    const bookmarks = readStore(BOOKMARKS_KEY);
+    const bookmarks = readStore(BOOKMARKS_KEY).map(normalizeProductRecord);
     const cartQty = readStore(CART_KEY).reduce((sum, item) => sum + (item.quantity || 1), 0);
     const currentOrders = orders.filter(order => order.current);
     const pastOrders = orders.filter(order => !order.current);
@@ -316,25 +377,10 @@
   }
   function bindAccountTabs(root) { $$('[data-account-tab]', root).forEach(tab => tab.addEventListener('click', () => { $$('[data-account-tab]', root).forEach(item => item.classList.toggle('active', item === tab)); $$('[data-account-panel]', root).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.accountPanel !== tab.dataset.accountTab)); })); }
   function bindLogout(root = document) { $$('[data-logout]', root).forEach(button => { if (button.dataset.bound) return; button.dataset.bound = 'true'; button.addEventListener('click', () => { setLoggedIn(false); showToast('Du är utloggad'); renderLoginPage(); renderAccountPage(); renderBookmarksPage(); renderOrderPage(); }); }); }
-  function initThemeSwitcher() {
-    const saved = localStorage.getItem('swedsnus-theme') || '1';
-    document.documentElement.className = saved === '1' ? '' : `theme-${saved}`;
-    $$('.theme-dot').forEach(dot => { dot.classList.toggle('active', dot.dataset.theme === saved); dot.addEventListener('click', () => { const theme = dot.dataset.theme; document.documentElement.className = theme === '1' ? '' : `theme-${theme}`; $$('.theme-dot').forEach(item => item.classList.toggle('active', item === dot)); localStorage.setItem('swedsnus-theme', theme); }); });
-  }
+  function initThemeSwitcher() { const saved = localStorage.getItem('swedsnus-theme') || '1'; document.documentElement.className = saved === '1' ? '' : `theme-${saved}`; $$('.theme-dot').forEach(dot => { dot.classList.toggle('active', dot.dataset.theme === saved); dot.addEventListener('click', () => { const theme = dot.dataset.theme; document.documentElement.className = theme === '1' ? '' : `theme-${theme}`; $$('.theme-dot').forEach(item => item.classList.toggle('active', item === dot)); localStorage.setItem('swedsnus-theme', theme); }); }); }
   function insertAfter(reference, node) { reference?.parentNode?.insertBefore(node, reference.nextSibling); }
-  function ensureVittSnusLinks() {
-    $$('.sub-dropdown').forEach(dropdown => { if (!$('a[href="vitt-snus.html"]', dropdown)) { const li = document.createElement('li'); li.innerHTML = '<a href="vitt-snus.html">Vitt snus</a>'; const los = $$('a', dropdown).find(link => link.getAttribute('href') === 'los.html')?.closest('li'); los ? insertAfter(los, li) : dropdown.appendChild(li); } });
-    $$('.subnav-inner').forEach(nav => { if (!$('a[href="vitt-snus.html"]', nav)) { const link = document.createElement('a'); link.href = 'vitt-snus.html'; link.textContent = 'Vitt snus'; const los = $$('a', nav).find(item => item.getAttribute('href') === 'los.html'); los ? insertAfter(los, link) : nav.appendChild(link); } });
-  }
-  function mobileMenuLink(href, text, extra = '') { return `<a class="mobile-menu-link${extra ? ` ${extra}` : ''}" href="${href}">${text}</a>`; }
-  
-  function initNavigation() {
-    ensureVittSnusLinks();
-    $$('a[href="#"]').forEach(link => { if (link.textContent.trim().toLowerCase() === 'kontakt') link.href = 'contact.html'; });
-    $$('a[href="portion.html#gor-eget"], a[href="index.html#gor-eget"], a[href$="#gor-eget"]').forEach(link => link.href = 'gor-eget.html');
-    const file = window.location.pathname.split('/').pop() || 'index.html';
-    $$('.subheader-inner a, .subnav-inner a, .main-nav a').forEach(link => { const href = (link.getAttribute('href') || '').split('#')[0].split('/').pop(); if (href && href === file) link.classList.add('active'); });
-  }
+  function ensureVittSnusLinks() { $$('.sub-dropdown').forEach(dropdown => { if (!$('a[href="vitt-snus.html"]', dropdown)) { const li = document.createElement('li'); li.innerHTML = '<a href="vitt-snus.html">Vitt snus</a>'; const los = $$('a', dropdown).find(link => link.getAttribute('href') === 'los.html')?.closest('li'); los ? insertAfter(los, li) : dropdown.appendChild(li); } }); $$('.subnav-inner').forEach(nav => { if (!$('a[href="vitt-snus.html"]', nav)) { const link = document.createElement('a'); link.href = 'vitt-snus.html'; link.textContent = 'Vitt snus'; const los = $$('a', nav).find(item => item.getAttribute('href') === 'los.html'); los ? insertAfter(los, link) : nav.appendChild(link); } }); }
+  function initNavigation() { ensureVittSnusLinks(); $$('a[href="#"]').forEach(link => { if (link.textContent.trim().toLowerCase() === 'kontakt') link.href = 'contact.html'; }); $$('a[href="portion.html#gor-eget"], a[href="index.html#gor-eget"], a[href$="#gor-eget"]').forEach(link => link.href = 'gor-eget.html'); const file = window.location.pathname.split('/').pop() || 'index.html'; $$('.subheader-inner a, .subnav-inner a, .main-nav a').forEach(link => { const href = (link.getAttribute('href') || '').split('#')[0].split('/').pop(); if (href && href === file) link.classList.add('active'); }); }
   function initVittShowcase() {
     const file = window.location.pathname.split('/').pop() || 'index.html';
     if (file !== 'index.html' || $('.vitt-showcase-section')) return;
@@ -342,7 +388,7 @@
     if (!feature) return;
     const section = document.createElement('section');
     section.className = 'vitt-showcase-section';
-    section.innerHTML = `<div class="vitt-showcase-shell"><div class="vitt-showcase-copy"><span class="vitt-showcase-kicker">Ny produktgrupp</span><h2>Vitt snus</h2><p>En egen yta för kommande tobaksfria produkter. Layouten skiljer sig från de övriga karusellerna med en friare, horisontell produktvisning.</p><div class="vitt-tag-row"><span>Normal</span><span>Slim</span><span>Mini</span><span>Compact</span><span>Large</span></div><div class="btn-row"><a class="btn btn-primary" href="vitt-snus.html">Se vitt snus</a></div></div><div class="vitt-showcase-track-wrap"><div class="vitt-showcase-track"><div class="product-card" data-href="vitt-snus.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Normal</span><p class="product-card-name">Vitt Snus Normal Mint</p><p class="product-card-meta">Format: <span>Normal</span></p><p class="product-card-meta">Smak: <span>Mint</span></p><div class="product-card-actions"><select class="pack-select"><option data-price="249 kr" data-pack="1-pack">1-pack — 249 kr</option></select><button class="add-to-cart-btn">+</button></div><p class="product-card-price">249 kr <small>1-pack</small></p></div></div><div class="product-card" data-href="vitt-snus.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Slim</span><p class="product-card-name">Vitt Snus Slim Citrus</p><p class="product-card-meta">Format: <span>Slim</span></p><p class="product-card-meta">Smak: <span>Klassisk</span></p><div class="product-card-actions"><select class="pack-select"><option data-price="259 kr" data-pack="1-pack">1-pack — 259 kr</option></select><button class="add-to-cart-btn">+</button></div><p class="product-card-price">259 kr <small>1-pack</small></p></div></div><div class="product-card" data-href="vitt-snus.html"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">Compact</span><p class="product-card-name">Vitt Snus Compact Berry</p><p class="product-card-meta">Format: <span>Compact</span></p><p class="product-card-meta">Smak: <span>Bergamott</span></p><div class="product-card-actions"><select class="pack-select"><option data-price="239 kr" data-pack="1-pack">1-pack — 239 kr</option></select><button class="add-to-cart-btn">+</button></div><p class="product-card-price">239 kr <small>1-pack</small></p></div></div></div></div></div>`;
+    section.innerHTML = '<div class="vitt-showcase-shell"><div class="vitt-showcase-copy"><span class="vitt-showcase-kicker">Ny produktgrupp</span><h2>Vitt snus</h2><p>En egen yta för kommande tobaksfria produkter.</p><div class="vitt-tag-row"><span>Normal</span><span>Slim</span><span>Mini</span><span>Compact</span><span>Large</span></div><div class="btn-row"><a class="btn btn-primary" href="vitt-snus.html">Se vitt snus</a></div></div><div class="vitt-showcase-track-wrap"><div class="vitt-showcase-track"></div></div></div>';
     insertAfter(feature, section);
   }
   function initCatalogControls() {
@@ -350,7 +396,10 @@
       if ($('.catalog-mobile-tools', catalog)) return;
       const tools = $('.catalog-tools', catalog), sidebar = $('.filter-sidebar', catalog), grid = $('.product-grid', catalog);
       if (!tools || !sidebar || !grid) return;
-      const controls = document.createElement('div'); controls.className = 'catalog-mobile-tools'; controls.innerHTML = '<button class="catalog-filter-toggle" type="button" aria-expanded="false">Filter</button><select class="catalog-sort-select" aria-label="Sortera produkter"><option value="relevance">Relevans</option><option value="price-asc">Pris: lägst först</option><option value="price-desc">Pris: högst först</option><option value="alpha">A–Ö</option><option value="alpha-desc">Ö–A</option><option value="newest">Nyast först</option></select>'; tools.insertAdjacentElement('beforebegin', controls);
+      const controls = document.createElement('div');
+      controls.className = 'catalog-mobile-tools';
+      controls.innerHTML = '<button class="catalog-filter-toggle" type="button" aria-expanded="false">Filter</button><select class="catalog-sort-select" aria-label="Sortera produkter"><option value="relevance">Relevans</option><option value="price-asc">Pris: lägst först</option><option value="price-desc">Pris: högst först</option><option value="alpha">A–Ö</option><option value="alpha-desc">Ö–A</option><option value="newest">Nyast först</option></select>';
+      tools.insertAdjacentElement('beforebegin', controls);
       const overlay = document.createElement('div'); overlay.className = 'catalog-filter-overlay'; document.body.appendChild(overlay);
       const close = document.createElement('button'); close.className = 'catalog-filter-close'; close.type = 'button'; close.textContent = 'Visa produkter'; if (!$('.catalog-filter-close', sidebar)) sidebar.appendChild(close);
       function setOpen(open) { sidebar.classList.toggle('mobile-filter-open', open); overlay.classList.toggle('show', open); document.body.classList.toggle('catalog-filter-open', open); $('.catalog-filter-toggle', controls)?.setAttribute('aria-expanded', open ? 'true' : 'false'); }
@@ -359,14 +408,8 @@
       $('.catalog-sort-select', controls)?.addEventListener('change', event => sortGrid(grid, event.target.value));
     });
   }
-  function sortGrid(grid, mode) {
-    const cards = $$('.product-card', grid); cards.forEach((card, index) => { if (!card.dataset.originalIndex) card.dataset.originalIndex = index; });
-    cards.sort((a, b) => { const an = $('.product-card-name', a)?.textContent?.trim() || '', bn = $('.product-card-name', b)?.textContent?.trim() || ''; const ap = parsePrice(selectedPrice(a)), bp = parsePrice(selectedPrice(b)); if (mode === 'price-asc') return ap - bp; if (mode === 'price-desc') return bp - ap; if (mode === 'alpha') return an.localeCompare(bn, 'sv'); if (mode === 'alpha-desc') return bn.localeCompare(an, 'sv'); if (mode === 'newest') return Number(b.dataset.originalIndex) - Number(a.dataset.originalIndex); return Number(a.dataset.originalIndex) - Number(b.dataset.originalIndex); }).forEach(card => grid.appendChild(card));
-  }
-  function initFilters() {
-    $$('.filter-bar').forEach(bar => bar.addEventListener('click', event => { const chip = event.target.closest('.filter-chip'); if (!chip) return; $$('.filter-chip', bar).forEach(item => item.classList.remove('active')); chip.classList.add('active'); }));
-    $$('[data-catalog-filter]').forEach(catalog => { const buttons = $$('.filter-pill[data-series]', catalog), cards = $$('.product-card[data-series]', catalog), count = $('.catalog-count', catalog), empty = $('.catalog-empty', catalog); function update(selected) { let visible = 0; cards.forEach(card => { const match = !selected || card.dataset.series === selected; card.classList.toggle('is-hidden', !match); if (match) visible += 1; }); if (count) count.textContent = `${visible} produkter`; if (empty) empty.classList.toggle('show', visible === 0); } buttons.forEach(button => button.addEventListener('click', () => { const active = button.classList.contains('active'); buttons.forEach(item => item.classList.remove('active')); active ? update(null) : (button.classList.add('active'), update(button.dataset.series)); })); update(null); });
-  }
+  function sortGrid(grid, mode) { const cards = $$('.product-card', grid); cards.forEach((card, index) => { if (!card.dataset.originalIndex) card.dataset.originalIndex = index; }); cards.sort((a, b) => { const an = $('.product-card-name', a)?.textContent?.trim() || '', bn = $('.product-card-name', b)?.textContent?.trim() || ''; const ap = parsePrice(selectedPrice(a)), bp = parsePrice(selectedPrice(b)); if (mode === 'price-asc') return ap - bp; if (mode === 'price-desc') return bp - ap; if (mode === 'alpha') return an.localeCompare(bn, 'sv'); if (mode === 'alpha-desc') return bn.localeCompare(an, 'sv'); if (mode === 'newest') return Number(b.dataset.originalIndex) - Number(a.dataset.originalIndex); return Number(a.dataset.originalIndex) - Number(b.dataset.originalIndex); }).forEach(card => grid.appendChild(card)); }
+  function initFilters() { $$('.filter-bar').forEach(bar => bar.addEventListener('click', event => { const chip = event.target.closest('.filter-chip'); if (!chip) return; $$('.filter-chip', bar).forEach(item => item.classList.remove('active')); chip.classList.add('active'); })); }
   function initCarousels() {
     $$('.carousel-header').forEach(header => { if ($('.section-heading', header)?.textContent.trim().toLowerCase() === 'nyheter') $('.see-all', header)?.remove(); });
     $$('.carousel-wrapper').forEach(wrapper => {
@@ -380,11 +423,15 @@
       function max() { return Math.max(0, Math.ceil($$('.product-card', track).length - visible())); }
       function go(value) { index = Math.max(0, Math.min(value, max())); track.style.transition = 'transform .24s ease'; track.style.transform = `translateX(-${index * (width() + gap())}px)`; if (prev) prev.disabled = index === 0; if (next) next.disabled = index >= max(); }
       function size() { const w = width(); track.style.gap = `${gap()}px`; $$('.product-card', track).forEach(card => { card.style.flex = `0 0 ${w}px`; card.style.width = `${w}px`; }); go(index); }
-      prev?.addEventListener('click', () => go(index - 1)); next?.addEventListener('click', () => go(index + 1));
-      outer.addEventListener('touchstart', event => { if (!event.touches.length) return; startX = event.touches[0].clientX; startY = event.touches[0].clientY; moved = false; }, { passive: true });
-      outer.addEventListener('touchmove', event => { if (!event.touches.length) return; const dx = event.touches[0].clientX - startX; const dy = event.touches[0].clientY - startY; if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) moved = true; }, { passive: true });
-      outer.addEventListener('touchend', event => { if (!moved) return; const dx = event.changedTouches[0].clientX - startX; if (Math.abs(dx) > 38) go(index + (dx < 0 ? 1 : -1)); });
-      window.addEventListener('resize', size); size();
+      if (wrapper.dataset.mainCarouselBound !== 'true') {
+        prev?.addEventListener('click', () => go(index - 1)); next?.addEventListener('click', () => go(index + 1));
+        outer.addEventListener('touchstart', event => { if (!event.touches.length) return; startX = event.touches[0].clientX; startY = event.touches[0].clientY; moved = false; }, { passive: true });
+        outer.addEventListener('touchmove', event => { if (!event.touches.length) return; const dx = event.touches[0].clientX - startX; const dy = event.touches[0].clientY - startY; if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) moved = true; }, { passive: true });
+        outer.addEventListener('touchend', event => { if (!moved) return; const dx = event.changedTouches[0].clientX - startX; if (Math.abs(dx) > 38) go(index + (dx < 0 ? 1 : -1)); });
+        window.addEventListener('resize', size);
+        wrapper.dataset.mainCarouselBound = 'true';
+      }
+      size();
     });
   }
   function initProductPage() {
@@ -407,11 +454,17 @@
       const add = event.target.closest('.add-to-cart-btn');
       if (add) { event.preventDefault(); event.stopPropagation(); const card = add.closest('.product-card'); if (card) addCartItem(productFromCard(card)); add.classList.add('added'); setTimeout(() => add.classList.remove('added'), 900); showToast('Tillagd i kundvagnen'); return; }
       const action = event.target.closest('[data-cart-action]');
-      if (action) { event.preventDefault(); const index = parseInt(action.dataset.index, 10); const cart = readStore(CART_KEY); if (!cart[index]) return; if (action.dataset.cartAction === 'increase') cart[index].quantity = (cart[index].quantity || 1) + 1; if (action.dataset.cartAction === 'decrease') cart[index].quantity = Math.max(1, (cart[index].quantity || 1) - 1); if (action.dataset.cartAction === 'remove') cart.splice(index, 1); writeStore(CART_KEY, cart); updateCartPanel(); renderCartPage(); return; }
+      if (action) { event.preventDefault(); const index = parseInt(action.dataset.index, 10); const cart = readStore(CART_KEY).map(normalizeProductRecord); if (!cart[index]) return; if (action.dataset.cartAction === 'increase') cart[index].quantity = (cart[index].quantity || 1) + 1; if (action.dataset.cartAction === 'decrease') cart[index].quantity = Math.max(1, (cart[index].quantity || 1) - 1); if (action.dataset.cartAction === 'remove') cart.splice(index, 1); writeStore(CART_KEY, cart); updateCartPanel(); renderCartPage(); return; }
       if (event.target.closest('[data-demo-action]')) { event.preventDefault(); showToast('Funktionen är markerad i prototypen'); return; }
-      const card = event.target.closest('.product-card'); if (card && !event.target.closest('.pack-select')) window.location.href = card.dataset.href || 'product.html';
+      const card = event.target.closest('.product-card');
+      if (card && !event.target.closest('a, button, input, select, textarea, label, .pack-select')) window.location.href = productFromCard(card).href;
     });
   }
-  function init() { loadAssets(); syncAccountState(); initThemeSwitcher(); initNavigation(); initVittShowcase(); initFilters(); initCatalogControls(); initCarousels(); renderLoginPage(); renderAccountPage(); renderOrderPage(); renderBookmarksPage(); normalizeCards(); initProductPage(); updateCartPanel(); renderCartPage(); bindAuth(); bindLogout(); bindSupportForm(); handleClicks(); }
+  function rerenderProductDependentUi() { migrateProductStores(); renderAccountPage(); renderBookmarksPage(); normalizeCards(); updateCartPanel(); renderCartPage(); initProductPage(); initCarousels(); }
+  function init() {
+    loadAssets(); syncAccountState(); initThemeSwitcher(); initNavigation(); initVittShowcase(); initFilters(); initCatalogControls(); initCarousels(); renderLoginPage(); renderAccountPage(); renderOrderPage(); renderBookmarksPage(); normalizeCards(); initProductPage(); updateCartPanel(); renderCartPage(); bindAuth(); bindLogout(); bindSupportForm(); handleClicks();
+    document.addEventListener('swedsnus:products-rendered', rerenderProductDependentUi);
+    setTimeout(rerenderProductDependentUi, 400);
+  }
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
 })();
