@@ -30,7 +30,7 @@
     document.body.appendChild(script);
   }
   function loadAssets() {
-    loadStylesheet('index-carousel.css');
+    loadStylesheet('commerce.css');
     loadScript('layout.js');
   }
 
