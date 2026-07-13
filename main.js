@@ -14,8 +14,8 @@
   ];
 
   let pendingLoginAction = null;
-  const $ = (selector, root = document) => root.querySelector(selector);
-  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+  const $ = (selector, root = document) => root ? root.querySelector(selector) : null;
+  const $$ = (selector, root = document) => root ? Array.from(root.querySelectorAll(selector)) : [];
 
   function ensureScript(src) {
     if ($(`script[src="${src}"]`)) return;
