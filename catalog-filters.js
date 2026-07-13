@@ -5,6 +5,8 @@
   const $ = (selector, root = document) => root ? root.querySelector(selector) : null;
   const $$ = (selector, root = document) => root ? Array.from(root.querySelectorAll(selector)) : [];
   const savedFilters = {};
+  const portaledSidebars = new WeakMap();
+  let activeCatalog = null;
 
   function ensureStyles() {
     if ($('#catalog-filter-fixes')) return;
@@ -18,6 +20,7 @@
       .category-pills .filter-pill-subtitle { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .category-pills .filter-pill-close { position: relative; z-index: 3; flex: 0 0 18px; pointer-events: none; }
       .catalog-filter-close { width: 100%; min-height: 42px; margin-top: .85rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-footer-bg); color: #fff; font-family: var(--font-body); font-size: .78rem; font-weight: 800; }
+      .catalog-filter-overlay.show { position: fixed; inset: 0; z-index: 1001; background: rgba(18, 17, 14, .38); }
       @media (max-width: 720px) {
         body.catalog-filter-open { overflow: hidden; }
         .category-pills { gap: .45rem; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
@@ -29,11 +32,11 @@
         .category-pills .filter-pill-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; overflow: hidden; text-overflow: clip; overflow-wrap: anywhere; hyphens: auto; font-size: .64rem; line-height: 1.02; }
         .category-pills .filter-pill-subtitle { display: none; }
         .category-pills .filter-pill-close { width: 15px; height: 15px; font-size: .7rem; align-self: center; }
-        .catalog-page .filter-sidebar.mobile-filter-open {
+        .filter-sidebar.mobile-filter-open {
           position: fixed !important;
           box-sizing: border-box;
-          left: .875rem !important;
-          right: .875rem !important;
+          left: max(.875rem, env(safe-area-inset-left)) !important;
+          right: max(.875rem, env(safe-area-inset-right)) !important;
           top: 50dvh !important;
           bottom: auto !important;
           transform: translate3d(0, -50%, 0) !important;
@@ -52,7 +55,7 @@
           box-shadow: 0 24px 70px rgba(34,31,25,.24);
           margin: 0 !important;
         }
-        .catalog-page .filter-sidebar.mobile-filter-open .catalog-filter-scroll {
+        .filter-sidebar.mobile-filter-open .catalog-filter-scroll {
           flex: 1 1 auto;
           min-height: 0;
           overflow-y: auto;
@@ -60,10 +63,10 @@
           margin-right: -.2rem;
           overscroll-behavior: contain;
         }
-        .catalog-page .filter-sidebar.mobile-filter-open .sidebar-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem .6rem; margin: 0 0 .75rem; }
-        .catalog-page .filter-sidebar.mobile-filter-open .sidebar-group h4 { grid-column: 1 / -1; margin: 0 0 .1rem; }
-        .catalog-page .filter-sidebar.mobile-filter-open .sidebar-check { min-height: 30px; }
-        .catalog-page .filter-sidebar.mobile-filter-open .catalog-filter-close {
+        .filter-sidebar.mobile-filter-open .sidebar-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem .6rem; margin: 0 0 .75rem; }
+        .filter-sidebar.mobile-filter-open .sidebar-group h4 { grid-column: 1 / -1; margin: 0 0 .1rem; }
+        .filter-sidebar.mobile-filter-open .sidebar-check { min-height: 30px; }
+        .filter-sidebar.mobile-filter-open .catalog-filter-close {
           flex: 0 0 auto;
           align-self: flex-end;
           width: auto;
@@ -77,7 +80,7 @@
       }
       @supports not (height: 100dvh) {
         @media (max-width: 720px) {
-          .catalog-page .filter-sidebar.mobile-filter-open {
+          .filter-sidebar.mobile-filter-open {
             top: 50vh !important;
             max-height: min(76vh, 620px);
           }
@@ -86,7 +89,7 @@
       @media (max-width: 380px) {
         .category-pills .filter-pill { flex-basis: 108px; }
         .category-pills .filter-pill-title { font-size: .61rem; }
-        .catalog-page .filter-sidebar.mobile-filter-open .sidebar-group { grid-template-columns: 1fr; }
+        .filter-sidebar.mobile-filter-open .sidebar-group { grid-template-columns: 1fr; }
       }
     `;
     document.head.appendChild(style);
@@ -94,6 +97,17 @@
 
   function catalogKey(catalog) {
     return document.body.dataset.page || location.pathname.split('/').pop() || 'catalog';
+  }
+
+  function prepareCatalog(catalog) {
+    const key = catalogKey(catalog);
+    catalog.dataset.catalogFilterKey = key;
+    return key;
+  }
+
+  function sidebarFor(catalog) {
+    const key = catalog.dataset.catalogFilterKey || prepareCatalog(catalog);
+    return $('.filter-sidebar', catalog) || $(`body > .filter-sidebar[data-catalog-filter-key="${key}"]`);
   }
 
   function normalizePillLabels(catalog) {
@@ -106,8 +120,9 @@
   }
 
   function readSidebarFilters(catalog) {
+    const sidebar = sidebarFor(catalog);
     const filters = {};
-    $$('.filter-sidebar [data-filter-group]', catalog).forEach(group => {
+    $$('.filter-sidebar [data-filter-group]', sidebar || catalog).forEach(group => {
       const selected = $$('input:checked', group).map(input => input.value);
       if (selected.length) filters[group.dataset.filterGroup] = selected;
     });
@@ -119,9 +134,10 @@
   }
 
   function restoreSidebarFilters(catalog) {
+    const sidebar = sidebarFor(catalog);
     const filters = savedFilters[catalogKey(catalog)];
-    if (!filters) return;
-    $$('.filter-sidebar [data-filter-group]', catalog).forEach(group => {
+    if (!sidebar || !filters) return;
+    $$('.filter-sidebar [data-filter-group]', sidebar).forEach(group => {
       const selected = new Set(filters[group.dataset.filterGroup] || []);
       $$('input', group).forEach(input => { input.checked = selected.has(input.value); });
     });
@@ -159,27 +175,54 @@
     $('.catalog-empty', catalog)?.classList.toggle('show', visibleCount === 0);
   }
 
+  function portalSidebar(catalog) {
+    const sidebar = sidebarFor(catalog);
+    if (!sidebar) return null;
+    const key = prepareCatalog(catalog);
+    sidebar.dataset.catalogFilterKey = key;
+    if (sidebar.parentNode === document.body) return sidebar;
+
+    const placeholder = document.createComment('catalog filter sidebar');
+    sidebar.parentNode.insertBefore(placeholder, sidebar);
+    portaledSidebars.set(sidebar, { parent: placeholder.parentNode, placeholder });
+    document.body.appendChild(sidebar);
+    return sidebar;
+  }
+
+  function restoreSidebarPosition(catalog) {
+    const sidebar = sidebarFor(catalog);
+    const record = sidebar ? portaledSidebars.get(sidebar) : null;
+    if (!sidebar || !record?.placeholder?.parentNode) return;
+    record.parent.insertBefore(sidebar, record.placeholder);
+    record.placeholder.remove();
+    portaledSidebars.delete(sidebar);
+  }
+
   function closeDrawer(catalog) {
-    const sidebar = $('.filter-sidebar', catalog);
+    const sidebar = sidebarFor(catalog);
     const overlay = $('.catalog-filter-overlay');
     sidebar?.classList.remove('mobile-filter-open');
     overlay?.classList.remove('show');
     document.body.classList.remove('catalog-filter-open');
     $('.catalog-filter-toggle', catalog)?.setAttribute('aria-expanded', 'false');
+    restoreSidebarPosition(catalog);
+    activeCatalog = null;
   }
 
   function openDrawer(catalog) {
-    const sidebar = $('.filter-sidebar', catalog);
+    const sidebar = portalSidebar(catalog);
+    if (!sidebar) return;
     const overlay = ensureOverlay();
+    activeCatalog = catalog;
     restoreSidebarFilters(catalog);
-    sidebar?.classList.add('mobile-filter-open');
+    sidebar.classList.add('mobile-filter-open');
     overlay.classList.add('show');
     document.body.classList.add('catalog-filter-open');
     $('.catalog-filter-toggle', catalog)?.setAttribute('aria-expanded', 'true');
   }
 
   function toggleDrawer(catalog) {
-    const sidebar = $('.filter-sidebar', catalog);
+    const sidebar = sidebarFor(catalog);
     if (!sidebar) return;
     if (sidebar.classList.contains('mobile-filter-open')) {
       saveSidebarFilters(catalog);
@@ -201,7 +244,7 @@
       overlay.dataset.catalogFilterFixBound = 'true';
       overlay.addEventListener('click', event => {
         event.preventDefault();
-        const catalog = $('.catalog-page[data-catalog-filter]');
+        const catalog = activeCatalog || $('.catalog-page[data-catalog-filter]');
         if (catalog) {
           saveSidebarFilters(catalog);
           closeDrawer(catalog);
@@ -225,8 +268,9 @@
   }
 
   function ensureControls(catalog) {
+    prepareCatalog(catalog);
     const tools = $('.catalog-tools', catalog);
-    const sidebar = $('.filter-sidebar', catalog);
+    const sidebar = sidebarFor(catalog);
     if (!tools || !sidebar) return;
 
     let controls = $('.catalog-mobile-tools', catalog);
@@ -292,7 +336,7 @@
   document.addEventListener('change', event => {
     const input = event.target.closest('.filter-sidebar input');
     if (!input) return;
-    const catalog = input.closest('.catalog-page[data-catalog-filter]');
+    const catalog = input.closest('.catalog-page[data-catalog-filter]') || activeCatalog;
     if (!catalog) return;
     saveSidebarFilters(catalog);
     applyCatalogFilters(catalog);
