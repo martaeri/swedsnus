@@ -228,7 +228,7 @@
     });
   }
   function renderShell() {
-    ['expanded-themes.css', 'advanced-themes.css', 'product-family-pages.css'].forEach(loadStylesheet);
+    ['themes.css', 'product-components.css'].forEach(loadStylesheet);
     const firstContent = $('main, .page-title-bar, .hero') || document.body.firstElementChild;
     const banner = ensureBefore('.age-banner', 'div', 'age-banner', firstContent);
     banner.textContent = 'Tobaksförsäljning — åldersgräns 18 år · Legitimation kan krävas';
