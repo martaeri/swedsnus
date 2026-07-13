@@ -120,7 +120,7 @@
         const wrap = tab.closest('.auth-modal, .auth-page-card');
         if (!wrap) return;
         $$('[data-auth-tab]', wrap).forEach(item => item.classList.toggle('active', item === tab));
-        $$('[data-auth-panel]', wrap).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.authPanel !== tab.datasetAuthTab));
+        $$('[data-auth-panel]', wrap).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.authPanel !== tab.dataset.authTab));
       }, 0);
     });
   }
