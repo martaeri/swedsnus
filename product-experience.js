@@ -35,18 +35,37 @@
     loadScript('hamburger-menu.js');
   }
 
+  function savedLinks() {
+    return [...new Set($$('a[href="bookmarks.html"], .header-icons a[title="Sparade produkter"], .header-icons a[aria-label="Sparade produkter"]'))];
+  }
   function updateSavedBadge() {
     const count = loggedIn() ? readBookmarks().length : 0;
-    $$('a[href="bookmarks.html"]').forEach(link => {
+    savedLinks().forEach(link => {
       let badge = $('.saved-badge', link);
       if (!badge) {
         badge = document.createElement('span');
         badge.className = 'saved-badge saved-count';
         link.appendChild(badge);
       }
-      badge.textContent = count;
+      badge.textContent = count > 99 ? '99+' : String(count);
       badge.hidden = count === 0;
+      link.classList.toggle('has-saved-badge', count > 0);
+      link.setAttribute('aria-label', count > 0 ? `Sparade produkter, ${count}` : 'Sparade produkter');
     });
+  }
+  function scheduleSavedBadgeUpdate() {
+    setTimeout(updateSavedBadge, 0);
+    setTimeout(updateSavedBadge, 80);
+  }
+  function bindSavedBadgeUpdates() {
+    if (window.__swedsnusSavedBadgeUpdatesBound) return;
+    window.__swedsnusSavedBadgeUpdatesBound = true;
+    document.addEventListener('click', event => {
+      if (event.target.closest('.bookmark-toggle, [data-logout], a[href="bookmarks.html"]')) scheduleSavedBadgeUpdate();
+    }, true);
+    document.addEventListener('submit', event => {
+      if (event.target.closest('[data-auth-form]')) scheduleSavedBadgeUpdate();
+    }, true);
   }
 
   function createImageOverlay(source) {
@@ -233,6 +252,7 @@
 
   function init() {
     loadAssets();
+    bindSavedBadgeUpdates();
     repairAuthTabs();
     syncStickyHeaderOffset();
     rerunEnhancements();
