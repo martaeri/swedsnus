@@ -16,9 +16,22 @@
       .category-pills .filter-pill-copy { min-width: 0; overflow: hidden; }
       .category-pills .filter-pill-title,
       .category-pills .filter-pill-subtitle { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .category-pills .filter-pill-close { position: relative; z-index: 2; flex: 0 0 18px; pointer-events: none; }
+      .category-pills .filter-pill-close { position: relative; z-index: 3; flex: 0 0 18px; pointer-events: none; }
       .catalog-filter-close { width: 100%; min-height: 42px; margin-top: .85rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-footer-bg); color: #fff; font-family: var(--font-body); font-size: .78rem; font-weight: 800; }
-      @media (max-width: 640px) { .category-pills .filter-pill { min-width: 150px; grid-template-columns: 30px minmax(0, 1fr) 20px; } }
+      @media (max-width: 720px) {
+        .category-pills { gap: .45rem; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+        .category-pills::-webkit-scrollbar { display: none; }
+        .category-pills .filter-pill { min-width: 112px; min-height: 42px; grid-template-columns: 22px minmax(0, 1fr) 16px; gap: .35rem; padding: .42rem .48rem; }
+        .category-pills .filter-pill-icon { width: 22px; height: 22px; }
+        .category-pills .filter-pill-icon::before { inset: 5px; }
+        .category-pills .filter-pill-icon::after { left: 6px; right: 6px; bottom: 6px; height: 7px; }
+        .category-pills .filter-pill-title { font-size: .66rem; line-height: 1.05; }
+        .category-pills .filter-pill-subtitle { display: none; }
+        .category-pills .filter-pill-close { width: 16px; height: 16px; font-size: .72rem; }
+      }
+      @media (max-width: 380px) {
+        .category-pills .filter-pill { min-width: 104px; }
+      }
     `;
     document.head.appendChild(style);
   }
@@ -100,6 +113,18 @@
     $('.catalog-filter-toggle', catalog)?.setAttribute('aria-expanded', 'true');
   }
 
+  function toggleDrawer(catalog) {
+    const sidebar = $('.filter-sidebar', catalog);
+    if (!sidebar) return;
+    if (sidebar.classList.contains('mobile-filter-open')) {
+      saveSidebarFilters(catalog);
+      closeDrawer(catalog);
+      applyCatalogFilters(catalog);
+    } else {
+      openDrawer(catalog);
+    }
+  }
+
   function ensureOverlay() {
     let overlay = $('.catalog-filter-overlay');
     if (!overlay) {
@@ -109,14 +134,15 @@
     }
     if (overlay.dataset.catalogFilterFixBound !== 'true') {
       overlay.dataset.catalogFilterFixBound = 'true';
-      overlay.addEventListener('click', () => {
+      overlay.addEventListener('click', event => {
+        event.preventDefault();
         const catalog = $('.catalog-page[data-catalog-filter]');
         if (catalog) {
           saveSidebarFilters(catalog);
           closeDrawer(catalog);
           applyCatalogFilters(catalog);
         }
-      });
+      }, true);
     }
     return overlay;
   }
@@ -148,24 +174,20 @@
       toggle.dataset.catalogFilterFixBound = 'true';
       toggle.addEventListener('click', event => {
         event.preventDefault();
-        if (sidebar.classList.contains('mobile-filter-open')) {
-          saveSidebarFilters(catalog);
-          closeDrawer(catalog);
-          applyCatalogFilters(catalog);
-        } else {
-          openDrawer(catalog);
-        }
-      });
+        event.stopImmediatePropagation();
+        toggleDrawer(catalog);
+      }, true);
     }
 
     if (close.dataset.catalogFilterFixBound !== 'true') {
       close.dataset.catalogFilterFixBound = 'true';
       close.addEventListener('click', event => {
         event.preventDefault();
+        event.stopImmediatePropagation();
         saveSidebarFilters(catalog);
         closeDrawer(catalog);
         applyCatalogFilters(catalog);
-      });
+      }, true);
     }
   }
 
