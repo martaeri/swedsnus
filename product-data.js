@@ -14,7 +14,7 @@
 
   const routes = {
     'portion.html': { title: 'Alla portionsprodukter', filter: row => row.product_family === 'Portionssnus' && row.site_section === 'Portionssnus' && row.tobacco_type !== 'Tobaksfri', pills: [['white', 'White Portion', 'Färdigt portionssnus'], ['instant', 'Instant Portion', 'Färdig att snusa'], ['superdry', 'Super Dry', 'Osmaksatt bas']] },
-    'los.html': { title: 'Alla lössnusprodukter', filter: row => row.site_section === 'Lössnus' || row.aroma_type === 'Expressarom', pills: [['instant', 'Instant', 'Färdig att snusa'], ['express', 'Express', 'Snussats'], ['aromer', 'Expressaromer', 'Smaksättning']] },
+    'los.html': { title: 'Alla lössnusprodukter', filter: row => row.product_family === 'Lössnus' || row.aroma_type === 'Expressarom', pills: [['instant', 'Instant', 'Färdig att snusa'], ['express', 'Express', 'Snussats'], ['aromer', 'Expressaromer', 'Smaksättning']] },
     'gor-eget.html': { title: 'Alla produkter för Gör Eget', filter: row => row.site_section === 'Gör eget' || row.aroma_type === 'Super Dry Arom', pills: [['instant', 'Instant Portion', 'Färdig att snusa'], ['superdry', 'Super Dry', 'Osmaksatt bas'], ['aromer', 'Super Dry Aromer', 'Smaksättning']] },
     'vitt-snus.html': { title: 'Alla tobaksfria produkter', filter: row => row.tobacco_type === 'Tobaksfri' || row.site_section === 'Vitt snus', pills: [['rebell', 'Rebell', 'Tobaksfri portion'], ['rx-slim', 'RX Slim', 'Tobaksfri slim'], ['compact-mini', 'Compact & Mini', 'Tobaksfria mindre format']] },
     'tillbehor.html': { title: 'Alla tillbehör', filter: row => row.product_family === 'Tillbehör', pills: [['portion', 'Portionssnus', 'Tillbehör till portionssnus'], ['lossnus', 'Lössnus', 'Tillbehör till lössnus'], ['general', 'Övrigt', 'Övriga tillbehör']] }
@@ -26,11 +26,24 @@
   const splitList = value => String(value || '').split(',').map(item => item.trim()).filter(Boolean);
   const unique = values => [...new Set(values.filter(value => value !== null && value !== undefined && value !== '').map(value => String(value).trim()))];
   const visible = row => row.product_id && String(row.visible_on_site || 'Yes').toLowerCase() !== 'no';
+  const amount = row => row.amount_dosor ? `${row.amount_dosor} dosor` : row.package_quantity ? `${row.package_quantity}-pack` : '';
   const price = row => row.price_sek ? `${Number(row.price_sek).toLocaleString('sv-SE')} kr` : '';
-  const amount = row => row.amount_dosor ? `${row.amount_dosor} dosor` : row.package_quantity ? `${row.package_quantity}-pack` : '1-pack';
-  const name = row => row.generated_name || [row.taste_name, row.product_line, row.strength !== 'Normal' ? row.strength : '', row.format, row.grind && row.grind !== 'Standard' ? row.grind : '', row.amount_dosor ? `${row.amount_dosor} dosor` : row.package_quantity ? `${row.package_quantity}-pack` : ''].filter(Boolean).join(' ');
-  const rowKey = row => `${row.product_id}__${row.variant_id || row.sku_draft || slugify(name(row))}`;
-  const urlFor = row => `${PRODUCT_PAGE}?id=${encodeURIComponent(rowKey(row))}`;
+  const mm = value => value !== null && value !== undefined && String(value).trim() !== '' ? `${value} mm` : '';
+  const cleanRows = rows => rows.filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== '');
+
+  function name(row) {
+    if (row.product_family === 'Tillbehör' && row.accessory_name) return [row.accessory_name, row.design_color].filter(Boolean).join(' - ');
+    return row.generated_name || [row.taste_name, row.product_line, row.strength !== 'Normal' ? row.strength : '', row.format, row.grind && row.grind !== 'Standard' ? row.grind : '', amount(row)].filter(Boolean).join(' ');
+  }
+
+  function rowKey(row) { return `${row.product_id}__${row.variant_id || row.sku_draft || slugify(name(row))}`; }
+  function urlFor(row) { return `${PRODUCT_PAGE}?id=${encodeURIComponent(rowKey(row))}`; }
+
+  async function fetchJson(url) {
+    const response = await fetch(url, { cache: 'no-cache' });
+    if (!response.ok) throw new Error(`${url} ${response.status}`);
+    return response.json();
+  }
 
   function decodeValue(value, dict) {
     if (value === '') return null;
@@ -39,16 +52,28 @@
     return /^-?\d+(\.\d+)?$/.test(decoded) ? Number(decoded) : decoded;
   }
 
+  function parseTsv(tsv) {
+    const lines = String(tsv || '').trim().split('\n').filter(Boolean);
+    if (!lines.length) return [];
+    const headers = lines.shift().split('\t');
+    return lines.map(line => Object.fromEntries(headers.map((header, index) => [header, line.split('\t')[index] || null])));
+  }
+
   function expandData(data) {
     if (Array.isArray(data)) return data;
+    if (data?.tsv) return parseTsv(data.tsv);
     if (Array.isArray(data?.headers) && Array.isArray(data?.rows)) return data.rows.map(row => Object.fromEntries(data.headers.map((header, index) => [header, row[index] ?? null])));
-    if (Array.isArray(data?.cols) && typeof data.rows === 'string') {
-      return data.rows.split('\n').filter(Boolean).map(line => {
-        const values = line.split('|');
-        return Object.fromEntries(data.cols.map((header, index) => [header, decodeValue(values[index] ?? '', data.dict || [])]));
-      });
-    }
+    if (Array.isArray(data?.cols) && typeof data.rows === 'string') return data.rows.split('\n').filter(Boolean).map(line => Object.fromEntries(data.cols.map((header, index) => [header, decodeValue(line.split('|')[index] ?? '', data.dict || [])])));
     return [];
+  }
+
+  async function loadProducts() {
+    const payload = await fetchJson(DATA_URL);
+    if (Array.isArray(payload?.parts)) {
+      const parts = await Promise.all(payload.parts.map(fetchJson));
+      return parts.flatMap(expandData);
+    }
+    return expandData(payload);
   }
 
   function groupRows(rows) {
@@ -61,18 +86,18 @@
   }
 
   function series(row) {
-    const line = String(row.product_line || '').toLowerCase();
     const family = String(row.product_family || '').toLowerCase();
+    const line = String(row.product_line || '').toLowerCase();
     const aroma = String(row.aroma_type || '').toLowerCase();
     const format = slugify(row.format || '');
-    const text = slugify(`${row.generated_name || ''} ${row.accessory_type || ''}`);
+    const compatible = String(row.compatible_with || '').toLowerCase();
+    if (family === 'tillbehör' || family === 'tillbehor') return compatible.includes('portion') ? 'portion' : compatible.includes('lös') || compatible.includes('los') ? 'lossnus' : 'general';
     if (row.tobacco_type === 'Tobaksfri') return format === 'rx-slim' ? 'rx-slim' : ['compact', 'mini'].includes(format) ? 'compact-mini' : format || 'rebell';
     if (family === 'aromer' || aroma.includes('arom')) return 'aromer';
     if (line.includes('super dry')) return 'superdry';
     if (line.includes('instant')) return 'instant';
     if (line.includes('express')) return 'express';
     if (line.includes('white')) return 'white';
-    if (family === 'tillbehör' || family === 'tillbehor') return text.includes('los') || text.includes('lossnus') ? 'lossnus' : text.includes('portion') ? 'portion' : 'general';
     return 'product';
   }
 
@@ -101,17 +126,16 @@
   }
 
   function cardMeta(row) {
-    return [['Typ', row.product_line || row.aroma_type || row.accessory_type], ['Smak', row.taste_display], ['Format', row.format], ['Malningsgrad', row.grind], ['Tobak', row.tobacco_type === 'Tobaksfri' ? 'Tobaksfri' : '']]
-      .filter(item => item[1])
-      .slice(0, 3)
-      .map(([label, value]) => `<p class="product-card-meta">${escapeHtml(label)}: <span>${escapeHtml(value)}</span></p>`)
-      .join('');
+    const rows = row.product_family === 'Tillbehör'
+      ? [['Typ', row.accessory_type], ['Färg', row.design_color || row.filter_color], ['Material', row.material]]
+      : [['Typ', row.product_line || row.aroma_type], ['Smak', row.taste_display], ['Format', row.format], ['Malningsgrad', row.grind], ['Tobak', row.tobacco_type === 'Tobaksfri' ? 'Tobaksfri' : '']];
+    return cleanRows(rows).slice(0, 3).map(([label, value]) => `<p class="product-card-meta">${escapeHtml(label)}: <span>${escapeHtml(value)}</span></p>`).join('');
   }
 
   function productCard(row) {
     const href = urlFor(row);
     const id = rowKey(row);
-    return `<div class="product-card" role="link" tabindex="0" data-product-source="json" data-experience-enhanced="true" data-product-id="${escapeHtml(id)}" data-product-group="${escapeHtml(row.product_id)}" data-variant-id="${escapeHtml(row.variant_id || '')}" data-series="${escapeHtml(series(row))}" data-taste="${escapeHtml(splitList(row.taste_variables).join('|'))}" data-type="${escapeHtml(row.product_line || row.aroma_type || row.accessory_type || '')}" data-format="${escapeHtml(row.format || row.grind || row.aroma_type || row.accessory_type || '')}" data-strength="${escapeHtml(row.strength || '')}" data-amount="${escapeHtml(amount(row))}" data-href="${escapeHtml(href)}"><button class="bookmark-toggle requires-login" data-product-id="${escapeHtml(id)}" type="button" aria-label="Spara produkt" aria-pressed="false">${BOOKMARK_ICON}</button><a class="product-card-main-link" href="${escapeHtml(href)}" aria-label="Visa ${escapeHtml(name(row))}" style="color:inherit;text-decoration:none;"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">${escapeHtml(row.format || row.product_line || row.aroma_type || row.accessory_type || 'Produkt')}</span><p class="product-card-name">${escapeHtml(name(row))}</p>${cardMeta(row)}${strengthDots(row)}</div></a><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="${escapeHtml(price(row))}" data-pack="1-pack">1-pack — ${escapeHtml(price(row))}</option></select></div><div class="product-card-bottom"><p class="product-card-price"><span class="unit-price">${escapeHtml(price(row))}</span><small>per produkt</small></p><button class="add-to-cart-btn" type="button" aria-label="Lägg i kundvagn">${CART_ICON}</button></div></div>`;
+    return `<div class="product-card" role="link" tabindex="0" data-product-source="json" data-experience-enhanced="true" data-product-id="${escapeHtml(id)}" data-product-group="${escapeHtml(row.product_id)}" data-variant-id="${escapeHtml(row.variant_id || '')}" data-series="${escapeHtml(series(row))}" data-taste="${escapeHtml(splitList(row.taste_variables).join('|'))}" data-type="${escapeHtml(row.product_line || row.aroma_type || row.accessory_type || '')}" data-format="${escapeHtml(row.format || row.grind || row.aroma_type || row.accessory_type || '')}" data-color="${escapeHtml(row.filter_color || row.design_color || '')}" data-material="${escapeHtml(row.material || '')}" data-strength="${escapeHtml(row.strength || '')}" data-amount="${escapeHtml(amount(row))}" data-href="${escapeHtml(href)}"><button class="bookmark-toggle requires-login" data-product-id="${escapeHtml(id)}" type="button" aria-label="Spara produkt" aria-pressed="false">${BOOKMARK_ICON}</button><a class="product-card-main-link" href="${escapeHtml(href)}" aria-label="Visa ${escapeHtml(name(row))}"><div class="img-placeholder product">Produktbild</div><div class="product-card-body"><span class="product-card-badge">${escapeHtml(row.format || row.product_line || row.aroma_type || row.accessory_type || 'Produkt')}</span><p class="product-card-name">${escapeHtml(name(row))}</p>${cardMeta(row)}${strengthDots(row)}</div></a><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="${escapeHtml(price(row))}" data-pack="1-pack">1-pack — ${escapeHtml(price(row))}</option></select></div><div class="product-card-bottom"><p class="product-card-price"><span class="unit-price">${escapeHtml(price(row))}</span><small>per produkt</small></p><button class="add-to-cart-btn" type="button" aria-label="Lägg i kundvagn">${CART_ICON}</button></div></div>`;
   }
 
   function filterGroup(title, key, values) {
@@ -119,16 +143,21 @@
   }
 
   function buildSidebar(rows) {
-    const values = { taste: [], type: [], format: [], strength: [], amount: [] };
+    const values = { taste: [], type: [], format: [], strength: [], amount: [], color: [], material: [] };
     rows.forEach(row => {
       values.taste.push(...splitList(row.taste_variables));
       values.type.push(row.product_line || row.aroma_type || row.accessory_type);
       values.format.push(row.format || row.grind || row.aroma_type || row.accessory_type);
       values.strength.push(row.strength);
       values.amount.push(amount(row));
+      values.color.push(row.filter_color || row.design_color);
+      values.material.push(row.material);
     });
     const sidebar = $('.filter-sidebar');
-    if (sidebar) sidebar.innerHTML = filterGroup('Smak', 'taste', unique(values.taste).sort()) + filterGroup('Typ', 'type', unique(values.type).sort()) + filterGroup('Format', 'format', unique(values.format).sort()) + filterGroup('Styrka', 'strength', unique(values.strength).sort()) + filterGroup('Mängd', 'amount', unique(values.amount).sort());
+    if (!sidebar) return;
+    sidebar.innerHTML = page() === 'tillbehor.html'
+      ? filterGroup('Typ', 'type', unique(values.type).sort()) + filterGroup('Färg', 'color', unique(values.color).sort()) + filterGroup('Material', 'material', unique(values.material).sort())
+      : filterGroup('Smak', 'taste', unique(values.taste).sort()) + filterGroup('Typ', 'type', unique(values.type).sort()) + filterGroup('Format', 'format', unique(values.format).sort()) + filterGroup('Styrka', 'strength', unique(values.strength).sort()) + filterGroup('Mängd', 'amount', unique(values.amount).sort());
   }
 
   function applyFilters() {
@@ -182,10 +211,10 @@
     applyFilters();
   }
 
-  function productFields(row) {
+  function productFields(row, group) {
+    if (row.product_family === 'Tillbehör') return [['design_color', 'Design']];
     if (row.product_family === 'Lössnus') return [['amount', 'Mängd'], ['grind', 'Malningsgrad'], ['strength', 'Styrka']];
     if (row.product_family === 'Aromer') return [['amount', 'Mängd'], ['aroma_type', 'Aromtyp']];
-    if (row.product_family === 'Tillbehör') return [['compatible_with', 'Passar till'], ['package_quantity', 'Antal'], ['design_color', 'Färg/design']];
     return [['format', 'Format'], ['amount', 'Portioner'], ['strength', 'Styrka']];
   }
 
@@ -198,23 +227,25 @@
   function findRow(product = {}) {
     const id = String(product.id || '').trim();
     const href = String(product.href || '').trim();
-    const hrefId = new URL(href, location.href).searchParams.get('id') || '';
+    const hrefId = href ? new URL(href, location.href).searchParams.get('id') || '' : '';
     const nameValue = String(product.name || '').trim();
     const nameSlug = slugify(nameValue);
-    return state.rows.find(row => {
-      const keys = [rowKey(row), row.product_id, row.variant_id, row.sku_draft, row.article_number, row.generated_name, row.source_title].filter(Boolean);
-      return keys.some(key => String(key) === id || String(key) === hrefId || slugify(key) === id || slugify(key) === nameSlug);
-    }) || null;
+    return state.rows.find(row => [rowKey(row), row.product_id, row.variant_id, row.sku_draft, row.article_number, name(row), row.generated_name].filter(Boolean).some(key => String(key) === id || String(key) === hrefId || slugify(key) === id || slugify(key) === nameSlug)) || null;
   }
 
   function currentRow() {
-    const query = new URLSearchParams(location.search);
-    const id = query.get('id');
+    const id = new URLSearchParams(location.search).get('id');
     return id ? state.rows.find(row => rowKey(row) === id) : null;
   }
 
-  function rowSpecs(row) {
-    return [['Produktfamilj', row.product_family], ['Produktlinje', row.product_line || row.aroma_type || row.accessory_type], ['Tobakstyp', row.tobacco_type && row.tobacco_type !== 'Ej tillämpligt' ? row.tobacco_type : ''], ['Format', [row.format, row.format_dimensions].filter(Boolean).join(', ')], ['Fyllnad', row.fill_level], ['Smak', row.taste_display], ['Malningsgrad', row.grind], ['Styrka', [row.strength, row.strength_mg_g].filter(Boolean).join(', ')], ['Nikotinhalt', row.nicotine_per_portion], ['Förpackningsstorlek', row.portions_total ? `${row.amount_dosor} dosor (${row.portions_total} portioner)` : row.amount_dosor ? amount(row) : row.package_quantity ? `${row.package_quantity}-pack` : ''], ['Material', row.material], ['Färg/design', row.design_color], ['Hållbarhet', row.shelf_life], ['Tillverkningsort', row.manufacturing_location]];
+  function detailMetaRows(row) {
+    if (row.product_family === 'Tillbehör') return cleanRows([['Typ', row.accessory_type], ['Färg', row.design_color || row.filter_color], ['Material', row.material], ['Diameter', mm(row.diameter)], ['Höjd', mm(row.height)]]);
+    return cleanRows([['Typ', row.product_line || row.aroma_type || row.product_family], ['Smak', row.taste_display], ['Format', row.format], ['Malningsgrad', row.grind], ['Styrka', row.strength], ['Tobak', row.tobacco_type === 'Tobaksfri' ? 'Tobaksfri' : ''], ['Tillverkning', row.manufacturing_location]]).slice(0, 5);
+  }
+
+  function specRows(row) {
+    if (row.product_family === 'Tillbehör') return detailMetaRows(row);
+    return cleanRows([['Produktfamilj', row.product_family], ['Produktlinje', row.product_line || row.aroma_type], ['Tobakstyp', row.tobacco_type && row.tobacco_type !== 'Ej tillämpligt' ? row.tobacco_type : ''], ['Format', [row.format, row.format_dimensions].filter(Boolean).join(', ')], ['Fyllnad', row.fill_level], ['Smak', row.taste_display], ['Malningsgrad', row.grind], ['Styrka', [row.strength, row.strength_mg_g].filter(Boolean).join(', ')], ['Nikotinhalt', row.nicotine_per_portion], ['Förpackningsstorlek', row.portions_total ? `${row.amount_dosor} dosor (${row.portions_total} portioner)` : amount(row)], ['Hållbarhet', row.shelf_life], ['Tillverkningsort', row.manufacturing_location]]);
   }
 
   function renderDetail(row) {
@@ -222,29 +253,24 @@
     if (!detail || !row) return;
     detail.dataset.productId = rowKey(row);
     detail.dataset.href = urlFor(row);
-    const category = categoryLabel(row);
-    const categoryHref = categoryUrl(row);
     const title = $('[data-product-title]', detail) || $('h1', detail);
     if (title) title.textContent = name(row);
     document.title = `${name(row)} — Swedsnus`;
     const breadcrumb = $('[data-product-breadcrumb]');
     if (breadcrumb) breadcrumb.textContent = name(row);
     const categoryLink = $('[data-product-category-link]');
-    if (categoryLink) {
-      categoryLink.href = categoryHref;
-      categoryLink.textContent = category;
-    }
+    if (categoryLink) { categoryLink.href = categoryUrl(row); categoryLink.textContent = categoryLabel(row); }
     const badge = $('.product-detail-badge', detail);
     if (badge) badge.innerHTML = `<span class="product-card-badge">${escapeHtml(row.format || row.product_line || row.aroma_type || row.accessory_type || row.product_family)}</span>${row.tobacco_type === 'Tobaksfri' ? '<span class="product-card-badge" style="background:var(--color-accent);">Tobaksfri</span>' : ''}`;
     const priceEl = $('.product-detail-price', detail);
     if (priceEl) priceEl.innerHTML = `${escapeHtml(price(row))} <small>1-pack</small>`;
     const desc = $('.product-desc', detail);
     if (desc) desc.textContent = row.short_description || `${name(row)} visas från produktdatan.`;
-    const metaRows = [['Typ', row.product_line || row.aroma_type || row.accessory_type || row.product_family], ['Smak', row.taste_display], ['Format', row.format], ['Malningsgrad', row.grind], ['Styrka', row.strength], ['Tobak', row.tobacco_type === 'Tobaksfri' ? 'Tobaksfri' : ''], ['Tillverkning', row.manufacturing_location]];
+    const meta = detailMetaRows(row);
     const metaEl = $('.product-detail-meta', detail);
-    if (metaEl) metaEl.innerHTML = metaRows.filter(item => item[1]).slice(0, 5).map(([label, val]) => `<div class="product-detail-meta-row"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(val)}</dd></div>`).join('');
+    if (metaEl) metaEl.innerHTML = meta.map(([label, value]) => `<div class="product-detail-meta-row"><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join('');
     const spec = $('.product-spec-table tbody', detail);
-    if (spec) spec.innerHTML = rowSpecs(row).filter(item => item[1]).map(([label, val]) => `<tr><td>${escapeHtml(label)}</td><td>${escapeHtml(val)}</td></tr>`).join('');
+    if (spec) spec.innerHTML = specRows(row).map(([label, value]) => `<tr><td>${escapeHtml(label)}</td><td>${escapeHtml(value)}</td></tr>`).join('');
     const pack = $('.pack-picker-options', detail);
     if (pack) pack.innerHTML = `<label class="pack-option selected" data-price="${escapeHtml(price(row))}" data-pack="1-pack"><input type="radio" name="pack" value="1" checked /><span class="pack-option-label">1-pack</span><span class="pack-option-price">${escapeHtml(price(row))}</span><span class="pack-option-per">${escapeHtml(price(row))}/st</span></label>`;
     $$('.bookmark-toggle', detail).forEach(button => { button.dataset.productId = rowKey(row); });
@@ -256,48 +282,30 @@
     document.title = 'Produkt hittades inte — Swedsnus';
     detail.innerHTML = '<div class="product-detail-badge"><span class="product-card-badge">Produktdata saknas</span></div><h1>Produkt hittades inte</h1><p class="product-desc">Produktlänken kunde inte matchas mot data/products.json.</p><div class="btn-row"><a href="portion.html" class="btn btn-primary">Till sortimentet</a></div>';
     $('.product-gallery')?.classList.add('is-hidden');
-    const breadcrumb = $('[data-product-breadcrumb]');
-    if (breadcrumb) breadcrumb.textContent = 'Produkt hittades inte';
   }
 
   function matchingVariant(group, selected, changed, current) {
-    const exact = group.find(row => Object.entries(selected).every(([field, val]) => !val || fieldValue(row, field) === val));
-    if (exact) return exact;
-    if (changed && selected[changed]) return group.find(row => fieldValue(row, changed) === selected[changed]) || current;
-    return current;
+    return group.find(row => Object.entries(selected).every(([field, value]) => !value || fieldValue(row, field) === value)) || group.find(row => changed && fieldValue(row, changed) === selected[changed]) || current;
   }
 
   function renderProductPage() {
     if (page() !== PRODUCT_PAGE) return;
     const row = currentRow();
-    if (!row) {
-      renderMissingProduct();
-      return;
-    }
-    const group = state.groups.get(row.product_id) || [row];
+    if (!row) return renderMissingProduct();
+    const group = row.product_family === 'Tillbehör' && row.accessory_name ? state.rows.filter(item => item.product_family === 'Tillbehör' && item.accessory_name === row.accessory_name && visible(item)) : state.groups.get(row.product_id) || [row];
     const detail = $('.product-detail');
     if (!detail) return;
-    const fields = productFields(row).filter(([field]) => unique(group.map(item => fieldValue(item, field))).length > 0);
+    const fields = productFields(row, group).filter(([field]) => unique(group.map(item => fieldValue(item, field))).length > 0);
     let panel = $('.product-choice-panel', detail);
     if (fields.length) {
-      if (!panel) {
-        panel = document.createElement('section');
-        panel.className = 'product-choice-panel';
-        $('.pack-picker-label', detail)?.insertAdjacentElement('beforebegin', panel);
-      }
+      if (!panel) { panel = document.createElement('section'); panel.className = 'product-choice-panel'; $('.pack-picker-label', detail)?.insertAdjacentElement('beforebegin', panel); }
       panel.innerHTML = `<p class="product-choice-panel-title">Produktval</p><div class="product-choice-grid">${fields.map(([field, label]) => `<div class="product-choice-field"><label>${escapeHtml(label)}</label><select data-data-field="${escapeHtml(field)}">${unique(group.map(item => fieldValue(item, field))).map(option => `<option${option === fieldValue(row, field) ? ' selected' : ''}>${escapeHtml(option)}</option>`).join('')}</select></div>`).join('')}</div>`;
-      fields.forEach(([field]) => {
-        const select = $(`[data-data-field="${field}"]`, panel);
-        if (!select) return;
-        select.addEventListener('change', () => {
-          const selected = Object.fromEntries(fields.map(([itemField]) => [itemField, $(`[data-data-field="${itemField}"]`, panel)?.value || '']));
-          const target = matchingVariant(group, selected, field, row);
-          if (rowKey(target) !== rowKey(row)) location.href = urlFor(target);
-        });
-      });
-    } else if (panel) {
-      panel.remove();
-    }
+      fields.forEach(([field]) => $('[data-data-field="' + field + '"]', panel)?.addEventListener('change', () => {
+        const selected = Object.fromEntries(fields.map(([itemField]) => [itemField, $('[data-data-field="' + itemField + '"]', panel)?.value || '']));
+        const target = matchingVariant(group, selected, field, row);
+        if (rowKey(target) !== rowKey(row)) location.href = urlFor(target);
+      }));
+    } else if (panel) panel.remove();
     renderDetail(row);
   }
 
@@ -305,7 +313,7 @@
     const text = String(title || '').toLowerCase();
     const rows = state.rows.filter(visible);
     if (text.includes('portion')) return rows.filter(row => row.product_family === 'Portionssnus' && row.site_section === 'Portionssnus' && row.tobacco_type !== 'Tobaksfri').slice(0, 12);
-    if (text.includes('lössnus') || text.includes('lossnus')) return rows.filter(row => row.site_section === 'Lössnus' || row.product_family === 'Lössnus').slice(0, 12);
+    if (text.includes('lössnus') || text.includes('lossnus')) return rows.filter(row => row.product_family === 'Lössnus').slice(0, 12);
     if (text.includes('gör eget') || text.includes('gor eget')) return rows.filter(row => row.site_section === 'Gör eget' || row.aroma_type === 'Super Dry Arom').slice(0, 12);
     if (text.includes('tillbehör') || text.includes('tillbehor')) return rows.filter(row => row.product_family === 'Tillbehör').slice(0, 12);
     if (text.includes('vitt')) return rows.filter(row => row.tobacco_type === 'Tobaksfri' || row.site_section === 'Vitt snus').slice(0, 12);
@@ -315,71 +323,34 @@
   function renderIndex() {
     if (page() !== 'index.html') return;
     $$('.carousel-section').forEach(section => {
-      const title = $('.section-heading', section)?.textContent || '';
       const track = $('.carousel-track', section);
-      if (track) track.innerHTML = rowsForCarousel(title).map(productCard).join('');
+      if (track) track.innerHTML = rowsForCarousel($('.section-heading', section)?.textContent || '').map(productCard).join('');
     });
     const showcase = $('.vitt-showcase-track');
     if (showcase) showcase.innerHTML = state.rows.filter(row => visible(row) && (row.tobacco_type === 'Tobaksfri' || row.site_section === 'Vitt snus')).slice(0, 6).map(productCard).join('');
   }
 
-  function productFromElement(element) {
-    return {
-      id: element.dataset.productId || element.dataset.productGroup || '',
-      name: $('.product-card-name', element)?.textContent?.trim() || '',
-      href: element.dataset.href || $('.product-card-main-link', element)?.getAttribute('href') || ''
-    };
-  }
-
+  function productFromElement(element) { return { id: element.dataset.productId || element.dataset.productGroup || '', name: $('.product-card-name', element)?.textContent?.trim() || '', href: element.dataset.href || $('.product-card-main-link', element)?.getAttribute('href') || '' }; }
   function syncProductCard(card) {
     const row = findRow(productFromElement(card));
     if (!row) return;
-    const href = urlFor(row);
-    const id = rowKey(row);
+    const href = urlFor(row), id = rowKey(row);
     card.dataset.href = href;
     card.dataset.productId = id;
-    card.dataset.productGroup = row.product_id || card.dataset.productGroup || '';
-    card.dataset.variantId = row.variant_id || card.dataset.variantId || '';
-    const link = $('.product-card-main-link', card);
-    if (link) link.href = href;
+    $('.product-card-main-link', card)?.setAttribute('href', href);
     $$('.bookmark-toggle', card).forEach(button => { button.dataset.productId = id; });
   }
-
-  function syncProductTextLink(link) {
-    const text = link.textContent?.trim() || link.closest('.cart-panel-item, .cart-page-item')?.querySelector('.cart-panel-item-name, h3 a')?.textContent?.trim() || '';
-    const row = findRow({ name: text, href: link.getAttribute('href') || '' });
-    if (row) link.href = urlFor(row);
-  }
-
-  function normalizeProductHref(product = {}) {
-    const row = findRow(product);
-    return row ? urlFor(row) : product.href || '';
-  }
-
+  function normalizeProductHref(product = {}) { const row = findRow(product); return row ? urlFor(row) : product.href || ''; }
   function migrateStore(key) {
     try {
       const items = JSON.parse(localStorage.getItem(key) || '[]');
       if (!Array.isArray(items)) return;
       let changed = false;
-      const next = items.map(item => {
-        const href = normalizeProductHref(item);
-        if (href && href !== item.href) {
-          changed = true;
-          return { ...item, href };
-        }
-        return item;
-      });
+      const next = items.map(item => { const href = normalizeProductHref(item); if (href && href !== item.href) { changed = true; return { ...item, href }; } return item; });
       if (changed) localStorage.setItem(key, JSON.stringify(next));
-    } catch (error) {
-    }
+    } catch (error) {}
   }
-
-  function syncExistingProductLinks() {
-    migrateStore(BOOKMARKS_KEY);
-    migrateStore(CART_KEY);
-    $$('.product-card').forEach(syncProductCard);
-    $$('.cart-panel-item, .cart-page-img, .cart-page-main h3 a').forEach(syncProductTextLink);
-  }
+  function syncExistingProductLinks() { migrateStore(BOOKMARKS_KEY); migrateStore(CART_KEY); $$('.product-card').forEach(syncProductCard); }
 
   function bindProductCardNavigation() {
     if (window.__swedsnusProductCardNavigationBound) return;
@@ -394,22 +365,12 @@
       event.stopImmediatePropagation();
       location.href = href;
     }, true);
-    document.addEventListener('keydown', event => {
-      if (!['Enter', ' '].includes(event.key)) return;
-      const card = event.target.closest('.product-card[data-href]');
-      if (!card || event.target.closest(interactive)) return;
-      const href = card.dataset.href || $('.product-card-main-link', card)?.getAttribute('href');
-      if (!href) return;
-      event.preventDefault();
-      location.href = href;
-    });
   }
 
   async function init() {
     bindProductCardNavigation();
     try {
-      const response = await fetch(DATA_URL, { cache: 'no-cache' });
-      state.rows = expandData(await response.json()).filter(visible);
+      state.rows = (await loadProducts()).filter(visible);
       state.groups = groupRows(state.rows);
       window.SwedsnusProducts = { rows: state.rows, groups: state.groups, rowKey, urlFor, productCard, findRow, syncExistingProductLinks, normalizeProductHref };
       renderCatalog();
@@ -417,7 +378,6 @@
       renderIndex();
       syncExistingProductLinks();
       document.dispatchEvent(new CustomEvent('swedsnus:products-rendered'));
-      setTimeout(syncExistingProductLinks, 0);
       setTimeout(syncExistingProductLinks, 120);
     } catch (error) {
       document.documentElement.classList.add('product-data-load-failed');
