@@ -119,7 +119,7 @@
         const wrap = tab.closest('.auth-modal, .auth-page-card');
         if (!wrap) return;
         $$('[data-auth-tab]', wrap).forEach(item => item.classList.toggle('active', item === tab));
-        $$('[data-auth-panel]', wrap).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.authPanel !== tab.dataset.authTab));
+        $$('[data-auth-panel]', wrap).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.authPanel !== tab.datasetAuthTab));
       }, 0);
     });
   }
@@ -133,35 +133,65 @@
     if ('ResizeObserver' in window) new ResizeObserver(setOffset).observe(header);
   }
 
+  function px(value) { return Number(String(value || '').replace('px', '')) || 0; }
+  function elementGap(track) { return px(getComputedStyle(track).columnGap || getComputedStyle(track).gap); }
+  function cardStep(scroller, track) {
+    const card = $('.product-card', track || scroller);
+    if (!card) return Math.max(scroller.clientWidth * .8, 160);
+    return card.getBoundingClientRect().width + elementGap(track || scroller);
+  }
+  function scrollStep(scroller, track, direction) {
+    scroller.scrollBy({ left: cardStep(scroller, track) * direction, behavior: 'smooth' });
+  }
+  function syncCarouselTrack(wrapper) {
+    const outer = $('.carousel-track-outer', wrapper);
+    const track = $('.carousel-track', wrapper);
+    if (!outer || !track) return;
+    track.style.transform = 'none';
+    track.style.transition = 'none';
+    const gap = elementGap(track) || 16;
+    const cardWidth = outer.clientWidth < 720
+      ? Math.min(Math.max(outer.clientWidth * .72, 160), 260)
+      : Math.max((outer.clientWidth - gap * 4) / 4.35, 180);
+    $$('.product-card', track).forEach(card => {
+      card.style.flex = `0 0 ${cardWidth}px`;
+      card.style.width = `${cardWidth}px`;
+    });
+  }
+
   function enhanceFluidCarousels() {
     $$('.carousel-wrapper').forEach(wrapper => {
-      if (wrapper.dataset.fluidCarousel === 'true') return;
       const outer = $('.carousel-track-outer', wrapper);
+      const track = $('.carousel-track', wrapper);
       const prev = $('.carousel-btn-prev', wrapper);
       const next = $('.carousel-btn-next', wrapper);
-      if (!outer) return;
-      wrapper.dataset.fluidCarousel = 'true';
+      if (!outer || !track) return;
       wrapper.classList.add('carousel-fluid-scroll');
-      const scrollStep = () => Math.max(outer.clientWidth * .72, 150);
-      prev?.addEventListener('click', event => {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        outer.scrollBy({ left: -scrollStep(), behavior: 'smooth' });
-      }, true);
-      next?.addEventListener('click', event => {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        outer.scrollBy({ left: scrollStep(), behavior: 'smooth' });
-      }, true);
+      syncCarouselTrack(wrapper);
+      if (wrapper.dataset.fluidCarousel !== 'true') {
+        wrapper.dataset.fluidCarousel = 'true';
+        prev?.addEventListener('click', event => {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          scrollStep(outer, track, -1);
+        }, true);
+        next?.addEventListener('click', event => {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          scrollStep(outer, track, 1);
+        }, true);
+        outer.addEventListener('scroll', () => { track.style.transform = 'none'; }, { passive: true });
+      }
     });
   }
 
   function enhanceVittShowcaseControls() {
     const wrap = $('.vitt-showcase-track-wrap');
     const track = $('.vitt-showcase-track', wrap);
-    if (!wrap || !track || wrap.dataset.vittControls === 'true') return;
-    wrap.dataset.vittControls = 'true';
+    if (!wrap || !track) return;
     wrap.classList.add('vitt-showcase-enhanced-wrap');
+    if (wrap.dataset.vittControls === 'true') return;
+    wrap.dataset.vittControls = 'true';
     const prev = document.createElement('button');
     const next = document.createElement('button');
     prev.type = 'button';
@@ -173,9 +203,8 @@
     prev.innerHTML = ARROW_LEFT;
     next.innerHTML = ARROW_RIGHT;
     wrap.append(prev, next);
-    const step = () => Math.max(track.clientWidth * .68, 150);
-    prev.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }));
-    next.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }));
+    prev.addEventListener('click', () => scrollStep(track, track, -1));
+    next.addEventListener('click', () => scrollStep(track, track, 1));
   }
 
   function rerunEnhancements() {
@@ -191,6 +220,7 @@
     syncStickyHeaderOffset();
     rerunEnhancements();
     document.addEventListener('swedsnus:products-rendered', () => setTimeout(rerunEnhancements, 0));
+    window.addEventListener('resize', () => requestAnimationFrame(rerunEnhancements));
     window.addEventListener('storage', updateSavedBadge);
     window.addEventListener('focus', updateSavedBadge);
   }
