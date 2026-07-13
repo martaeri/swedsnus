@@ -19,18 +19,26 @@
       .category-pills .filter-pill-close { position: relative; z-index: 3; flex: 0 0 18px; pointer-events: none; }
       .catalog-filter-close { width: 100%; min-height: 42px; margin-top: .85rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-footer-bg); color: #fff; font-family: var(--font-body); font-size: .78rem; font-weight: 800; }
       @media (max-width: 720px) {
+        body.catalog-filter-open { overflow: hidden; }
         .category-pills { gap: .45rem; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
         .category-pills::-webkit-scrollbar { display: none; }
-        .category-pills .filter-pill { min-width: 112px; min-height: 42px; grid-template-columns: 22px minmax(0, 1fr) 16px; gap: .35rem; padding: .42rem .48rem; }
-        .category-pills .filter-pill-icon { width: 22px; height: 22px; }
-        .category-pills .filter-pill-icon::before { inset: 5px; }
-        .category-pills .filter-pill-icon::after { left: 6px; right: 6px; bottom: 6px; height: 7px; }
-        .category-pills .filter-pill-title { font-size: .66rem; line-height: 1.05; }
+        .category-pills .filter-pill { flex: 0 0 clamp(112px, 30vw, 136px); min-width: 0; min-height: 48px; grid-template-columns: 19px minmax(0, 1fr) 15px; gap: .32rem; padding: .42rem .44rem; }
+        .category-pills .filter-pill-icon { width: 19px; height: 19px; }
+        .category-pills .filter-pill-icon::before { inset: 4px; }
+        .category-pills .filter-pill-icon::after { left: 5px; right: 5px; bottom: 5px; height: 6px; }
+        .category-pills .filter-pill-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; overflow: hidden; text-overflow: clip; overflow-wrap: anywhere; hyphens: auto; font-size: .64rem; line-height: 1.02; }
         .category-pills .filter-pill-subtitle { display: none; }
-        .category-pills .filter-pill-close { width: 16px; height: 16px; font-size: .72rem; }
+        .category-pills .filter-pill-close { width: 15px; height: 15px; font-size: .7rem; align-self: center; }
+        .catalog-page .filter-sidebar.mobile-filter-open { position: fixed !important; left: .75rem !important; right: .75rem !important; top: auto !important; bottom: .75rem !important; z-index: 1002; display: block !important; max-height: min(82vh, 640px); overflow-y: auto; overscroll-behavior: contain; padding: .9rem .9rem 0; border: 1px solid var(--color-border); border-radius: 20px; background: var(--color-surface); box-shadow: 0 24px 70px rgba(34,31,25,.22); }
+        .catalog-page .filter-sidebar.mobile-filter-open .sidebar-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem .6rem; margin: 0 0 .75rem; }
+        .catalog-page .filter-sidebar.mobile-filter-open .sidebar-group h4 { grid-column: 1 / -1; margin: 0 0 .1rem; }
+        .catalog-page .filter-sidebar.mobile-filter-open .sidebar-check { min-height: 30px; }
+        .catalog-page .filter-sidebar.mobile-filter-open .catalog-filter-close { position: sticky; bottom: 0; z-index: 2; width: calc(100% + 1.8rem); min-height: 48px; margin: .65rem -.9rem 0; border-radius: 0 0 20px 20px; box-shadow: 0 -10px 22px rgba(255,255,255,.92); }
       }
       @media (max-width: 380px) {
-        .category-pills .filter-pill { min-width: 104px; }
+        .category-pills .filter-pill { flex-basis: 108px; }
+        .category-pills .filter-pill-title { font-size: .61rem; }
+        .catalog-page .filter-sidebar.mobile-filter-open .sidebar-group { grid-template-columns: 1fr; }
       }
     `;
     document.head.appendChild(style);
@@ -38,6 +46,14 @@
 
   function catalogKey(catalog) {
     return document.body.dataset.page || location.pathname.split('/').pop() || 'catalog';
+  }
+
+  function normalizePillLabels(catalog) {
+    $$('.filter-pill-title', catalog).forEach(title => {
+      const text = title.textContent.trim();
+      title.setAttribute('title', text);
+      if (text === 'Expressaromer') title.innerHTML = 'Express-<br>aromer';
+    });
   }
 
   function readSidebarFilters(catalog) {
@@ -194,6 +210,7 @@
   function setupCatalog(catalog) {
     ensureStyles();
     ensureControls(catalog);
+    normalizePillLabels(catalog);
     restoreSidebarFilters(catalog);
     applyCatalogFilters(catalog);
   }
