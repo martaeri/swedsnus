@@ -3,8 +3,8 @@ import fs from 'fs';
 const target = 'commerce.css';
 
 const filesToInline = [
-  'interaction-fixes.css',
-  'product-card-cleanup.css'
+  'mobile-menu-carousel-fixes.css',
+  'mobile-polish.css'
 ];
 
 let css = fs.readFileSync(target, 'utf8');
