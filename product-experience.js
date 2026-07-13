@@ -31,6 +31,7 @@
   }
   function loadAssets() {
     loadStylesheet('mobile-sticky-menu-footer.css');
+    loadStylesheet('index-carousel.css');
     loadScript('hamburger-menu.js');
   }
 
@@ -119,7 +120,7 @@
         const wrap = tab.closest('.auth-modal, .auth-page-card');
         if (!wrap) return;
         $$('[data-auth-tab]', wrap).forEach(item => item.classList.toggle('active', item === tab));
-        $$('[data-auth-panel]', wrap).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.authPanel !== tab.datasetAuthTab));
+        $$('[data-auth-panel]', wrap).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.authPanel !== tab.dataset.authTab));
       }, 0);
     });
   }
@@ -219,7 +220,10 @@
     repairAuthTabs();
     syncStickyHeaderOffset();
     rerunEnhancements();
-    document.addEventListener('swedsnus:products-rendered', () => setTimeout(rerunEnhancements, 0));
+    document.addEventListener('swedsnus:products-rendered', () => {
+      setTimeout(rerunEnhancements, 0);
+      setTimeout(rerunEnhancements, 120);
+    });
     window.addEventListener('resize', () => requestAnimationFrame(rerunEnhancements));
     window.addEventListener('storage', updateSavedBadge);
     window.addEventListener('focus', updateSavedBadge);
