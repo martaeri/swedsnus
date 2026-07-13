@@ -30,7 +30,6 @@
     document.body.appendChild(script);
   }
   function loadAssets() {
-    loadStylesheet('mobile-sticky-menu-footer.css');
     loadStylesheet('index-carousel.css');
     loadScript('layout.js');
   }
