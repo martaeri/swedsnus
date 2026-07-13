@@ -12,27 +12,28 @@
     { id: 'SW-10361', date: '2026-05-17', status: 'Levererad', current: false, total: '549 kr', items: ['Spacemint Rebell 2-pack'], eta: 'Levererad 2026-05-20', tracking: 'PN-712409-SW' },
     { id: 'SW-10224', date: '2026-04-03', status: 'Returnerad', current: false, total: '289 kr', items: ['White RX Slim 15 dosor'], eta: 'Retur hanterad 2026-04-12', tracking: 'PN-690122-SW' }
   ];
+
   let pendingLoginAction = null;
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
-  function loadAsset(tag, selector, attrs) {
-    if ($(selector)) return;
-    const element = document.createElement(tag);
-    Object.entries(attrs).forEach(([key, value]) => { element[key] = value; });
-    (tag === 'script' ? document.body : document.head).appendChild(element);
+  function ensureScript(src) {
+    if ($(`script[src="${src}"]`)) return;
+    const script = document.createElement('script');
+    script.src = src;
+    document.body.appendChild(script);
   }
-  function loadAssets() {
-    ['interaction-fixes.css', 'product-card-cleanup.css', 'mobile-catalog-tools.css', 'mobile-polish.css', 'mobile-menu-carousel-fixes.css', 'account.css', 'support.css', 'category-extra.css'].forEach(href => loadAsset('link', `link[href="${href}"]`, { rel: 'stylesheet', href }));
-    loadAsset('script', 'script[src="product-data.js"]', { src: 'product-data.js', defer: true });
-    loadAsset('script', 'script[src="product-experience.js"]', { src: 'product-experience.js', defer: true });
+
+  function loadSupportingScripts() {
+    ensureScript('product-data.js');
+    ensureScript('product-experience.js');
   }
 
   function readStore(key) {
     try {
       const value = JSON.parse(localStorage.getItem(key) || '[]');
       return Array.isArray(value) ? value : [];
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -42,10 +43,7 @@
   function escapeHtml(value) { return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
   function slugify(value) { return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'produkt'; }
   function parsePrice(value) { const match = String(value || '').replace(/\s/g, '').match(/[0-9]+/); return match ? parseInt(match[0], 10) : 0; }
-  function productIdFromHref(href) {
-    try { return new URL(href || '', location.href).searchParams.get('id') || ''; }
-    catch (error) { return ''; }
-  }
+  function productIdFromHref(href) { try { return new URL(href || '', location.href).searchParams.get('id') || ''; } catch { return ''; } }
   function selectedOption(card) { return card?.querySelector?.('.pack-select option:checked') || null; }
   function selectedPack(card) { const option = selectedOption(card); return option?.dataset.pack || option?.textContent?.split('—')[0]?.trim() || $('.pack-option.selected')?.dataset.pack || '1-pack'; }
   function selectedPrice(card) {
@@ -65,14 +63,11 @@
     return price ? `${Math.round(price / amount).toLocaleString('sv-SE')} kr/st` : '';
   }
   function cardMeta(card) { return $$('.product-card-meta', card).map(item => item.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean); }
-
   function productHref(product = {}) {
-    const api = window.SwedsnusProducts;
-    const normalized = api?.normalizeProductHref?.(product);
+    const normalized = window.SwedsnusProducts?.normalizeProductHref?.(product);
     if (normalized) return normalized;
     const id = product.id || productIdFromHref(product.href);
-    if (id) return `${PRODUCT_PAGE}?id=${encodeURIComponent(id)}`;
-    return DEFAULT_PRODUCT_HREF;
+    return id ? `${PRODUCT_PAGE}?id=${encodeURIComponent(id)}` : DEFAULT_PRODUCT_HREF;
   }
   function normalizeProductRecord(product) { return { ...product, href: productHref(product) }; }
   function migrateProductStores() {
@@ -108,7 +103,6 @@
     renderBookmarksPage();
     syncBookmarkButtons();
   }
-
   function normalizeProductCard(card) {
     if (!card || card.dataset.normalized === 'true') return;
     const product = productFromCard(card);
@@ -160,7 +154,6 @@
       button.setAttribute('title', loggedIn() ? 'Spara produkt' : 'Logga in för att spara');
     });
   }
-
   function metaMarkup(meta) {
     return (meta || []).slice(0, 3).map(item => {
       const parts = String(item).split(':');
@@ -172,7 +165,6 @@
     const item = normalizeProductRecord(product);
     return `<div class="product-card" data-product-id="${escapeHtml(item.id)}" data-href="${escapeHtml(item.href)}"><button class="bookmark-toggle active" data-product-id="${escapeHtml(item.id)}" type="button" aria-label="Spara produkt" aria-pressed="true">${BOOKMARK_ICON}</button><a class="product-card-main-link" href="${escapeHtml(item.href)}" aria-label="Visa ${escapeHtml(item.name)}"><div class="img-placeholder product">Produktbild</div><div class="product-card-body">${item.badge ? `<span class="product-card-badge">${escapeHtml(item.badge)}</span>` : ''}<p class="product-card-name">${escapeHtml(item.name)}</p>${metaMarkup(item.meta)}</div></a><div class="product-card-actions"><select class="pack-select" aria-label="Välj antal"><option data-price="${escapeHtml(item.price || '')}" data-pack="${escapeHtml(item.pack || '1-pack')}">${escapeHtml(item.pack || '1-pack')} — ${escapeHtml(item.price || '')}</option></select></div><div class="product-card-bottom"><p class="product-card-price"><span class="unit-price">${escapeHtml(item.price || '')}</span><small>per produkt</small></p><button class="add-to-cart-btn" type="button" aria-label="Lägg i kundvagn">${CART_ICON}</button></div></div>`;
   }
-
   function requireMarkup(message, redirect = 'account.html') { return `<div class="account-locked"><span class="account-kicker">Inloggning krävs</span><h2>Logga in för att fortsätta</h2><p>${escapeHtml(message)}</p><div class="account-action-row"><a class="btn btn-primary" href="${redirect}">Logga in eller skapa konto</a><a class="btn btn-outline" href="index.html">Till startsidan</a></div></div>`; }
   function renderBookmarksPage() {
     const list = $('[data-bookmarks-list]') || (document.body.classList.contains('bookmarks-page') ? $('.bookmarks-list') : null);
@@ -191,7 +183,6 @@
     list.innerHTML = bookmarks.length ? bookmarks.map(productCardMarkup).join('') : '<div class="bookmarks-empty">Du har inga sparade produkter än.</div>';
     normalizeCards();
   }
-
   function addCartItem(product, quantity = 1) {
     const item = normalizeProductRecord(product);
     const cart = readStore(CART_KEY).map(normalizeProductRecord);
@@ -233,7 +224,6 @@
     if (!list) return;
     list.innerHTML = cart.length ? cart.map((item, index) => `<article class="cart-page-item"><a href="${escapeHtml(item.href)}" class="cart-page-img">Produktbild</a><div class="cart-page-main">${item.badge ? `<span class="product-card-badge">${escapeHtml(item.badge)}</span>` : ''}<h3><a href="${escapeHtml(item.href)}">${escapeHtml(item.name)}</a></h3>${metaMarkup(item.meta)}<p class="cart-page-pack">${escapeHtml(item.pack || '1-pack')}</p></div><div class="cart-page-qty"><button type="button" data-cart-action="decrease" data-index="${index}">−</button><span>${item.quantity || 1}</span><button type="button" data-cart-action="increase" data-index="${index}">+</button></div><strong class="cart-page-price">${escapeHtml(item.price || '')}</strong><button class="cart-page-remove" type="button" data-cart-action="remove" data-index="${index}" aria-label="Ta bort produkt">×</button></article>`).join('') : '<div class="cart-empty-page">Din kundvagn är tom.</div>';
   }
-
   function showToast(message) {
     let toast = $('.toast');
     if (!toast) { toast = document.createElement('div'); toast.className = 'toast'; document.body.appendChild(toast); }
@@ -259,14 +249,7 @@
     bindAuth(modal);
     return modal;
   }
-  function openAuth(message, action) {
-    pendingLoginAction = action || null;
-    const modal = createAuthModal();
-    $('[data-auth-message]', modal).textContent = message || 'Logga in eller skapa ett konto för att fortsätta.';
-    modal.classList.add('open');
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('auth-modal-open');
-  }
+  function openAuth(message, action) { pendingLoginAction = action || null; const modal = createAuthModal(); $('[data-auth-message]', modal).textContent = message || 'Logga in eller skapa ett konto för att fortsätta.'; modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false'); document.body.classList.add('auth-modal-open'); }
   function closeAuth() { $('.auth-modal')?.classList.remove('open'); document.body.classList.remove('auth-modal-open'); }
   function requireLogin(message, action) { if (loggedIn()) { action?.(); return true; } openAuth(message, action); return false; }
   function bindAuth(root = document) {
@@ -341,10 +324,8 @@
   }
   function bindAccountTabs(root) { $$('[data-account-tab]', root).forEach(tab => tab.addEventListener('click', () => { $$('[data-account-tab]', root).forEach(item => item.classList.toggle('active', item === tab)); $$('[data-account-panel]', root).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.accountPanel !== tab.dataset.accountTab)); })); }
   function bindLogout(root = document) { $$('[data-logout]', root).forEach(button => { if (button.dataset.bound) return; button.dataset.bound = 'true'; button.addEventListener('click', () => { setLoggedIn(false); showToast('Du är utloggad'); renderLoginPage(); renderAccountPage(); renderBookmarksPage(); renderOrderPage(); }); }); }
-  function initThemeSwitcher() { const saved = localStorage.getItem('swedsnus-theme') || '1'; document.documentElement.className = saved === '1' ? '' : `theme-${saved}`; $$('.theme-dot').forEach(dot => { dot.classList.toggle('active', dot.dataset.theme === saved); dot.addEventListener('click', () => { const theme = dot.dataset.theme; document.documentElement.className = theme === '1' ? '' : `theme-${theme}`; $$('.theme-dot').forEach(item => item.classList.toggle('active', item === dot)); localStorage.setItem('swedsnus-theme', theme); }); }); }
   function insertAfter(reference, node) { reference?.parentNode?.insertBefore(node, reference.nextSibling); }
-  function ensureVittSnusLinks() { $$('.sub-dropdown').forEach(dropdown => { if (!$('a[href="vitt-snus.html"]', dropdown)) { const li = document.createElement('li'); li.innerHTML = '<a href="vitt-snus.html">Vitt snus</a>'; const los = $$('a', dropdown).find(link => link.getAttribute('href') === 'los.html')?.closest('li'); los ? insertAfter(los, li) : dropdown.appendChild(li); } }); $$('.subnav-inner').forEach(nav => { if (!$('a[href="vitt-snus.html"]', nav)) { const link = document.createElement('a'); link.href = 'vitt-snus.html'; link.textContent = 'Vitt snus'; const los = $$('a', nav).find(item => item.getAttribute('href') === 'los.html'); los ? insertAfter(los, link) : nav.appendChild(link); } }); }
-  function initNavigation() { ensureVittSnusLinks(); $$('a[href="#"]').forEach(link => { if (link.textContent.trim().toLowerCase() === 'kontakt') link.href = 'contact.html'; }); $$('a[href="portion.html#gor-eget"], a[href="index.html#gor-eget"], a[href$="#gor-eget"]').forEach(link => link.href = 'gor-eget.html'); const file = location.pathname.split('/').pop() || 'index.html'; $$('.subheader-inner a, .subnav-inner a, .main-nav a').forEach(link => { const href = (link.getAttribute('href') || '').split('#')[0].split('/').pop(); if (href && href === file) link.classList.add('active'); }); }
+  function initNavigation() { $$('a[href="#"]').forEach(link => { if (link.textContent.trim().toLowerCase() === 'kontakt') link.href = 'contact.html'; }); $$('a[href="portion.html#gor-eget"], a[href="index.html#gor-eget"], a[href$="#gor-eget"]').forEach(link => link.href = 'gor-eget.html'); }
   function initVittShowcase() {
     const file = location.pathname.split('/').pop() || 'index.html';
     if (file !== 'index.html' || $('.vitt-showcase-section')) return;
@@ -425,6 +406,6 @@
     });
   }
   function refreshProductLinks() { migrateProductStores(); renderBookmarksPage(); updateCartPanel(); renderCartPage(); normalizeCards(); }
-  function init() { loadAssets(); syncAccountState(); initThemeSwitcher(); initNavigation(); initVittShowcase(); initFilters(); initCatalogControls(); initCarousels(); renderLoginPage(); renderAccountPage(); renderOrderPage(); renderBookmarksPage(); normalizeCards(); initProductPage(); updateCartPanel(); renderCartPage(); bindAuth(); bindLogout(); bindSupportForm(); handleClicks(); document.addEventListener('swedsnus:products-rendered', refreshProductLinks); }
+  function init() { loadSupportingScripts(); syncAccountState(); initNavigation(); initVittShowcase(); initFilters(); initCatalogControls(); initCarousels(); renderLoginPage(); renderAccountPage(); renderOrderPage(); renderBookmarksPage(); normalizeCards(); initProductPage(); updateCartPanel(); renderCartPage(); bindAuth(); bindLogout(); bindSupportForm(); handleClicks(); document.addEventListener('swedsnus:products-rendered', refreshProductLinks); }
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
 })();
