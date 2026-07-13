@@ -29,11 +29,48 @@
         .category-pills .filter-pill-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; overflow: hidden; text-overflow: clip; overflow-wrap: anywhere; hyphens: auto; font-size: .64rem; line-height: 1.02; }
         .category-pills .filter-pill-subtitle { display: none; }
         .category-pills .filter-pill-close { width: 15px; height: 15px; font-size: .7rem; align-self: center; }
-        .catalog-page .filter-sidebar.mobile-filter-open { position: fixed !important; left: 0 !important; right: 0 !important; top: clamp(112px, 18dvh, 148px) !important; bottom: 0 !important; z-index: 1002; display: flex !important; flex-direction: column; max-height: none; overflow-y: auto; overscroll-behavior: contain; padding: .9rem .9rem 0; border: 1px solid var(--color-border); border-bottom: 0; border-radius: 22px 22px 0 0; background: var(--color-surface); box-shadow: 0 -18px 58px rgba(34,31,25,.24); }
-        .catalog-page .filter-sidebar.mobile-filter-open .sidebar-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem .6rem; margin: 0 0 .75rem; flex: 0 0 auto; }
+        .catalog-page .filter-sidebar.mobile-filter-open {
+          position: fixed !important;
+          left: 50% !important;
+          top: 50% !important;
+          right: auto !important;
+          bottom: auto !important;
+          transform: translate(-50%, -50%);
+          z-index: 1002;
+          display: flex !important;
+          flex-direction: column;
+          width: min(calc(100vw - 1.5rem), 420px);
+          max-height: min(76dvh, 620px);
+          overflow: hidden;
+          overscroll-behavior: contain;
+          padding: .95rem;
+          border: 1px solid var(--color-border);
+          border-radius: 22px;
+          background: var(--color-surface);
+          box-shadow: 0 24px 70px rgba(34,31,25,.24);
+        }
+        .catalog-page .filter-sidebar.mobile-filter-open .catalog-filter-scroll {
+          flex: 1 1 auto;
+          min-height: 0;
+          overflow-y: auto;
+          padding-right: .2rem;
+          margin-right: -.2rem;
+          overscroll-behavior: contain;
+        }
+        .catalog-page .filter-sidebar.mobile-filter-open .sidebar-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem .6rem; margin: 0 0 .75rem; }
         .catalog-page .filter-sidebar.mobile-filter-open .sidebar-group h4 { grid-column: 1 / -1; margin: 0 0 .1rem; }
         .catalog-page .filter-sidebar.mobile-filter-open .sidebar-check { min-height: 30px; }
-        .catalog-page .filter-sidebar.mobile-filter-open .catalog-filter-close { position: sticky; bottom: 0; z-index: 2; width: calc(100% + 1.8rem); min-height: 50px; margin: auto -.9rem 0; border-radius: 0; box-shadow: 0 -10px 22px rgba(255,255,255,.94); flex: 0 0 auto; }
+        .catalog-page .filter-sidebar.mobile-filter-open .catalog-filter-close {
+          flex: 0 0 auto;
+          align-self: flex-end;
+          width: auto;
+          min-width: 132px;
+          min-height: 40px;
+          margin: .75rem 0 0;
+          padding: 0 1.05rem;
+          border-radius: 999px;
+          box-shadow: none;
+        }
       }
       @media (max-width: 380px) {
         .category-pills .filter-pill { flex-basis: 108px; }
@@ -164,6 +201,18 @@
     return overlay;
   }
 
+  function ensureFilterScroll(sidebar, close) {
+    let scroll = $('.catalog-filter-scroll', sidebar);
+    if (!scroll) {
+      scroll = document.createElement('div');
+      scroll.className = 'catalog-filter-scroll';
+      sidebar.insertBefore(scroll, close);
+    }
+    Array.from(sidebar.children).forEach(child => {
+      if (child !== scroll && child !== close) scroll.appendChild(child);
+    });
+  }
+
   function ensureControls(catalog) {
     const tools = $('.catalog-tools', catalog);
     const sidebar = $('.filter-sidebar', catalog);
@@ -185,6 +234,7 @@
       close.textContent = 'Visa produkter';
       sidebar.appendChild(close);
     }
+    ensureFilterScroll(sidebar, close);
 
     const toggle = $('.catalog-filter-toggle', controls);
     if (toggle && toggle.dataset.catalogFilterFixBound !== 'true') {
