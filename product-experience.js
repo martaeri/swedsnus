@@ -32,7 +32,7 @@
   function loadAssets() {
     loadStylesheet('mobile-sticky-menu-footer.css');
     loadStylesheet('index-carousel.css');
-    loadScript('hamburger-menu.js');
+    loadScript('layout.js');
   }
 
   function savedLinks() {
@@ -52,6 +52,7 @@
       link.classList.toggle('has-saved-badge', count > 0);
       link.setAttribute('aria-label', count > 0 ? `Sparade produkter, ${count}` : 'Sparade produkter');
     });
+    window.SwedsnusLayout?.syncCounters?.();
   }
   function scheduleSavedBadgeUpdate() {
     setTimeout(updateSavedBadge, 0);
@@ -256,6 +257,10 @@
     repairAuthTabs();
     syncStickyHeaderOffset();
     rerunEnhancements();
+    document.addEventListener('swedsnus:layout-rendered', () => {
+      syncStickyHeaderOffset();
+      setTimeout(rerunEnhancements, 0);
+    });
     document.addEventListener('swedsnus:products-rendered', () => {
       setTimeout(rerunEnhancements, 0);
       setTimeout(rerunEnhancements, 120);
