@@ -20,7 +20,7 @@
       .category-pills .filter-pill-subtitle { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .category-pills .filter-pill-close { position: relative; z-index: 3; flex: 0 0 18px; pointer-events: none; }
       .catalog-filter-close { width: 100%; min-height: 42px; margin-top: .85rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-footer-bg); color: #fff; font-family: var(--font-body); font-size: .78rem; font-weight: 800; }
-      .catalog-filter-overlay.show { position: fixed; inset: 0; z-index: 1001; background: rgba(18, 17, 14, .38); }
+      .catalog-filter-overlay.show { position: fixed; inset: 0; z-index: 3000 !important; background: rgba(18, 17, 14, .38); }
       @media (max-width: 720px) {
         body.catalog-filter-open { overflow: hidden; }
         .category-pills { gap: .45rem; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
@@ -40,7 +40,7 @@
           top: 50dvh !important;
           bottom: auto !important;
           transform: translate3d(0, -50%, 0) !important;
-          z-index: 1002;
+          z-index: 3001 !important;
           display: flex !important;
           flex-direction: column;
           width: auto !important;
@@ -54,6 +54,7 @@
           background: var(--color-surface);
           box-shadow: 0 24px 70px rgba(34,31,25,.24);
           margin: 0 !important;
+          pointer-events: auto;
         }
         .filter-sidebar.mobile-filter-open .catalog-filter-scroll {
           flex: 1 1 auto;
@@ -175,6 +176,16 @@
     $('.catalog-empty', catalog)?.classList.toggle('show', visibleCount === 0);
   }
 
+  function setLayering(sidebar, overlay) {
+    if (overlay) overlay.style.zIndex = '3000';
+    if (sidebar) sidebar.style.zIndex = '3001';
+  }
+
+  function clearLayering(sidebar, overlay) {
+    if (overlay) overlay.style.removeProperty('z-index');
+    if (sidebar) sidebar.style.removeProperty('z-index');
+  }
+
   function portalSidebar(catalog) {
     const sidebar = sidebarFor(catalog);
     if (!sidebar) return null;
@@ -203,6 +214,7 @@
     const overlay = $('.catalog-filter-overlay');
     sidebar?.classList.remove('mobile-filter-open');
     overlay?.classList.remove('show');
+    clearLayering(sidebar, overlay);
     document.body.classList.remove('catalog-filter-open');
     $('.catalog-filter-toggle', catalog)?.setAttribute('aria-expanded', 'false');
     restoreSidebarPosition(catalog);
@@ -213,8 +225,11 @@
     const sidebar = portalSidebar(catalog);
     if (!sidebar) return;
     const overlay = ensureOverlay();
+    document.body.appendChild(overlay);
+    document.body.appendChild(sidebar);
     activeCatalog = catalog;
     restoreSidebarFilters(catalog);
+    setLayering(sidebar, overlay);
     sidebar.classList.add('mobile-filter-open');
     overlay.classList.add('show');
     document.body.classList.add('catalog-filter-open');
@@ -240,6 +255,7 @@
       overlay.className = 'catalog-filter-overlay';
       document.body.appendChild(overlay);
     }
+    overlay.style.zIndex = '3000';
     if (overlay.dataset.catalogFilterFixBound !== 'true') {
       overlay.dataset.catalogFilterFixBound = 'true';
       overlay.addEventListener('click', event => {
