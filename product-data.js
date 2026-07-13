@@ -8,8 +8,8 @@
   const PRODUCT_PAGE = 'product.html';
   const CART_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
   const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
-  const $ = (selector, root = document) => root.querySelector(selector);
-  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+  const $ = (selector, root = document) => root ? root.querySelector(selector) : null;
+  const $$ = (selector, root = document) => root ? Array.from(root.querySelectorAll(selector)) : [];
   const state = { rows: [], groups: new Map(), series: null, filters: {} };
 
   const routes = {
@@ -20,7 +20,23 @@
     'tillbehor.html': { title: 'Alla tillbehör', filter: row => row.product_family === 'Tillbehör', pills: [['portion', 'Portionssnus', 'Tillbehör till portionssnus'], ['lossnus', 'Lössnus', 'Tillbehör till lössnus'], ['general', 'Övrigt', 'Övriga tillbehör']] }
   };
 
-  const page = () => location.pathname.split('/').pop() || 'index.html';
+  const page = () => {
+    const file = location.pathname.split('/').pop() || 'index.html';
+    if (file.includes('.')) return file;
+
+    const aliases = {
+        '': 'index.html',
+        index: 'index.html',
+        portion: 'portion.html',
+        los: 'los.html',
+        'gor-eget': 'gor-eget.html',
+        'vitt-snus': 'vitt-snus.html',
+        tillbehor: 'tillbehor.html',
+        product: 'product.html'
+    };
+
+  return aliases[file] || `${file}.html`;
+  };
   const escapeHtml = value => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   const slugify = value => String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'produkt';
   const splitList = value => String(value || '').split(',').map(item => item.trim()).filter(Boolean);
@@ -235,7 +251,9 @@
 
   function currentRow() {
     const id = new URLSearchParams(location.search).get('id');
-    return id ? state.rows.find(row => rowKey(row) === id) : null;
+    if (!id) return null;
+
+    return findRow({ id, href: location.href });
   }
 
   function detailMetaRows(row) {

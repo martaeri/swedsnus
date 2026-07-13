@@ -4,8 +4,8 @@
   const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
   const ARROW_LEFT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
   const ARROW_RIGHT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
-  const $ = (selector, root = document) => root.querySelector(selector);
-  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+  const $ = (selector, root = document) => root ? root.querySelector(selector) : null;
+  const $$ = (selector, root = document) => root ? Array.from(root.querySelectorAll(selector)) : [];
 
   function loggedIn() { return sessionStorage.getItem(AUTH_KEY) === 'true'; }
   function readBookmarks() {
@@ -223,13 +223,18 @@
 
   function enhanceVittShowcaseControls() {
     const wrap = $('.vitt-showcase-track-wrap');
+    if (!wrap) return;
+
     const track = $('.vitt-showcase-track', wrap);
-    if (!wrap || !track) return;
+    if (!track) return;
+
     wrap.classList.add('vitt-showcase-enhanced-wrap');
     if (wrap.dataset.vittControls === 'true') return;
     wrap.dataset.vittControls = 'true';
+
     const prev = document.createElement('button');
     const next = document.createElement('button');
+
     prev.type = 'button';
     next.type = 'button';
     prev.className = 'vitt-showcase-btn vitt-showcase-btn-prev';
@@ -238,10 +243,12 @@
     next.setAttribute('aria-label', 'Nästa produkter');
     prev.innerHTML = ARROW_LEFT;
     next.innerHTML = ARROW_RIGHT;
+
     wrap.append(prev, next);
+
     prev.addEventListener('click', () => scrollStep(track, track, -1));
     next.addEventListener('click', () => scrollStep(track, track, 1));
-  }
+}
 
   function rerunEnhancements() {
     enhanceProductPage();
