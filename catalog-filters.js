@@ -31,15 +31,17 @@
         .category-pills .filter-pill-close { width: 15px; height: 15px; font-size: .7rem; align-self: center; }
         .catalog-page .filter-sidebar.mobile-filter-open {
           position: fixed !important;
-          left: 50% !important;
-          top: 50% !important;
-          right: auto !important;
+          box-sizing: border-box;
+          left: .875rem !important;
+          right: .875rem !important;
+          top: 50dvh !important;
           bottom: auto !important;
-          transform: translate(-50%, -50%);
+          transform: translate3d(0, -50%, 0) !important;
           z-index: 1002;
           display: flex !important;
           flex-direction: column;
-          width: min(calc(100vw - 1.5rem), 420px);
+          width: auto !important;
+          max-width: none !important;
           max-height: min(76dvh, 620px);
           overflow: hidden;
           overscroll-behavior: contain;
@@ -48,6 +50,7 @@
           border-radius: 22px;
           background: var(--color-surface);
           box-shadow: 0 24px 70px rgba(34,31,25,.24);
+          margin: 0 !important;
         }
         .catalog-page .filter-sidebar.mobile-filter-open .catalog-filter-scroll {
           flex: 1 1 auto;
@@ -70,6 +73,14 @@
           padding: 0 1.05rem;
           border-radius: 999px;
           box-shadow: none;
+        }
+      }
+      @supports not (height: 100dvh) {
+        @media (max-width: 720px) {
+          .catalog-page .filter-sidebar.mobile-filter-open {
+            top: 50vh !important;
+            max-height: min(76vh, 620px);
+          }
         }
       }
       @media (max-width: 380px) {
