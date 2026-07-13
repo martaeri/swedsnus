@@ -144,6 +144,12 @@
   function scrollStep(scroller, track, direction) {
     scroller.scrollBy({ left: cardStep(scroller, track) * direction, behavior: 'smooth' });
   }
+  function activateCarouselButton(button) {
+    if (!button) return;
+    button.disabled = false;
+    button.removeAttribute('disabled');
+    button.setAttribute('aria-disabled', 'false');
+  }
   function syncCarouselTrack(wrapper) {
     const outer = $('.carousel-track-outer', wrapper);
     const track = $('.carousel-track', wrapper);
@@ -168,20 +174,30 @@
       const next = $('.carousel-btn-next', wrapper);
       if (!outer || !track) return;
       wrapper.classList.add('carousel-fluid-scroll');
+      activateCarouselButton(prev);
+      activateCarouselButton(next);
       syncCarouselTrack(wrapper);
       if (wrapper.dataset.fluidCarousel !== 'true') {
         wrapper.dataset.fluidCarousel = 'true';
         prev?.addEventListener('click', event => {
           event.preventDefault();
           event.stopImmediatePropagation();
+          activateCarouselButton(prev);
+          activateCarouselButton(next);
           scrollStep(outer, track, -1);
         }, true);
         next?.addEventListener('click', event => {
           event.preventDefault();
           event.stopImmediatePropagation();
+          activateCarouselButton(prev);
+          activateCarouselButton(next);
           scrollStep(outer, track, 1);
         }, true);
-        outer.addEventListener('scroll', () => { track.style.transform = 'none'; }, { passive: true });
+        outer.addEventListener('scroll', () => {
+          track.style.transform = 'none';
+          activateCarouselButton(prev);
+          activateCarouselButton(next);
+        }, { passive: true });
       }
     });
   }
