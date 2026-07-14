@@ -3,27 +3,13 @@
   window.__swedsnusMainLoaded = true;
 
   const Core = window.SwedsnusCore;
-  if (!Core) throw new Error('SwedsnusCore must load before main.js');
+  const Records = window.SwedsnusProductRecords;
+  const UI = window.SwedsnusUI;
+  if (!Core || !Records || !UI) throw new Error('Core, product records and UI must load before main.js');
 
-  const { $, $$, escapeHtml, parsePrice, slugify } = Core;
+  const { $, $$, escapeHtml, parsePrice } = Core;
   const CART_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
   const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
-
-  function selectedOption(card) {
-    return card?.querySelector?.('.pack-select option:checked') || null;
-  }
-
-  function selectedPack(card) {
-    const option = selectedOption(card);
-    return option?.dataset.pack || option?.textContent?.split('—')[0]?.trim() || '1-pack';
-  }
-
-  function selectedPrice(card) {
-    const option = selectedOption(card);
-    if (option?.dataset.price) return option.dataset.price;
-    const price = card?.querySelector?.('.product-card-price');
-    return (price?.childNodes?.[0]?.textContent || price?.textContent || '').replace(/\s+/g, ' ').trim();
-  }
 
   function unitPrice(option) {
     if (!option) return '';
@@ -34,19 +20,9 @@
     return price ? `${Math.round(price / amount).toLocaleString('sv-SE')} kr/st` : '';
   }
 
-  function productFromCard(card) {
-    const name = $('.product-card-name', card)?.textContent?.trim() || 'Produkt';
-    const id = card.dataset.productId || slugify(name);
-    const href = window.SwedsnusProducts?.normalizeProductHref?.({
-      id,
-      href: card.dataset.href || $('.product-card-main-link', card)?.getAttribute('href')
-    }) || card.dataset.href || `product.html?id=${encodeURIComponent(id)}`;
-    return { id, href, name, pack: selectedPack(card), price: selectedPrice(card) };
-  }
-
   function normalizeCard(card) {
     if (!card || card.dataset.normalized === 'true') return;
-    const product = productFromCard(card);
+    const product = Records.fromCard(card);
     card.dataset.href = product.href;
     card.dataset.productId = product.id;
 
@@ -71,7 +47,7 @@
       bottom.append(price, add);
       add.type = 'button';
       if (!add.querySelector('svg')) add.innerHTML = CART_ICON;
-      price.innerHTML = `<span class="unit-price">${escapeHtml(unitPrice(selectedOption(card)) || selectedPrice(card))}</span><small>per produkt</small>`;
+      price.innerHTML = `<span class="unit-price">${escapeHtml(unitPrice(Records.selectedOption(card)) || Records.selectedPrice(card))}</span><small>per produkt</small>`;
     }
 
     let bookmark = $('.bookmark-toggle', card);
@@ -93,23 +69,6 @@
   function normalizeCards() {
     $$('.product-card').forEach(normalizeCard);
     window.SwedsnusBookmarks?.syncButtons?.();
-  }
-
-  function showToast(message) {
-    if (window.SwedsnusAuth?.showToast) {
-      window.SwedsnusAuth.showToast(message);
-      return;
-    }
-    let toast = $('.toast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.className = 'toast';
-      document.body.appendChild(toast);
-    }
-    toast.textContent = message;
-    toast.classList.add('show');
-    clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => toast.classList.remove('show'), 2200);
   }
 
   function initNavigation() {
@@ -231,7 +190,7 @@
       form.dataset.bound = 'true';
       form.addEventListener('submit', event => {
         event.preventDefault();
-        showToast('Kundserviceärende markerat i prototypen');
+        UI.toast('Kundserviceärende markerat i prototypen');
         form.reset();
       });
     });
@@ -249,12 +208,12 @@
     document.addEventListener('click', event => {
       if (event.target.closest('[data-demo-action]')) {
         event.preventDefault();
-        showToast('Funktionen är markerad i prototypen');
+        UI.toast('Funktionen är markerad i prototypen');
         return;
       }
       const card = event.target.closest('.product-card');
       if (card && !event.target.closest('a, button, input, select, textarea, label, .pack-select')) {
-        location.href = productFromCard(card).href;
+        location.href = Records.fromCard(card).href;
       }
     });
   }
