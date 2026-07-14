@@ -76,6 +76,14 @@
     window.SwedsnusBookmarks?.syncButtons?.();
   }
 
+  function refreshLegacyView() {
+    if (window.SwedsnusAccount) {
+      window.SwedsnusAccount.renderAll();
+      return;
+    }
+    if (document.querySelector('[data-login-page], [data-account-page], [data-order-page]')) location.reload();
+  }
+
   function completeLogin() {
     setLoggedIn(true);
     close();
@@ -84,20 +92,23 @@
     if (action) action();
     else {
       const redirect = new URLSearchParams(location.search).get('redirect');
-      if (redirect) location.href = redirect;
+      if (redirect) {
+        location.href = redirect;
+        return;
+      }
     }
     sync();
-    window.SwedsnusAccount?.renderAll?.();
     window.SwedsnusBookmarks?.renderPage?.();
     showToast('Du är inloggad');
+    if (!action) refreshLegacyView();
   }
 
   function logout() {
     setLoggedIn(false);
     sync();
-    window.SwedsnusAccount?.renderAll?.();
     window.SwedsnusBookmarks?.renderPage?.();
     showToast('Du är utloggad');
+    refreshLegacyView();
   }
 
   function handleSubmit(event) {
