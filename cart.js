@@ -4,7 +4,7 @@
   const Core = window.SwedsnusCore;
   if (!Core) throw new Error('SwedsnusCore must load before cart.js');
 
-  const { $, $$, keys, read, write, escapeHtml, parsePrice } = Core;
+  const { $, $$, keys, readStore, writeStore, escapeHtml, parsePrice } = Core;
 
   function normalizeProduct(product = {}) {
     const href = window.SwedsnusProducts?.normalizeProductHref?.(product) || product.href || 'portion.html';
@@ -12,7 +12,7 @@
   }
 
   function items() {
-    return read(keys.CART).map(normalizeProduct);
+    return readStore(keys.cart).map(normalizeProduct);
   }
 
   function total(cart = items()) {
@@ -72,7 +72,7 @@
     const existing = cart.find(row => row.id === item.id && row.pack === item.pack && row.price === item.price);
     if (existing) existing.quantity = (existing.quantity || 1) + quantity;
     else cart.unshift({ ...item, quantity });
-    write(keys.CART, cart);
+    writeStore(keys.cart, cart);
     refresh();
   }
 
@@ -83,7 +83,7 @@
     if (action.dataset.cartAction === 'increase') cart[index].quantity = (cart[index].quantity || 1) + 1;
     if (action.dataset.cartAction === 'decrease') cart[index].quantity = Math.max(1, (cart[index].quantity || 1) - 1);
     if (action.dataset.cartAction === 'remove') cart.splice(index, 1);
-    write(keys.CART, cart);
+    writeStore(keys.cart, cart);
     refresh();
     return true;
   }
@@ -91,7 +91,7 @@
   function init() {
     refresh();
     window.addEventListener('storage', event => {
-      if (event.key === keys.CART) refresh();
+      if (event.key === keys.cart) refresh();
     });
   }
 
