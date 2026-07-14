@@ -47,6 +47,7 @@
       await loadScript('catalog-filters.js');
     }
 
+    await loadScript('cart.js');
     await loadScript('main.js');
     document.dispatchEvent(new CustomEvent('swedsnus:app-ready'));
   }
