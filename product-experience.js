@@ -131,19 +131,6 @@
     });
   }
 
-  function repairAuthTabs() {
-    document.addEventListener('click', event => {
-      const tab = event.target.closest('[data-auth-tab]');
-      if (!tab) return;
-      setTimeout(() => {
-        const wrap = tab.closest('.auth-modal, .auth-page-card');
-        if (!wrap) return;
-        $$('[data-auth-tab]', wrap).forEach(item => item.classList.toggle('active', item === tab));
-        $$('[data-auth-panel]', wrap).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.authPanel !== tab.dataset.authTab));
-      }, 0);
-    });
-  }
-
   function syncStickyHeaderOffset() {
     const header = $('.site-header');
     if (!header) return;
@@ -248,7 +235,7 @@
 
     prev.addEventListener('click', () => scrollStep(track, track, -1));
     next.addEventListener('click', () => scrollStep(track, track, 1));
-}
+  }
 
   function rerunEnhancements() {
     enhanceProductPage();
@@ -260,7 +247,6 @@
   function init() {
     loadAssets();
     bindSavedBadgeUpdates();
-    repairAuthTabs();
     syncStickyHeaderOffset();
     rerunEnhancements();
     document.addEventListener('swedsnus:layout-rendered', () => {
