@@ -42,6 +42,7 @@
     await loadScript('ui-popovers.js');
     await loadScript('layout.js');
     await loadScript('product-data.js');
+    await loadScript('product-records.js');
     await loadScript('product-experience.js');
 
     if (document.querySelector('.catalog-page[data-catalog-filter]')) {
