@@ -4,7 +4,7 @@ All pages load `app.js` as the single application entry point.
 
 Dependency order:
 
-1. `commerce.css`
+1. `commerce.css`, `themes.css` and `product-components.css`
 2. `commerce-core.js`
 3. `ui-feedback.js`
 4. `ui-popovers.js`
@@ -21,11 +21,11 @@ Dependency order:
 
 Responsibilities:
 
-- `app.js`: shared dependency selection and load order.
+- `app.js`: shared stylesheet selection, script dependency selection and load order.
 - `commerce-core.js`: shared storage keys, local/session storage access, selectors and common formatting utilities.
 - `ui-feedback.js`: shared toast creation, timing and display behavior.
 - `ui-popovers.js`: shared outside-click, click-suppression and Escape handling for blocking popup menus.
-- `layout.js`: shared layout and navigation, including hamburger menu rendering.
+- `layout.js`: header, footer, theme switcher, counters, shared navigation and hamburger menu rendering. It consumes `commerce-core.js` rather than defining storage or formatting helpers.
 - `product-data.js`: product data and rendering.
 - `product-records.js`: product URL normalization, selected pack/price lookup, metadata extraction and shared product-record creation from cards or product pages.
 - `product-experience.js`: product visuals and carousels.
@@ -36,4 +36,4 @@ Responsibilities:
 - `account.js`: login-page, account-page and order-page rendering plus account tabs.
 - `main.js`: shared product-card normalization/navigation, homepage carousel and showcase setup, product-page quantity/pack controls, support forms and prototype-only actions.
 
-The major frontend ownership areas are centralized. New work should modify the existing owner above instead of adding one-off patch files, duplicate product extraction or duplicate listeners.
+The major frontend ownership areas are centralized. New work should modify the existing owner above instead of adding one-off patch files, duplicate product extraction, duplicate storage helpers or duplicate listeners.
