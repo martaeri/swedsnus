@@ -35,7 +35,7 @@
   }
 
   async function start() {
-    ensureStylesheet('commerce.css');
+    ['commerce.css', 'themes.css', 'product-components.css'].forEach(ensureStylesheet);
 
     await loadScript('commerce-core.js');
     await loadScript('ui-feedback.js');
