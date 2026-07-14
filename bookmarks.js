@@ -2,7 +2,8 @@
   if (window.SwedsnusBookmarks) return;
 
   const Core = window.SwedsnusCore;
-  if (!Core) throw new Error('SwedsnusCore must load before bookmarks.js');
+  const UI = window.SwedsnusUI;
+  if (!Core || !UI) throw new Error('SwedsnusCore and SwedsnusUI must load before bookmarks.js');
 
   const { $, $$, keys, readStore, writeStore, loggedIn, escapeHtml, slugify } = Core;
   const BOOKMARK_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
@@ -117,19 +118,6 @@
     document.dispatchEvent(new CustomEvent('swedsnus:bookmarks-changed', { detail: { items: bookmarks } }));
   }
 
-  function showToast(message) {
-    let toast = $('.toast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.className = 'toast';
-      document.body.appendChild(toast);
-    }
-    toast.textContent = message;
-    toast.classList.add('show');
-    clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => toast.classList.remove('show'), 2200);
-  }
-
   function handleClick(event) {
     const button = event.target.closest('.bookmark-toggle');
     if (!button || !loggedIn()) return;
@@ -139,7 +127,7 @@
     const product = card ? fromCard(card) : fromPage();
     const shouldSave = !has(product.id);
     save(product, shouldSave);
-    showToast(shouldSave ? 'Sparad produkt' : 'Borttagen från sparade produkter');
+    UI.toast(shouldSave ? 'Sparad produkt' : 'Borttagen från sparade produkter');
   }
 
   function init() {
