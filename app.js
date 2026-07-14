@@ -42,8 +42,7 @@
     await loadScript('product-experience.js');
 
     if (document.querySelector('.catalog-page[data-catalog-filter]')) {
-      await loadScript('catalog-filters.js');
-      await loadScript('catalog-filter-modal-stack.js');
+      await loadScript('catalog.js');
     }
 
     await loadScript('main.js');
