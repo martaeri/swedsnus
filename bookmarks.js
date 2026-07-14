@@ -159,6 +159,6 @@
     });
   }
 
-  window.SwedsnusBookmarks = { items, has, save, renderPage, syncButtons, init };
+  window.SwedsnusBookmarks = { cardMarkup, items, has, save, renderPage, syncButtons, init };
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
 })();
