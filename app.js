@@ -38,6 +38,7 @@
     ensureStylesheet('commerce.css');
 
     await loadScript('commerce-core.js');
+    await loadScript('ui-feedback.js');
     await loadScript('ui-popovers.js');
     await loadScript('layout.js');
     await loadScript('product-data.js');
