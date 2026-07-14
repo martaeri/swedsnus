@@ -89,6 +89,17 @@
     section.className = 'vitt-showcase-section';
     section.innerHTML = '<div class="vitt-showcase-shell"><div class="vitt-showcase-copy"><span class="vitt-showcase-kicker">Ny produktgrupp</span><h2>Vitt snus</h2><p>En egen yta för kommande tobaksfria produkter.</p><div class="vitt-tag-row"><span>Normal</span><span>Slim</span><span>Mini</span><span>Compact</span><span>Large</span></div><div class="btn-row"><a class="btn btn-primary" href="vitt-snus.html">Se vitt snus</a></div></div><div class="vitt-showcase-track-wrap"><div class="vitt-showcase-track"></div></div></div>';
     feature.parentNode?.insertBefore(section, feature.nextSibling);
+
+    const products = window.SwedsnusProducts;
+    const track = $('.vitt-showcase-track', section);
+    if (track && products?.rows?.length && products.productCard) {
+      track.innerHTML = products.rows
+        .filter(row => row.tobacco_type === 'Tobaksfri' || row.site_section === 'Vitt snus')
+        .slice(0, 6)
+        .map(products.productCard)
+        .join('');
+      requestAnimationFrame(() => document.dispatchEvent(new CustomEvent('swedsnus:products-rendered')));
+    }
   }
 
   function initFilterChips() {

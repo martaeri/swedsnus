@@ -145,6 +145,10 @@
   top: 130px;
 }
 
+.catalog-page .catalog-filter-close {
+  display: none;
+}
+
 .sidebar-group + .sidebar-group {
   margin-top: 1rem;
 }
@@ -240,6 +244,12 @@
 
   .sidebar-check {
     padding: .2rem 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .filter-sidebar.mobile-filter-open .catalog-filter-close {
+    display: inline-flex;
   }
 }
 
