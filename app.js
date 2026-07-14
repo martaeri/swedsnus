@@ -48,6 +48,7 @@
     }
 
     await loadScript('cart.js');
+    await loadScript('auth.js');
     await loadScript('bookmarks.js');
     await loadScript('main.js');
     document.dispatchEvent(new CustomEvent('swedsnus:app-ready'));
