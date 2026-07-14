@@ -37,6 +37,7 @@
   async function start() {
     ensureStylesheet('commerce.css');
 
+    await loadScript('commerce-core.js');
     await loadScript('ui-popovers.js');
     await loadScript('layout.js');
     await loadScript('product-data.js');
