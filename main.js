@@ -17,18 +17,6 @@
   const $ = (selector, root = document) => root ? root.querySelector(selector) : null;
   const $$ = (selector, root = document) => root ? Array.from(root.querySelectorAll(selector)) : [];
 
-  function ensureScript(src) {
-    if ($(`script[src="${src}"]`)) return;
-    const script = document.createElement('script');
-    script.src = src;
-    document.body.appendChild(script);
-  }
-
-  function loadSupportingScripts() {
-    ensureScript('product-data.js');
-    ensureScript('product-experience.js');
-  }
-
   function readStore(key) {
     try {
       const value = JSON.parse(localStorage.getItem(key) || '[]');
@@ -95,12 +83,17 @@
     return normalizeProductRecord({ id, name, badge: $('.product-card-badge')?.textContent?.trim() || '', meta, price: selectedPrice(document), pack: selectedPack(document) });
   }
   function isBookmarked(id) { return readStore(BOOKMARKS_KEY).some(item => item.id === id); }
+  function updateBookmarkCount(bookmarks = readStore(BOOKMARKS_KEY)) {
+    const count = $('[data-bookmark-count]');
+    if (count) count.textContent = `${bookmarks.length} ${bookmarks.length === 1 ? 'produkt' : 'produkter'}`;
+  }
   function saveBookmark(product, shouldSave) {
     const item = normalizeProductRecord(product);
     const bookmarks = readStore(BOOKMARKS_KEY).filter(saved => saved.id !== item.id);
     if (shouldSave) bookmarks.unshift(item);
     writeStore(BOOKMARKS_KEY, bookmarks);
-    renderBookmarksPage();
+    if (document.body.classList.contains('bookmarks-page')) updateBookmarkCount(bookmarks);
+    else renderBookmarksPage();
     syncBookmarkButtons();
   }
   function normalizeProductCard(card) {
@@ -151,7 +144,7 @@
       button.classList.toggle('active', active);
       button.classList.toggle('requires-login', !loggedIn());
       button.setAttribute('aria-pressed', active ? 'true' : 'false');
-      button.setAttribute('title', loggedIn() ? 'Spara produkt' : 'Logga in för att spara');
+      button.setAttribute('title', loggedIn() ? (active ? 'Ta bort sparad produkt' : 'Spara produkt') : 'Logga in för att spara');
     });
   }
   function metaMarkup(meta) {
@@ -177,8 +170,7 @@
       return;
     }
     const bookmarks = readStore(BOOKMARKS_KEY).map(normalizeProductRecord);
-    const count = $('[data-bookmark-count]');
-    if (count) count.textContent = `${bookmarks.length} ${bookmarks.length === 1 ? 'produkt' : 'produkter'}`;
+    updateBookmarkCount(bookmarks);
     list.classList.add('product-grid', 'bookmarks-product-grid');
     list.innerHTML = bookmarks.length ? bookmarks.map(productCardMarkup).join('') : '<div class="bookmarks-empty">Du har inga sparade produkter än.</div>';
     normalizeCards();
@@ -336,7 +328,6 @@
     section.innerHTML = '<div class="vitt-showcase-shell"><div class="vitt-showcase-copy"><span class="vitt-showcase-kicker">Ny produktgrupp</span><h2>Vitt snus</h2><p>En egen yta för kommande tobaksfria produkter.</p><div class="vitt-tag-row"><span>Normal</span><span>Slim</span><span>Mini</span><span>Compact</span><span>Large</span></div><div class="btn-row"><a class="btn btn-primary" href="vitt-snus.html">Se vitt snus</a></div></div><div class="vitt-showcase-track-wrap"><div class="vitt-showcase-track"></div></div></div>';
     insertAfter(feature, section);
   }
-
   function initFilters() { $$('.filter-bar').forEach(bar => bar.addEventListener('click', event => { const chip = event.target.closest('.filter-chip'); if (!chip) return; $$('.filter-chip', bar).forEach(item => item.classList.remove('active')); chip.classList.add('active'); })); }
   function initCarousels() {
     $$('.carousel-header').forEach(header => { if ($('.section-heading', header)?.textContent.trim().toLowerCase() === 'nyheter') $('.see-all', header)?.remove(); });
@@ -363,9 +354,9 @@
     });
   }
   function initProductPage() {
-    const detail = $('.product-detail'), heading = detail?.querySelector('h1');
-    if (detail && heading && !$('.product-page-bookmark', detail)) { const wrap = document.createElement('div'); wrap.className = 'product-detail-actions'; heading.parentNode.insertBefore(wrap, heading); wrap.appendChild(heading); const button = document.createElement('button'); button.type = 'button'; button.className = 'bookmark-toggle product-page-bookmark'; button.dataset.productId = productFromPage().id; button.setAttribute('aria-label', 'Spara produkt'); button.innerHTML = BOOKMARK_ICON; wrap.appendChild(button); }
-    const qty = $('.qty-display'); $('.qty-minus')?.addEventListener('click', () => { if (qty) qty.value = Math.max(1, parseInt(qty.value || '1', 10) - 1); }); $('.qty-plus')?.addEventListener('click', () => { if (qty) qty.value = parseInt(qty.value || '1', 10) + 1; });
+    const qty = $('.qty-display');
+    $('.qty-minus')?.addEventListener('click', () => { if (qty) qty.value = Math.max(1, parseInt(qty.value || '1', 10) - 1); });
+    $('.qty-plus')?.addEventListener('click', () => { if (qty) qty.value = parseInt(qty.value || '1', 10) + 1; });
     $$('.pack-option').forEach(option => option.addEventListener('click', () => { $$('.pack-option').forEach(item => item.classList.remove('selected')); option.classList.add('selected'); const radio = $('input[type=radio]', option); if (radio) radio.checked = true; const price = $('.product-detail-price'); if (price && option.dataset.price) price.innerHTML = `${option.dataset.price} <small>${option.dataset.pack || '1-pack'}</small>`; }));
     $('.add-to-cart-main .btn-primary')?.addEventListener('click', event => { event.preventDefault(); addCartItem(productFromPage(), parseInt(qty?.value || '1', 10) || 1); showToast('Tillagd i kundvagnen'); });
   }
@@ -389,6 +380,6 @@
     });
   }
   function refreshProductLinks() { migrateProductStores(); renderBookmarksPage(); updateCartPanel(); renderCartPage(); normalizeCards(); }
-  function init() { loadSupportingScripts(); syncAccountState(); initNavigation(); initVittShowcase(); initFilters(); initCarousels(); renderLoginPage(); renderAccountPage(); renderOrderPage(); renderBookmarksPage(); normalizeCards(); initProductPage(); updateCartPanel(); renderCartPage(); bindAuth(); bindLogout(); bindSupportForm(); handleClicks(); document.addEventListener('swedsnus:products-rendered', refreshProductLinks); }
+  function init() { syncAccountState(); initNavigation(); initVittShowcase(); initFilters(); initCarousels(); renderLoginPage(); renderAccountPage(); renderOrderPage(); renderBookmarksPage(); normalizeCards(); initProductPage(); updateCartPanel(); renderCartPage(); bindAuth(); bindLogout(); bindSupportForm(); handleClicks(); document.addEventListener('swedsnus:products-rendered', refreshProductLinks); }
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
 })();
