@@ -32,9 +32,15 @@
       : `<div class="auth-page-card"><span class="account-kicker">Mina sidor</span><h1>Logga in eller skapa konto</h1><p>Det här är en prototyp. Du kan fortsätta utan riktiga uppgifter för att testa sparade produkter och Mina sidor.</p>${window.SwedsnusAuth?.panelsMarkup?.() || ''}</div>`;
   }
 
+  function activatePanel(page, panelName = 'overview') {
+    $$('[data-account-tab]', page).forEach(tab => tab.classList.toggle('active', tab.dataset.accountTab === panelName));
+    $$('[data-account-panel]', page).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.accountPanel !== panelName));
+  }
+
   function renderAccountPage() {
     const page = $('[data-account-page]');
     if (!page) return;
+    const activePanel = $('[data-account-tab].active', page)?.dataset.accountTab || 'overview';
     if (!loggedIn()) {
       page.innerHTML = requireMarkup('Mina sidor visas först när du är inloggad.');
       return;
@@ -48,7 +54,8 @@
       ? bookmarks.map(product => window.SwedsnusBookmarks?.cardMarkup?.(product) || '').join('')
       : '<div class="bookmarks-empty">Du har inga sparade produkter än.</div>';
 
-    page.innerHTML = `<div class="account-layout"><aside class="account-sidebar"><span class="account-kicker">Mina sidor</span><h2>Hej!</h2><p>Du är inloggad i prototypläge.</p><button class="account-tab active" type="button" data-account-tab="overview">Översikt</button><button class="account-tab" type="button" data-account-tab="orders">Orderhistorik</button><button class="account-tab" type="button" data-account-tab="saved">Sparade produkter</button><button class="account-tab" type="button" data-account-tab="settings">Inställningar</button><button class="btn btn-outline account-logout" type="button" data-logout>Logga ut</button></aside><section class="account-main"><div class="account-panel" data-account-panel="overview"><h1>Översikt</h1><div class="account-stat-grid"><div class="account-stat"><span>Sparade produkter</span><strong>${bookmarks.length}</strong></div><div class="account-stat"><span>Produkter i kundvagn</span><strong>${cartQuantity}</strong></div><div class="account-stat"><span>Aktuell order</span><strong>${currentOrders[0]?.id || '—'}</strong></div></div><div class="account-section"><h2>Aktuella beställningar</h2>${currentOrders.map(order => orderMarkup(order, true)).join('') || '<p>Du har inga aktuella beställningar.</p>'}</div><div class="account-section"><h2>Senaste tidigare order</h2>${pastOrders.slice(0, 2).map(order => orderMarkup(order, true)).join('')}</div></div><div class="account-panel is-hidden" data-account-panel="orders"><h1>Beställningar</h1><div class="account-section"><h2>Aktuella order</h2>${currentOrders.map(order => orderMarkup(order)).join('') || '<p>Inga aktuella order.</p>'}</div><div class="account-section"><h2>Tidigare order</h2>${pastOrders.map(order => orderMarkup(order)).join('')}</div></div><div class="account-panel is-hidden" data-account-panel="saved"><h1>Sparade produkter</h1><div class="account-saved-grid">${savedMarkup}</div></div><div class="account-panel is-hidden" data-account-panel="settings"><h1>Inställningar</h1><div class="settings-grid"><div class="settings-card"><h2>Personuppgifter</h2><p>Här kan kunden senare uppdatera namn, e-post och adress.</p><button class="btn btn-primary" type="button" data-demo-action="settings">Spara ändringar</button></div><div class="settings-card danger-zone"><h2>Radera konto</h2><p>Visuell prototyp för kontoradering.</p><button class="btn btn-outline" type="button" data-demo-action="delete">Radera konto</button></div></div></div></section></div>`;
+    page.innerHTML = `<div class="account-layout"><aside class="account-sidebar"><span class="account-kicker">Mina sidor</span><h2>Hej!</h2><p>Du är inloggad i prototypläge.</p><button class="account-tab" type="button" data-account-tab="overview">Översikt</button><button class="account-tab" type="button" data-account-tab="orders">Orderhistorik</button><button class="account-tab" type="button" data-account-tab="saved">Sparade produkter</button><button class="account-tab" type="button" data-account-tab="settings">Inställningar</button><button class="btn btn-outline account-logout" type="button" data-logout>Logga ut</button></aside><section class="account-main"><div class="account-panel" data-account-panel="overview"><h1>Översikt</h1><div class="account-stat-grid"><div class="account-stat"><span>Sparade produkter</span><strong>${bookmarks.length}</strong></div><div class="account-stat"><span>Produkter i kundvagn</span><strong>${cartQuantity}</strong></div><div class="account-stat"><span>Aktuell order</span><strong>${currentOrders[0]?.id || '—'}</strong></div></div><div class="account-section"><h2>Aktuella beställningar</h2>${currentOrders.map(order => orderMarkup(order, true)).join('') || '<p>Du har inga aktuella beställningar.</p>'}</div><div class="account-section"><h2>Senaste tidigare order</h2>${pastOrders.slice(0, 2).map(order => orderMarkup(order, true)).join('')}</div></div><div class="account-panel" data-account-panel="orders"><h1>Beställningar</h1><div class="account-section"><h2>Aktuella order</h2>${currentOrders.map(order => orderMarkup(order)).join('') || '<p>Inga aktuella order.</p>'}</div><div class="account-section"><h2>Tidigare order</h2>${pastOrders.map(order => orderMarkup(order)).join('')}</div></div><div class="account-panel" data-account-panel="saved"><h1>Sparade produkter</h1><div class="account-saved-grid">${savedMarkup}</div></div><div class="account-panel" data-account-panel="settings"><h1>Inställningar</h1><div class="settings-grid"><div class="settings-card"><h2>Personuppgifter</h2><p>Här kan kunden senare uppdatera namn, e-post och adress.</p><button class="btn btn-primary" type="button" data-demo-action="settings">Spara ändringar</button></div><div class="settings-card danger-zone"><h2>Radera konto</h2><p>Visuell prototyp för kontoradering.</p><button class="btn btn-outline" type="button" data-demo-action="delete">Radera konto</button></div></div></div></section></div>`;
+    activatePanel(page, activePanel);
     window.SwedsnusBookmarks?.syncButtons?.();
   }
 
@@ -76,9 +83,7 @@
     if (!tab) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    const root = tab.closest('[data-account-page]');
-    $$('[data-account-tab]', root).forEach(item => item.classList.toggle('active', item === tab));
-    $$('[data-account-panel]', root).forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.accountPanel !== tab.dataset.accountTab));
+    activatePanel(tab.closest('[data-account-page]'), tab.dataset.accountTab);
   }
 
   function init() {
