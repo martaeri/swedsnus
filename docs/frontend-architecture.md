@@ -11,7 +11,8 @@ Dependency order:
 5. `product-data.js`
 6. `product-experience.js`
 7. `catalog-filters.js` on catalog pages
-8. `main.js`
+8. `cart.js`
+9. `main.js`
 
 Responsibilities:
 
@@ -22,14 +23,15 @@ Responsibilities:
 - `product-data.js`: product data and rendering.
 - `product-experience.js`: product visuals and carousels.
 - `catalog-filters.js`: catalog pills, sidebar filters, sorting and the mobile filter modal.
-- `main.js`: temporary coordinator for cart, bookmarks, authentication and account behavior while those areas are extracted into focused modules.
+- `cart.js`: cart storage, totals, cart panel rendering, cart page rendering and cart actions.
+- `main.js`: temporary coordinator for product cards, bookmarks, authentication and account behavior while those areas are moved into focused modules.
 
 Migration order for `main.js`:
 
-1. Move shared helpers to `commerce-core.js`.
-2. Extract cart behavior.
-3. Extract bookmarks behavior.
-4. Extract authentication and account behavior.
-5. Reduce `main.js` to application coordination, then remove it if no coordination remains.
+1. Shared helpers in `commerce-core.js`.
+2. Cart behavior in `cart.js`.
+3. Bookmark behavior in a focused module.
+4. Authentication and account behavior in focused modules.
+5. Keep `main.js` only for remaining coordination.
 
 New fixes should be made in the existing owner rather than added as one-off patch files.
