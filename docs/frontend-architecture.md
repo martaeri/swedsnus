@@ -10,13 +10,14 @@ Dependency order:
 4. `ui-popovers.js`
 5. `layout.js`
 6. `product-data.js`
-7. `product-experience.js`
-8. `catalog-filters.js` on catalog pages
-9. `cart.js`
-10. `auth.js`
-11. `bookmarks.js`
-12. `account.js`
-13. `main.js`
+7. `product-records.js`
+8. `product-experience.js`
+9. `catalog-filters.js` on catalog pages
+10. `cart.js`
+11. `auth.js`
+12. `bookmarks.js`
+13. `account.js`
+14. `main.js`
 
 Responsibilities:
 
@@ -26,6 +27,7 @@ Responsibilities:
 - `ui-popovers.js`: shared outside-click, click-suppression and Escape handling for blocking popup menus.
 - `layout.js`: shared layout and navigation, including hamburger menu rendering.
 - `product-data.js`: product data and rendering.
+- `product-records.js`: product URL normalization, selected pack/price lookup, metadata extraction and shared product-record creation from cards or product pages.
 - `product-experience.js`: product visuals and carousels.
 - `catalog-filters.js`: catalog pills, sidebar filters, sorting and the mobile filter modal.
 - `cart.js`: cart additions, quantity changes, removals, storage, totals and cart rendering.
@@ -34,6 +36,4 @@ Responsibilities:
 - `account.js`: login-page, account-page and order-page rendering plus account tabs.
 - `main.js`: shared product-card normalization/navigation, homepage carousel and showcase setup, product-page quantity/pack controls, support forms and prototype-only actions.
 
-The feature extraction from `main.js` is complete. New work should modify the existing owner above instead of adding one-off patch files or duplicate listeners.
-
-Remaining centralization candidate: shared product selection and product-record extraction currently used by `main.js`, `cart.js` and `bookmarks.js`. This should be handled as a separate tested refactor because it affects cart and saved-product payloads.
+The major frontend ownership areas are centralized. New work should modify the existing owner above instead of adding one-off patch files, duplicate product extraction or duplicate listeners.
