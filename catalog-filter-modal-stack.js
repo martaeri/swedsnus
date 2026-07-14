@@ -34,7 +34,14 @@
     document.head.appendChild(style);
   }
 
-  function parsePrice(card) {
+  function setImportant(element, styles) {
+    Object.entries(styles).forEach(([property, value]) => {
+      if (element.style.getPropertyValue(property) === value && element.style.getPropertyPriority(property) === 'important') return;
+      element.style.setProperty(property, value, 'important');
+    });
+  }
+
+  function priceOf(card) {
     const text = $('.product-card-price', card)?.textContent || '';
     return parseInt(text.replace(/\s/g, '').match(/[0-9]+/)?.[0] || '0', 10);
   }
@@ -47,8 +54,8 @@
     cards.sort((a, b) => {
       const an = $('.product-card-name', a)?.textContent?.trim() || '';
       const bn = $('.product-card-name', b)?.textContent?.trim() || '';
-      if (mode === 'price-asc') return parsePrice(a) - parsePrice(b);
-      if (mode === 'price-desc') return parsePrice(b) - parsePrice(a);
+      if (mode === 'price-asc') return priceOf(a) - priceOf(b);
+      if (mode === 'price-desc') return priceOf(b) - priceOf(a);
       if (mode === 'alpha') return an.localeCompare(bn, 'sv');
       if (mode === 'alpha-desc') return bn.localeCompare(an, 'sv');
       if (mode === 'newest') return Number(b.dataset.originalIndex) - Number(a.dataset.originalIndex);
@@ -61,8 +68,7 @@
       if (select.dataset.catalogSortBound === 'true') return;
       select.dataset.catalogSortBound = 'true';
       select.addEventListener('change', () => {
-        const catalog = select.closest('.catalog-page[data-catalog-filter]');
-        const grid = $('.product-grid', catalog);
+        const grid = $('.product-grid', select.closest('.catalog-page[data-catalog-filter]'));
         if (grid) sortGrid(grid, select.value);
       });
     });
@@ -70,25 +76,23 @@
 
   function forceStacking() {
     ensureStyle();
-    $$('.catalog-filter-overlay.show').forEach(overlay => {
-      overlay.style.setProperty('position', 'fixed', 'important');
-      overlay.style.setProperty('inset', '0', 'important');
-      overlay.style.setProperty('z-index', OVERLAY_Z, 'important');
-      overlay.style.setProperty('pointer-events', 'none', 'important');
-    });
+    $$('.catalog-filter-overlay.show').forEach(overlay => setImportant(overlay, {
+      position: 'fixed',
+      inset: '0',
+      'z-index': OVERLAY_Z,
+      'pointer-events': 'none'
+    }));
     $$('.filter-sidebar.mobile-filter-open').forEach(sidebar => {
       if (sidebar.parentNode !== document.body) document.body.appendChild(sidebar);
-      sidebar.style.setProperty('position', 'fixed', 'important');
-      sidebar.style.setProperty('z-index', MODAL_Z, 'important');
-      sidebar.style.setProperty('pointer-events', 'auto', 'important');
-      sidebar.style.setProperty('opacity', '1', 'important');
-      sidebar.style.setProperty('visibility', 'visible', 'important');
-      sidebar.style.setProperty('isolation', 'isolate', 'important');
+      setImportant(sidebar, {
+        position: 'fixed',
+        'z-index': MODAL_Z,
+        'pointer-events': 'auto',
+        opacity: '1',
+        visibility: 'visible',
+        isolation: 'isolate'
+      });
     });
-  }
-
-  function closeOpenFilter() {
-    $('.filter-sidebar.mobile-filter-open .catalog-filter-close')?.click();
   }
 
   function init() {
@@ -106,7 +110,7 @@
     if (!sidebar || sidebar.contains(event.target) || event.target.closest('.catalog-filter-toggle')) return;
     event.preventDefault();
     event.stopPropagation();
-    closeOpenFilter();
+    $('.filter-sidebar.mobile-filter-open .catalog-filter-close')?.click();
   }, true);
 
   document.addEventListener('touchstart', () => {
