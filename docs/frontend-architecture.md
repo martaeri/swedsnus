@@ -6,21 +6,23 @@ Dependency order:
 
 1. `commerce.css`
 2. `commerce-core.js`
-3. `ui-popovers.js`
-4. `layout.js`
-5. `product-data.js`
-6. `product-experience.js`
-7. `catalog-filters.js` on catalog pages
-8. `cart.js`
-9. `auth.js`
-10. `bookmarks.js`
-11. `account.js`
-12. `main.js`
+3. `ui-feedback.js`
+4. `ui-popovers.js`
+5. `layout.js`
+6. `product-data.js`
+7. `product-experience.js`
+8. `catalog-filters.js` on catalog pages
+9. `cart.js`
+10. `auth.js`
+11. `bookmarks.js`
+12. `account.js`
+13. `main.js`
 
 Responsibilities:
 
 - `app.js`: shared dependency selection and load order.
 - `commerce-core.js`: shared storage keys, local/session storage access, selectors and common formatting utilities.
+- `ui-feedback.js`: shared toast creation, timing and display behavior.
 - `ui-popovers.js`: shared outside-click, click-suppression and Escape handling for blocking popup menus.
 - `layout.js`: shared layout and navigation, including hamburger menu rendering.
 - `product-data.js`: product data and rendering.
@@ -33,3 +35,5 @@ Responsibilities:
 - `main.js`: shared product-card normalization/navigation, homepage carousel and showcase setup, product-page quantity/pack controls, support forms and prototype-only actions.
 
 The feature extraction from `main.js` is complete. New work should modify the existing owner above instead of adding one-off patch files or duplicate listeners.
+
+Remaining centralization candidate: shared product selection and product-record extraction currently used by `main.js`, `cart.js` and `bookmarks.js`. This should be handled as a separate tested refactor because it affects cart and saved-product payloads.

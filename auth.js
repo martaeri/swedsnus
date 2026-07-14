@@ -2,23 +2,11 @@
   if (window.SwedsnusAuth) return;
 
   const Core = window.SwedsnusCore;
-  if (!Core) throw new Error('SwedsnusCore must load before auth.js');
+  const UI = window.SwedsnusUI;
+  if (!Core || !UI) throw new Error('SwedsnusCore and SwedsnusUI must load before auth.js');
 
   const { $, $$, loggedIn, setLoggedIn } = Core;
   let pendingAction = null;
-
-  function showToast(message) {
-    let toast = $('.toast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.className = 'toast';
-      document.body.appendChild(toast);
-    }
-    toast.textContent = message;
-    toast.classList.add('show');
-    clearTimeout(toast._timer);
-    toast._timer = setTimeout(() => toast.classList.remove('show'), 2200);
-  }
 
   function formMarkup(mode) {
     const register = mode === 'register';
@@ -99,7 +87,7 @@
     }
     sync();
     window.SwedsnusBookmarks?.renderPage?.();
-    showToast('Du är inloggad');
+    UI.toast('Du är inloggad');
     if (!action) refreshLegacyView();
   }
 
@@ -107,7 +95,7 @@
     setLoggedIn(false);
     sync();
     window.SwedsnusBookmarks?.renderPage?.();
-    showToast('Du är utloggad');
+    UI.toast('Du är utloggad');
     refreshLegacyView();
   }
 
@@ -167,6 +155,6 @@
     document.addEventListener('swedsnus:auth-changed', sync);
   }
 
-  window.SwedsnusAuth = { close, loggedIn, logout, open, panelsMarkup, requireLogin, sync, showToast };
+  window.SwedsnusAuth = { close, loggedIn, logout, open, panelsMarkup, requireLogin, sync, showToast: UI.toast };
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
 })();
