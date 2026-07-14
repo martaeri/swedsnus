@@ -336,24 +336,7 @@
     section.innerHTML = '<div class="vitt-showcase-shell"><div class="vitt-showcase-copy"><span class="vitt-showcase-kicker">Ny produktgrupp</span><h2>Vitt snus</h2><p>En egen yta för kommande tobaksfria produkter.</p><div class="vitt-tag-row"><span>Normal</span><span>Slim</span><span>Mini</span><span>Compact</span><span>Large</span></div><div class="btn-row"><a class="btn btn-primary" href="vitt-snus.html">Se vitt snus</a></div></div><div class="vitt-showcase-track-wrap"><div class="vitt-showcase-track"></div></div></div>';
     insertAfter(feature, section);
   }
-  function initCatalogControls() {
-    $$('.catalog-page[data-catalog-filter]').forEach(catalog => {
-      if ($('.catalog-mobile-tools', catalog)) return;
-      const tools = $('.catalog-tools', catalog), sidebar = $('.filter-sidebar', catalog), grid = $('.product-grid', catalog);
-      if (!tools || !sidebar || !grid) return;
-      const controls = document.createElement('div');
-      controls.className = 'catalog-mobile-tools';
-      controls.innerHTML = '<button class="catalog-filter-toggle" type="button" aria-expanded="false">Filter</button><select class="catalog-sort-select" aria-label="Sortera produkter"><option value="relevance">Relevans</option><option value="price-asc">Pris: lägst först</option><option value="price-desc">Pris: högst först</option><option value="alpha">A–Ö</option><option value="alpha-desc">Ö–A</option><option value="newest">Nyast först</option></select>';
-      tools.insertAdjacentElement('beforebegin', controls);
-      const overlay = document.createElement('div'); overlay.className = 'catalog-filter-overlay'; document.body.appendChild(overlay);
-      const close = document.createElement('button'); close.className = 'catalog-filter-close'; close.type = 'button'; close.textContent = 'Visa produkter'; if (!$('.catalog-filter-close', sidebar)) sidebar.appendChild(close);
-      function setOpen(open) { sidebar.classList.toggle('mobile-filter-open', open); overlay.classList.toggle('show', open); document.body.classList.toggle('catalog-filter-open', open); $('.catalog-filter-toggle', controls)?.setAttribute('aria-expanded', open ? 'true' : 'false'); }
-      $('.catalog-filter-toggle', controls)?.addEventListener('click', () => setOpen(!sidebar.classList.contains('mobile-filter-open')));
-      overlay.addEventListener('click', () => setOpen(false)); close.addEventListener('click', () => setOpen(false));
-      $('.catalog-sort-select', controls)?.addEventListener('change', event => sortGrid(grid, event.target.value));
-    });
-  }
-  function sortGrid(grid, mode) { const cards = $$('.product-card', grid); cards.forEach((card, index) => { if (!card.dataset.originalIndex) card.dataset.originalIndex = index; }); cards.sort((a, b) => { const an = $('.product-card-name', a)?.textContent?.trim() || '', bn = $('.product-card-name', b)?.textContent?.trim() || ''; const ap = parsePrice(selectedPrice(a)), bp = parsePrice(selectedPrice(b)); if (mode === 'price-asc') return ap - bp; if (mode === 'price-desc') return bp - ap; if (mode === 'alpha') return an.localeCompare(bn, 'sv'); if (mode === 'alpha-desc') return bn.localeCompare(an, 'sv'); if (mode === 'newest') return Number(b.dataset.originalIndex) - Number(a.dataset.originalIndex); return Number(a.dataset.originalIndex) - Number(b.dataset.originalIndex); }).forEach(card => grid.appendChild(card)); }
+
   function initFilters() { $$('.filter-bar').forEach(bar => bar.addEventListener('click', event => { const chip = event.target.closest('.filter-chip'); if (!chip) return; $$('.filter-chip', bar).forEach(item => item.classList.remove('active')); chip.classList.add('active'); })); }
   function initCarousels() {
     $$('.carousel-header').forEach(header => { if ($('.section-heading', header)?.textContent.trim().toLowerCase() === 'nyheter') $('.see-all', header)?.remove(); });
@@ -406,6 +389,6 @@
     });
   }
   function refreshProductLinks() { migrateProductStores(); renderBookmarksPage(); updateCartPanel(); renderCartPage(); normalizeCards(); }
-  function init() { loadSupportingScripts(); syncAccountState(); initNavigation(); initVittShowcase(); initFilters(); initCatalogControls(); initCarousels(); renderLoginPage(); renderAccountPage(); renderOrderPage(); renderBookmarksPage(); normalizeCards(); initProductPage(); updateCartPanel(); renderCartPage(); bindAuth(); bindLogout(); bindSupportForm(); handleClicks(); document.addEventListener('swedsnus:products-rendered', refreshProductLinks); }
+  function init() { loadSupportingScripts(); syncAccountState(); initNavigation(); initVittShowcase(); initFilters(); initCarousels(); renderLoginPage(); renderAccountPage(); renderOrderPage(); renderBookmarksPage(); normalizeCards(); initProductPage(); updateCartPanel(); renderCartPage(); bindAuth(); bindLogout(); bindSupportForm(); handleClicks(); document.addEventListener('swedsnus:products-rendered', refreshProductLinks); }
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
 })();
