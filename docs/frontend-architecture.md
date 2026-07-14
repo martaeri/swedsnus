@@ -26,19 +26,10 @@ Responsibilities:
 - `product-data.js`: product data and rendering.
 - `product-experience.js`: product visuals and carousels.
 - `catalog-filters.js`: catalog pills, sidebar filters, sorting and the mobile filter modal.
-- `cart.js`: sole live owner of cart additions, quantity changes, removals, storage, totals and cart rendering.
-- `auth.js`: live owner of authentication session state, login modal, auth tabs, login/logout actions and protected-route gating.
-- `bookmarks.js`: live owner of saved-product storage, bookmark button state, bookmark-page rendering and logged-in bookmark actions.
-- `account.js`: live owner of login-page, account-page and order-page rendering plus account tabs.
-- `main.js`: temporary coordinator for shared product-card normalization, navigation, carousels and prototype-only actions. Its legacy cart, bookmark, authentication and account functions are dormant and remain only until the final physical cleanup pass.
+- `cart.js`: cart additions, quantity changes, removals, storage, totals and cart rendering.
+- `auth.js`: authentication session state, login modal, auth tabs, login/logout actions and protected-route gating.
+- `bookmarks.js`: saved-product storage, bookmark button state, bookmark-page rendering and bookmark actions.
+- `account.js`: login-page, account-page and order-page rendering plus account tabs.
+- `main.js`: shared product-card normalization/navigation, homepage carousel and showcase setup, product-page quantity/pack controls, support forms and prototype-only actions.
 
-Migration order for `main.js`:
-
-1. Shared helpers in `commerce-core.js`.
-2. Live cart behavior in `cart.js`.
-3. Live bookmark behavior in `bookmarks.js`.
-4. Live authentication behavior in `auth.js`.
-5. Live account and order rendering in `account.js`.
-6. Remove dormant extracted code and keep `main.js` only for remaining coordination.
-
-New fixes should be made in the existing owner rather than added as one-off patch files.
+The feature extraction from `main.js` is complete. New work should modify the existing owner above instead of adding one-off patch files or duplicate listeners.
