@@ -1,6 +1,6 @@
 # Frontend architecture
 
-Interactive pages load `app.js` as the single application entry point.
+All pages load `app.js` as the single application entry point.
 
 Dependency order:
 
@@ -13,6 +13,7 @@ Dependency order:
 
 Responsibilities:
 
+- `app.js`: shared dependency selection and load order.
 - `layout.js`: shared layout and navigation.
 - `product-data.js`: product data and rendering.
 - `product-experience.js`: product visuals and carousels.
