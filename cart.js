@@ -4,7 +4,7 @@
   const Core = window.SwedsnusCore;
   if (!Core) throw new Error('SwedsnusCore must load before cart.js');
 
-  const { $, $$, keys, readStore, writeStore, escapeHtml, parsePrice } = Core;
+  const { $, $$, keys, readStore, writeStore, escapeHtml, parsePrice, slugify } = Core;
 
   function normalizeProduct(product = {}) {
     const href = window.SwedsnusProducts?.normalizeProductHref?.(product) || product.href || 'portion.html';
@@ -17,6 +17,50 @@
 
   function total(cart = items()) {
     return cart.reduce((sum, item) => sum + parsePrice(item.price) * (item.quantity || 1), 0);
+  }
+
+  function selectedOption(root) {
+    return $('.pack-select option:checked', root);
+  }
+
+  function selectedPack(root) {
+    const option = selectedOption(root);
+    return option?.dataset.pack || option?.textContent?.split('—')[0]?.trim() || $('.pack-option.selected', root)?.dataset.pack || '1-pack';
+  }
+
+  function selectedPrice(root) {
+    const option = selectedOption(root);
+    if (option?.dataset.price) return option.dataset.price;
+    const pack = $('.pack-option.selected', root);
+    if (pack?.dataset.price) return pack.dataset.price;
+    const price = $('.product-card-price', root) || $('.product-detail-price');
+    return (price?.childNodes?.[0]?.textContent || price?.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function productFromCard(card) {
+    const name = $('.product-card-name', card)?.textContent?.trim() || 'Produkt';
+    return normalizeProduct({
+      id: card.dataset.productId || slugify(name),
+      name,
+      badge: $('.product-card-badge', card)?.textContent?.trim() || '',
+      meta: $$('.product-card-meta', card).map(item => item.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean),
+      price: selectedPrice(card),
+      pack: selectedPack(card),
+      href: card.dataset.href || $('.product-card-main-link', card)?.getAttribute('href')
+    });
+  }
+
+  function productFromPage() {
+    const detail = $('.product-detail');
+    const name = $('.product-detail h1')?.textContent?.trim() || document.title.split('—')[0].trim() || 'Produkt';
+    return normalizeProduct({
+      id: detail?.dataset.productId || new URLSearchParams(location.search).get('id') || slugify(name),
+      name,
+      badge: $('.product-card-badge')?.textContent?.trim() || '',
+      meta: $$('.product-detail-meta-row').map(row => `${$('dt', row)?.textContent?.trim() || ''}: ${$('dd', row)?.textContent?.replace(/\s+/g, ' ')?.trim() || ''}`).filter(item => item.length > 2).slice(0, 3),
+      price: selectedPrice(document),
+      pack: selectedPack(document)
+    });
   }
 
   function metaMarkup(meta) {
@@ -88,12 +132,56 @@
     return true;
   }
 
+  function toast(message) {
+    let element = $('.toast');
+    if (!element) {
+      element = document.createElement('div');
+      element.className = 'toast';
+      document.body.appendChild(element);
+    }
+    element.textContent = message;
+    element.classList.add('show');
+    clearTimeout(element._timer);
+    element._timer = setTimeout(() => element.classList.remove('show'), 2200);
+  }
+
+  function bindInteractions() {
+    document.addEventListener('click', event => {
+      const action = event.target.closest('[data-cart-action]');
+      const cardButton = event.target.closest('.add-to-cart-btn');
+      const pageButton = event.target.closest('.add-to-cart-main .btn-primary');
+      if (!action && !cardButton && !pageButton) return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      if (action) {
+        handleAction(action);
+        return;
+      }
+
+      if (cardButton) {
+        const card = cardButton.closest('.product-card');
+        if (card) add(productFromCard(card));
+        cardButton.classList.add('added');
+        setTimeout(() => cardButton.classList.remove('added'), 900);
+      } else {
+        const quantity = parseInt($('.qty-display')?.value || '1', 10) || 1;
+        add(productFromPage(), quantity);
+      }
+      toast('Tillagd i kundvagnen');
+    }, true);
+  }
+
   function init() {
     refresh();
+    bindInteractions();
     window.addEventListener('storage', event => {
       if (event.key === keys.cart) refresh();
     });
+    document.addEventListener('swedsnus:products-rendered', refresh);
   }
 
   window.SwedsnusCart = { add, handleAction, items, total, updatePanel, renderPage, refresh, init };
+  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
 })();

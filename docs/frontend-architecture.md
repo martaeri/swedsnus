@@ -23,15 +23,15 @@ Responsibilities:
 - `product-data.js`: product data and rendering.
 - `product-experience.js`: product visuals and carousels.
 - `catalog-filters.js`: catalog pills, sidebar filters, sorting and the mobile filter modal.
-- `cart.js`: cart storage, totals, cart panel rendering, cart page rendering and cart actions.
-- `main.js`: temporary coordinator for product cards, bookmarks, authentication and account behavior while those areas are moved into focused modules.
+- `cart.js`: sole live owner of cart additions, quantity changes, removals, storage, totals and cart rendering.
+- `main.js`: temporary coordinator for product cards, bookmarks, authentication and account behavior. Its legacy cart functions are dormant and remain only until the final physical cleanup pass.
 
 Migration order for `main.js`:
 
 1. Shared helpers in `commerce-core.js`.
-2. Cart behavior in `cart.js`.
+2. Live cart behavior in `cart.js`.
 3. Bookmark behavior in a focused module.
 4. Authentication and account behavior in focused modules.
-5. Keep `main.js` only for remaining coordination.
+5. Remove dormant cart code and keep `main.js` only for remaining coordination.
 
 New fixes should be made in the existing owner rather than added as one-off patch files.
