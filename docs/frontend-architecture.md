@@ -12,8 +12,9 @@ Dependency order:
 6. `product-experience.js`
 7. `catalog-filters.js` on catalog pages
 8. `cart.js`
-9. `bookmarks.js`
-10. `main.js`
+9. `auth.js`
+10. `bookmarks.js`
+11. `main.js`
 
 Responsibilities:
 
@@ -25,15 +26,17 @@ Responsibilities:
 - `product-experience.js`: product visuals and carousels.
 - `catalog-filters.js`: catalog pills, sidebar filters, sorting and the mobile filter modal.
 - `cart.js`: sole live owner of cart additions, quantity changes, removals, storage, totals and cart rendering.
+- `auth.js`: live owner of authentication session state, login modal, auth tabs, login/logout actions and protected-route gating.
 - `bookmarks.js`: live owner of saved-product storage, bookmark button state, bookmark-page rendering and logged-in bookmark actions.
-- `main.js`: temporary coordinator for product cards, authentication and account behavior. Its legacy cart and bookmark functions are dormant and remain only until the final physical cleanup pass.
+- `main.js`: temporary coordinator for product cards and account/order page rendering. Its legacy cart, bookmark and authentication functions are dormant and remain only until the final physical cleanup pass.
 
 Migration order for `main.js`:
 
 1. Shared helpers in `commerce-core.js`.
 2. Live cart behavior in `cart.js`.
 3. Live bookmark behavior in `bookmarks.js`.
-4. Authentication and account behavior in focused modules.
-5. Remove dormant cart/bookmark code and keep `main.js` only for remaining coordination.
+4. Live authentication behavior in `auth.js`.
+5. Move account and order page rendering into a focused module.
+6. Remove dormant cart/bookmark/authentication code and keep `main.js` only for remaining coordination.
 
 New fixes should be made in the existing owner rather than added as one-off patch files.
