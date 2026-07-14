@@ -2,7 +2,7 @@
   if (window.__swedsnusCatalogFiltersLoaded) return;
   window.__swedsnusCatalogFiltersLoaded = true;
 
-  const $ = (selector, root = document) => root ? root.querySelector(selector) : null;
+  const $ = (selector, root = document) => root?.querySelector(selector) || null;
   const $$ = (selector, root = document) => root ? Array.from(root.querySelectorAll(selector)) : [];
   const savedFilters = {};
   const portaledSidebars = new WeakMap();
@@ -20,7 +20,7 @@
       .category-pills .filter-pill-subtitle { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .category-pills .filter-pill-close { position: relative; z-index: 3; flex: 0 0 18px; pointer-events: none; }
       .catalog-filter-close { width: 100%; min-height: 42px; margin-top: .85rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-footer-bg); color: #fff; font-family: var(--font-body); font-size: .78rem; font-weight: 800; }
-      .catalog-filter-overlay.show { position: fixed; inset: 0; z-index: 3000 !important; background: rgba(18, 17, 14, .38); }
+      .catalog-filter-overlay.show { position: fixed !important; inset: 0 !important; z-index: 2147483646 !important; background: rgba(18, 17, 14, .38); pointer-events: none !important; }
       @media (max-width: 720px) {
         body.catalog-filter-open { overflow: hidden; }
         .category-pills { gap: .45rem; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
@@ -40,7 +40,8 @@
           top: 50dvh !important;
           bottom: auto !important;
           transform: translate3d(0, -50%, 0) !important;
-          z-index: 3001 !important;
+          z-index: 2147483647 !important;
+          isolation: isolate !important;
           display: flex !important;
           flex-direction: column;
           width: auto !important;
@@ -54,37 +55,21 @@
           background: var(--color-surface);
           box-shadow: 0 24px 70px rgba(34,31,25,.24);
           margin: 0 !important;
-          pointer-events: auto;
+          pointer-events: auto !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+          mix-blend-mode: normal !important;
         }
-        .filter-sidebar.mobile-filter-open .catalog-filter-scroll {
-          flex: 1 1 auto;
-          min-height: 0;
-          overflow-y: auto;
-          padding-right: .2rem;
-          margin-right: -.2rem;
-          overscroll-behavior: contain;
-        }
+        .filter-sidebar.mobile-filter-open * { pointer-events: auto !important; }
+        .filter-sidebar.mobile-filter-open .catalog-filter-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: .2rem; margin-right: -.2rem; overscroll-behavior: contain; }
         .filter-sidebar.mobile-filter-open .sidebar-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem .6rem; margin: 0 0 .75rem; }
         .filter-sidebar.mobile-filter-open .sidebar-group h4 { grid-column: 1 / -1; margin: 0 0 .1rem; }
         .filter-sidebar.mobile-filter-open .sidebar-check { min-height: 30px; }
-        .filter-sidebar.mobile-filter-open .catalog-filter-close {
-          flex: 0 0 auto;
-          align-self: flex-end;
-          width: auto;
-          min-width: 132px;
-          min-height: 40px;
-          margin: .75rem 0 0;
-          padding: 0 1.05rem;
-          border-radius: 999px;
-          box-shadow: none;
-        }
+        .filter-sidebar.mobile-filter-open .catalog-filter-close { flex: 0 0 auto; align-self: flex-end; width: auto; min-width: 132px; min-height: 40px; margin: .75rem 0 0; padding: 0 1.05rem; border-radius: 999px; box-shadow: none; }
       }
       @supports not (height: 100dvh) {
         @media (max-width: 720px) {
-          .filter-sidebar.mobile-filter-open {
-            top: 50vh !important;
-            max-height: min(76vh, 620px);
-          }
+          .filter-sidebar.mobile-filter-open { top: 50vh !important; max-height: min(76vh, 620px); }
         }
       }
       @media (max-width: 380px) {
@@ -114,16 +99,15 @@
   function normalizePillLabels(catalog) {
     $$('.filter-pill-title', catalog).forEach(title => {
       const text = title.textContent.trim();
-      title.setAttribute('title', text);
+      title.title = text;
       if (text === 'Expressaromer') title.innerHTML = 'Express-<br>aromer';
       if (text === 'Portionssnus') title.innerHTML = 'Portions-<br>snus';
     });
   }
 
   function readSidebarFilters(catalog) {
-    const sidebar = sidebarFor(catalog);
     const filters = {};
-    $$('.filter-sidebar [data-filter-group]', sidebar || catalog).forEach(group => {
+    $$('.filter-sidebar [data-filter-group]', sidebarFor(catalog) || catalog).forEach(group => {
       const selected = $$('input:checked', group).map(input => input.value);
       if (selected.length) filters[group.dataset.filterGroup] = selected;
     });
@@ -144,28 +128,17 @@
     });
   }
 
-  function activeSeries(catalog) {
-    return $('.filter-pill.active[data-series]', catalog)?.dataset.series || '';
-  }
-
-  function cardMatches(card, series, filters) {
-    if (series && card.dataset.series !== series) return false;
-    return Object.entries(filters).every(([key, selected]) => {
-      if (!selected.length) return true;
-      const value = card.dataset[key] || '';
-      if (key === 'taste') return selected.some(item => value.split('|').includes(item));
-      return selected.includes(value);
-    });
-  }
-
   function applyCatalogFilters(catalog) {
     restoreSidebarFilters(catalog);
     const filters = readSidebarFilters(catalog);
-    const series = activeSeries(catalog);
+    const series = $('.filter-pill.active[data-series]', catalog)?.dataset.series || '';
     let visibleCount = 0;
 
     $$('.product-grid .product-card', catalog).forEach(card => {
-      const visible = cardMatches(card, series, filters);
+      const visible = (!series || card.dataset.series === series) && Object.entries(filters).every(([key, selected]) => {
+        const value = card.dataset[key] || '';
+        return key === 'taste' ? selected.some(item => value.split('|').includes(item)) : selected.includes(value);
+      });
       card.classList.toggle('is-hidden', !visible);
       card.toggleAttribute('hidden', !visible);
       if (visible) visibleCount += 1;
@@ -176,23 +149,32 @@
     $('.catalog-empty', catalog)?.classList.toggle('show', visibleCount === 0);
   }
 
-  function setLayering(sidebar, overlay) {
-    if (overlay) overlay.style.zIndex = '3000';
-    if (sidebar) sidebar.style.zIndex = '3001';
+  function priceOf(card) {
+    return parseInt(($('.product-card-price', card)?.textContent || '').replace(/\s/g, '').match(/[0-9]+/)?.[0] || '0', 10);
   }
 
-  function clearLayering(sidebar, overlay) {
-    if (overlay) overlay.style.removeProperty('z-index');
-    if (sidebar) sidebar.style.removeProperty('z-index');
+  function sortGrid(grid, mode) {
+    const cards = $$('.product-card', grid);
+    cards.forEach((card, index) => {
+      if (!card.dataset.originalIndex) card.dataset.originalIndex = index;
+    });
+    cards.sort((a, b) => {
+      const an = $('.product-card-name', a)?.textContent?.trim() || '';
+      const bn = $('.product-card-name', b)?.textContent?.trim() || '';
+      if (mode === 'price-asc') return priceOf(a) - priceOf(b);
+      if (mode === 'price-desc') return priceOf(b) - priceOf(a);
+      if (mode === 'alpha') return an.localeCompare(bn, 'sv');
+      if (mode === 'alpha-desc') return bn.localeCompare(an, 'sv');
+      if (mode === 'newest') return Number(b.dataset.originalIndex) - Number(a.dataset.originalIndex);
+      return Number(a.dataset.originalIndex) - Number(b.dataset.originalIndex);
+    }).forEach(card => grid.appendChild(card));
   }
 
   function portalSidebar(catalog) {
     const sidebar = sidebarFor(catalog);
     if (!sidebar) return null;
-    const key = prepareCatalog(catalog);
-    sidebar.dataset.catalogFilterKey = key;
+    sidebar.dataset.catalogFilterKey = prepareCatalog(catalog);
     if (sidebar.parentNode === document.body) return sidebar;
-
     const placeholder = document.createComment('catalog filter sidebar');
     sidebar.parentNode.insertBefore(placeholder, sidebar);
     portaledSidebars.set(sidebar, { parent: placeholder.parentNode, placeholder });
@@ -202,34 +184,41 @@
 
   function restoreSidebarPosition(catalog) {
     const sidebar = sidebarFor(catalog);
-    const record = sidebar ? portaledSidebars.get(sidebar) : null;
+    const record = sidebar && portaledSidebars.get(sidebar);
     if (!sidebar || !record?.placeholder?.parentNode) return;
     record.parent.insertBefore(sidebar, record.placeholder);
     record.placeholder.remove();
     portaledSidebars.delete(sidebar);
   }
 
-  function closeDrawer(catalog) {
+  function ensureOverlay() {
+    let overlay = $('.catalog-filter-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'catalog-filter-overlay';
+      document.body.appendChild(overlay);
+    }
+    return overlay;
+  }
+
+  function closeDrawer(catalog, apply = true) {
     const sidebar = sidebarFor(catalog);
-    const overlay = $('.catalog-filter-overlay');
     sidebar?.classList.remove('mobile-filter-open');
-    overlay?.classList.remove('show');
-    clearLayering(sidebar, overlay);
+    $('.catalog-filter-overlay')?.classList.remove('show');
     document.body.classList.remove('catalog-filter-open');
     $('.catalog-filter-toggle', catalog)?.setAttribute('aria-expanded', 'false');
     restoreSidebarPosition(catalog);
     activeCatalog = null;
+    if (apply) applyCatalogFilters(catalog);
   }
 
   function openDrawer(catalog) {
     const sidebar = portalSidebar(catalog);
     if (!sidebar) return;
     const overlay = ensureOverlay();
-    document.body.appendChild(overlay);
-    document.body.appendChild(sidebar);
+    document.body.append(overlay, sidebar);
     activeCatalog = catalog;
     restoreSidebarFilters(catalog);
-    setLayering(sidebar, overlay);
     sidebar.classList.add('mobile-filter-open');
     overlay.classList.add('show');
     document.body.classList.add('catalog-filter-open');
@@ -242,33 +231,9 @@
     if (sidebar.classList.contains('mobile-filter-open')) {
       saveSidebarFilters(catalog);
       closeDrawer(catalog);
-      applyCatalogFilters(catalog);
     } else {
       openDrawer(catalog);
     }
-  }
-
-  function ensureOverlay() {
-    let overlay = $('.catalog-filter-overlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.className = 'catalog-filter-overlay';
-      document.body.appendChild(overlay);
-    }
-    overlay.style.zIndex = '3000';
-    if (overlay.dataset.catalogFilterFixBound !== 'true') {
-      overlay.dataset.catalogFilterFixBound = 'true';
-      overlay.addEventListener('click', event => {
-        event.preventDefault();
-        const catalog = activeCatalog || $('.catalog-page[data-catalog-filter]');
-        if (catalog) {
-          saveSidebarFilters(catalog);
-          closeDrawer(catalog);
-          applyCatalogFilters(catalog);
-        }
-      }, true);
-    }
-    return overlay;
   }
 
   function ensureFilterScroll(sidebar, close) {
@@ -308,8 +273,8 @@
     ensureFilterScroll(sidebar, close);
 
     const toggle = $('.catalog-filter-toggle', controls);
-    if (toggle && toggle.dataset.catalogFilterFixBound !== 'true') {
-      toggle.dataset.catalogFilterFixBound = 'true';
+    if (toggle && !toggle.dataset.bound) {
+      toggle.dataset.bound = 'true';
       toggle.addEventListener('click', event => {
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -317,15 +282,23 @@
       }, true);
     }
 
-    if (close.dataset.catalogFilterFixBound !== 'true') {
-      close.dataset.catalogFilterFixBound = 'true';
+    if (!close.dataset.bound) {
+      close.dataset.bound = 'true';
       close.addEventListener('click', event => {
         event.preventDefault();
         event.stopImmediatePropagation();
         saveSidebarFilters(catalog);
         closeDrawer(catalog);
-        applyCatalogFilters(catalog);
       }, true);
+    }
+
+    const sort = $('.catalog-sort-select', controls);
+    if (sort && !sort.dataset.bound) {
+      sort.dataset.bound = 'true';
+      sort.addEventListener('change', () => {
+        const grid = $('.product-grid', catalog);
+        if (grid) sortGrid(grid, sort.value);
+      });
     }
   }
 
@@ -343,11 +316,23 @@
 
   document.addEventListener('click', event => {
     const pill = event.target.closest('.filter-pill[data-series]');
-    if (!pill) return;
-    const catalog = pill.closest('.catalog-page[data-catalog-filter]');
-    if (!catalog) return;
-    requestAnimationFrame(() => applyCatalogFilters(catalog));
-  });
+    if (pill) {
+      const catalog = pill.closest('.catalog-page[data-catalog-filter]');
+      if (catalog) requestAnimationFrame(() => applyCatalogFilters(catalog));
+      return;
+    }
+
+    if (!document.body.classList.contains('catalog-filter-open')) return;
+    const sidebar = $('.filter-sidebar.mobile-filter-open');
+    if (!sidebar || sidebar.contains(event.target) || event.target.closest('.catalog-filter-toggle')) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const catalog = activeCatalog || $('.catalog-page[data-catalog-filter]');
+    if (catalog) {
+      saveSidebarFilters(catalog);
+      closeDrawer(catalog);
+    }
+  }, true);
 
   document.addEventListener('change', event => {
     const input = event.target.closest('.filter-sidebar input');
