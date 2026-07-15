@@ -282,10 +282,10 @@
 
 @media (min-width: 1181px) {
   .theme-8 .catalog-page-with-external-sidebar {
-    width: min(1440px, calc(100% - 2rem));
+    width: min(1500px, calc(100% - 2rem));
     max-width: none;
     display: grid;
-    grid-template-columns: 220px minmax(0, 960px) 220px;
+    grid-template-columns: 250px minmax(0, 960px) 250px;
     column-gap: 1.5rem;
     align-items: start;
     justify-content: center;
@@ -299,12 +299,30 @@
 
   .theme-8 .catalog-page-with-external-sidebar > .filter-sidebar {
     grid-column: 1;
-    grid-row: 1 / span 3;
-    width: 220px;
-    margin-top: 0;
+    grid-row: 3;
+    width: 250px;
+    margin-top: 1.55rem;
     position: sticky;
-    top: 130px;
-    padding: 1.1rem;
+    top: 106px;
+    max-height: calc(100dvh - 122px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    padding: 1.15rem;
+  }
+
+  .theme-8 .catalog-page-with-external-sidebar > .filter-sidebar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .theme-8 .catalog-page-with-external-sidebar > .filter-sidebar::-webkit-scrollbar-thumb {
+    background: #b7c7d8;
+    border: 2px solid #ffffff;
+    border-radius: 999px;
+  }
+
+  .theme-8 .catalog-page-with-external-sidebar > .filter-sidebar::-webkit-scrollbar-track {
+    background: transparent;
   }
 
   .theme-8 .catalog-page-with-external-sidebar .catalog-tools {
