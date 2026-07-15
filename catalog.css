@@ -1,3 +1,13 @@
+.catalog-page-with-external-sidebar {
+  --catalog-layout-max-width: 1500px;
+  --catalog-sidebar-width: 250px;
+  --catalog-content-width: 960px;
+  --catalog-layout-gap: 1.5rem;
+  --catalog-sticky-top: 198px;
+  --catalog-viewport-bottom-gap: 28px;
+  --catalog-sidebar-max-height: min(68dvh, calc(100dvh - var(--catalog-sticky-top) - var(--catalog-viewport-bottom-gap)));
+}
+
 .catalog-page .catalog-intro {
   max-width: 620px;
   color: var(--color-text-muted);
@@ -278,11 +288,11 @@
 
 @media (min-width: 1181px) {
   .catalog-page-with-external-sidebar {
-    width: min(1500px, calc(100% - 2rem));
+    width: min(var(--catalog-layout-max-width), calc(100% - 2rem));
     max-width: none;
     display: grid;
-    grid-template-columns: 250px minmax(0, 960px) 250px;
-    column-gap: 1.5rem;
+    grid-template-columns: var(--catalog-sidebar-width) minmax(0, var(--catalog-content-width)) var(--catalog-sidebar-width);
+    column-gap: var(--catalog-layout-gap);
     align-items: start;
     justify-content: center;
   }
@@ -296,11 +306,11 @@
   .catalog-page-with-external-sidebar > .filter-sidebar {
     grid-column: 1;
     grid-row: 3;
-    width: 250px;
+    width: var(--catalog-sidebar-width);
     margin-top: 1.55rem;
     position: sticky;
-    top: 198px;
-    max-height: min(68dvh, calc(100dvh - 226px));
+    top: var(--catalog-sticky-top);
+    max-height: var(--catalog-sidebar-max-height);
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
