@@ -141,10 +141,6 @@
   white-space: nowrap;
 }
 
-.catalog-page .filter-sidebar {
-  top: 168px;
-}
-
 .catalog-page .catalog-filter-close {
   display: none;
 }
@@ -303,8 +299,8 @@
     width: 250px;
     margin-top: 1.55rem;
     position: sticky;
-    top: 168px;
-    max-height: min(68dvh, calc(100dvh - 196px));
+    top: 198px;
+    max-height: min(68dvh, calc(100dvh - 226px));
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
