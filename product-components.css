@@ -79,6 +79,7 @@
 .catalog-page > [data-nicotine-warning="white-catalog"] {
   width: 100%;
   margin: 0 0 1.2rem;
+  text-align: center;
 }
 
 .vitt-showcase-copy .nicotine-health-warning,
@@ -106,7 +107,7 @@
 
 @media (min-width: 1181px) {
   .vitt-page .catalog-page-with-external-sidebar > [data-nicotine-warning="white-catalog"] {
-    grid-column: 1 / -1;
+    grid-column: 2;
     grid-row: 2;
   }
 
