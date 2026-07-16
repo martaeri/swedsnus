@@ -4,7 +4,7 @@ All pages load `app.js` as the single application entry point.
 
 Dependency order:
 
-1. `commerce.css`, `themes.css` and `product-components.css`
+1. `commerce.css`, `themes.css`, `product-components.css` and `seo-content.css`
 2. `commerce-core.js`
 3. `ui-feedback.js`
 4. `ui-popovers.js`
@@ -19,7 +19,8 @@ Dependency order:
 13. `bookmarks.js`
 14. `account.js`
 15. `main.js`
-16. `legal-content.js`
+16. `seo-content.js`
+17. `legal-content.js`
 
 Responsibilities:
 
@@ -28,6 +29,7 @@ Responsibilities:
 - `themes.css`: theme-specific visual overrides. It should change colors, typography, borders, radii and decorative presentation without owning structural page layout.
 - `commerce.css`: shared commerce-component structure and responsive behavior used across product cards, cart, bookmarks, account and product pages.
 - `product-components.css`: reusable product-component presentation that is not tied to one page type, including the single shared visual definition for product-related legal notices and the shared product-information cards.
+- `seo-content.css`: shared presentation for visible knowledge sections, category information, guide resources and FAQ content.
 - `catalog.css`: assortment-page structure, category pills, catalog filters, external filter-sidebar placement, catalog product-grid behavior and catalog-specific responsive rules.
 - `commerce-core.js`: shared storage keys, local/session storage access, selectors and common formatting utilities.
 - `ui-feedback.js`: shared toast creation, timing and display behavior.
@@ -43,6 +45,7 @@ Responsibilities:
 - `bookmarks.js`: saved-product storage, bookmark button state, bookmark-page rendering and bookmark actions.
 - `account.js`: login-page, account-page and order-page rendering plus account tabs.
 - `main.js`: shared product-card normalization/navigation, homepage carousel and showcase setup, product-page quantity/pack controls, support forms and prototype-only actions.
+- `seo-content.js`: guide resource enhancement, FAQ navigation and guide metadata. Main SEO copy remains visible in the relevant HTML templates.
 - `legal-content.js`: shared age messaging, footer regulation copy, creation of the centralized nicotine-warning component and placement of that component wherever tobacco-free nicotine products are presented.
 
 CSS ownership rules:
@@ -57,6 +60,8 @@ CSS ownership rules:
 Catalog layout tokens are owned by `catalog.css` on `.catalog-page-with-external-sidebar`. The sidebar width, centered content width and layout gap must be changed through those tokens rather than repeated numeric values inside component rules.
 
 Long-form product-page content must be created through `product-content.js`. Product templates and product-data rendering must not duplicate the section markup or category-specific placeholder copy. The shared visual treatment is owned by `product-components.css`.
+
+SEO and informational content intended for indexing should be written visibly in the relevant page HTML whenever practical. `seo-content.js` may enhance navigation or add secondary guide resources, but must not hide keyword blocks, duplicate visible copy or create content solely for crawlers.
 
 Legal notices and wording shared across pages must be handled by `legal-content.js`. The nicotine warning must always be created through its shared component factory and use the single `.nicotine-health-warning` presentation in `product-components.css`. Page layouts may control where the component is placed, but must not change its typography, padding, border or other visual treatment. Page-specific factual company information remains in the relevant HTML page, while required warnings and global age or regulation copy must not be duplicated in individual templates.
 
