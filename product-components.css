@@ -79,9 +79,15 @@
 }
 
 .nicotine-health-warning-text {
+  display: block;
+  width: 100%;
+  max-width: none;
   margin: 0;
+  padding: 0;
   color: inherit;
   font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .catalog-page > [data-nicotine-warning="white-catalog"] {
