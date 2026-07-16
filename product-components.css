@@ -76,6 +76,11 @@
   line-height: 1.45;
 }
 
+.catalog-page > [data-nicotine-warning="white-catalog"] {
+  width: 100%;
+  margin: 0 0 1.2rem;
+}
+
 .vitt-showcase-copy .nicotine-health-warning,
 .product-detail .nicotine-health-warning {
   width: 100%;
@@ -99,6 +104,22 @@
   padding-bottom: 1.15rem;
 }
 
+@media (min-width: 1181px) {
+  .vitt-page .catalog-page-with-external-sidebar > [data-nicotine-warning="white-catalog"] {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .vitt-page .catalog-page-with-external-sidebar > .category-pills {
+    grid-row: 3;
+  }
+
+  .vitt-page .catalog-page-with-external-sidebar > .filter-sidebar,
+  .vitt-page .catalog-page-with-external-sidebar > .catalog-tools {
+    grid-row: 4;
+  }
+}
+
 @media (max-width: 720px) {
   .product-choice-grid {
     grid-template-columns: 1fr;
@@ -111,6 +132,10 @@
   .nicotine-health-warning {
     margin-top: .7rem;
     font-size: .74rem;
+  }
+
+  .catalog-page > [data-nicotine-warning="white-catalog"] {
+    margin-top: 0;
   }
 
   .cart-panel .nicotine-health-warning {
