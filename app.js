@@ -35,7 +35,7 @@
   }
 
   async function start() {
-    ['commerce.css', 'themes.css', 'product-components.css'].forEach(ensureStylesheet);
+    ['commerce.css', 'themes.css', 'product-components.css', 'seo-content.css'].forEach(ensureStylesheet);
 
     await loadScript('commerce-core.js');
     await loadScript('ui-feedback.js');
@@ -58,6 +58,7 @@
     await loadScript('bookmarks.js');
     await loadScript('account.js');
     await loadScript('main.js');
+    await loadScript('seo-content.js');
     await loadScript('legal-content.js');
     document.dispatchEvent(new CustomEvent('swedsnus:app-ready'));
   }
