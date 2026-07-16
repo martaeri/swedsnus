@@ -12,13 +12,14 @@ Dependency order:
 6. `product-data.js`
 7. `product-records.js`
 8. `product-experience.js`
-9. `catalog-filters.js` on catalog pages
-10. `cart.js`
-11. `auth.js`
-12. `bookmarks.js`
-13. `account.js`
-14. `main.js`
-15. `legal-content.js`
+9. `product-content.js` on product pages
+10. `catalog-filters.js` on catalog pages
+11. `cart.js`
+12. `auth.js`
+13. `bookmarks.js`
+14. `account.js`
+15. `main.js`
+16. `legal-content.js`
 
 Responsibilities:
 
@@ -26,7 +27,7 @@ Responsibilities:
 - `styles.css`: base design tokens, global layout primitives, header, navigation, footer and general component foundations.
 - `themes.css`: theme-specific visual overrides. It should change colors, typography, borders, radii and decorative presentation without owning structural page layout.
 - `commerce.css`: shared commerce-component structure and responsive behavior used across product cards, cart, bookmarks, account and product pages.
-- `product-components.css`: reusable product-component presentation that is not tied to one page type, including the single shared visual definition for product-related legal notices.
+- `product-components.css`: reusable product-component presentation that is not tied to one page type, including the single shared visual definition for product-related legal notices and the shared product-information cards.
 - `catalog.css`: assortment-page structure, category pills, catalog filters, external filter-sidebar placement, catalog product-grid behavior and catalog-specific responsive rules.
 - `commerce-core.js`: shared storage keys, local/session storage access, selectors and common formatting utilities.
 - `ui-feedback.js`: shared toast creation, timing and display behavior.
@@ -35,6 +36,7 @@ Responsibilities:
 - `product-data.js`: product data and rendering.
 - `product-records.js`: product URL normalization, selected pack/price lookup, metadata extraction and shared product-record creation from cards or product pages.
 - `product-experience.js`: product visuals and carousels.
+- `product-content.js`: shared long-form product-page sections, category-specific placeholder copy and the ingredients panel for portionssnus, lössnus, Gör Eget and vitt snus.
 - `catalog-filters.js`: catalog pills, sidebar filters, sorting and the mobile filter modal.
 - `cart.js`: cart additions, quantity changes, removals, storage, totals and cart rendering.
 - `auth.js`: authentication session state, login modal, auth tabs, login/logout actions and protected-route gating.
@@ -53,6 +55,8 @@ CSS ownership rules:
 6. New fixes should update the existing owner instead of adding a patch stylesheet, page-specific override or duplicate selector.
 
 Catalog layout tokens are owned by `catalog.css` on `.catalog-page-with-external-sidebar`. The sidebar width, centered content width and layout gap must be changed through those tokens rather than repeated numeric values inside component rules.
+
+Long-form product-page content must be created through `product-content.js`. Product templates and product-data rendering must not duplicate the section markup or category-specific placeholder copy. The shared visual treatment is owned by `product-components.css`.
 
 Legal notices and wording shared across pages must be handled by `legal-content.js`. The nicotine warning must always be created through its shared component factory and use the single `.nicotine-health-warning` presentation in `product-components.css`. Page layouts may control where the component is placed, but must not change its typography, padding, border or other visual treatment. Page-specific factual company information remains in the relevant HTML page, while required warnings and global age or regulation copy must not be duplicated in individual templates.
 

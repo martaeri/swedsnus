@@ -45,6 +45,10 @@
     await loadScript('product-records.js');
     await loadScript('product-experience.js');
 
+    if (document.querySelector('.product-page')) {
+      await loadScript('product-content.js');
+    }
+
     if (document.querySelector('.catalog-page[data-catalog-filter]')) {
       await loadScript('catalog-filters.js');
     }

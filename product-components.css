@@ -100,6 +100,70 @@ main > [data-nicotine-warning="white-showcase"] {
   margin-bottom: .75rem;
 }
 
+.product-information {
+  display: grid;
+  gap: 1rem;
+  margin-top: clamp(1.75rem, 4vw, 3rem);
+}
+
+.product-information-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.product-information-card,
+.product-ingredients-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: 0 14px 34px var(--color-card-shadow);
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.product-information-card h2,
+.product-ingredients-card h2 {
+  margin: 0 0 .85rem;
+  color: var(--color-text);
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+}
+
+.product-information-kicker {
+  margin: 0 0 .45rem;
+  color: var(--color-accent);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.product-information-guide {
+  margin: 0 0 1rem;
+  color: var(--color-text);
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.product-information-body {
+  color: var(--color-text-muted);
+  line-height: 1.75;
+}
+
+.product-information-body p {
+  margin: 0;
+}
+
+.product-information-body p + p {
+  margin-top: .85rem;
+}
+
+.product-ingredients-card {
+  display: grid;
+  grid-template-columns: minmax(210px, .38fr) minmax(0, 1fr);
+  gap: clamp(1rem, 3vw, 2rem);
+  align-items: start;
+}
+
 .vitt-showcase-track-wrap {
   padding-top: clamp(1.35rem, 3vw, 1.9rem);
   padding-bottom: clamp(1.35rem, 3vw, 1.9rem);
@@ -137,6 +201,16 @@ main > [data-nicotine-warning="white-showcase"] {
 
   .catalog-page > [data-nicotine-warning="white-catalog"] {
     margin-top: 0;
+  }
+
+  .product-information-grid,
+  .product-ingredients-card {
+    grid-template-columns: 1fr;
+  }
+
+  .product-information-card,
+  .product-ingredients-card {
+    padding: 1.15rem;
   }
 
   .vitt-showcase-track-wrap {
