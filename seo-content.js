@@ -2,10 +2,23 @@
   if (window.__swedsnusSeoContentLoaded) return;
   window.__swedsnusSeoContentLoaded = true;
 
+  function ensureMetaDescription(content) {
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'description';
+      document.head.appendChild(meta);
+    }
+    meta.content = content;
+  }
+
   function addGuideResources() {
     if (document.body.dataset.page !== 'guide') return;
-    if (document.querySelector('[data-guide-resources]')) return;
 
+    document.title = 'Beredningsguide för lössnus och Gör Eget — Swedsnus';
+    ensureMetaDescription('Beredningsguide för Lössnus Instant, Lössnus Express, Instant Portion och Super Dry med vattenmängder, steg, förvaring och vanliga frågor.');
+
+    if (document.querySelector('[data-guide-resources]')) return;
     const guideTips = document.querySelector('.guide-tips');
     const main = document.querySelector('main');
     if (!main) return;
@@ -28,8 +41,27 @@
     else main.appendChild(section);
   }
 
+  function connectFaqNavigation() {
+    document.querySelectorAll('.site-footer a').forEach(link => {
+      if (['faq', 'vanliga frågor'].includes(link.textContent.trim().toLowerCase())) {
+        link.href = 'faq.html';
+        link.textContent = 'Vanliga frågor';
+      }
+    });
+
+    const secondaryLinks = document.querySelector('.hamburger-secondary-links');
+    if (secondaryLinks && !secondaryLinks.querySelector('a[href="faq.html"]')) {
+      const link = document.createElement('a');
+      link.className = 'hamburger-link hamburger-link-secondary';
+      link.href = 'faq.html';
+      link.innerHTML = '<span>Vanliga frågor</span><span class="hamburger-arrow" aria-hidden="true">›</span>';
+      secondaryLinks.appendChild(link);
+    }
+  }
+
   function refresh() {
     addGuideResources();
+    connectFaqNavigation();
   }
 
   document.addEventListener('swedsnus:layout-rendered', refresh);
