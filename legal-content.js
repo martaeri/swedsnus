@@ -6,22 +6,49 @@
   const TOBACCO_FREE = 'Tobaksfri';
   const $ = (selector, root = document) => root ? root.querySelector(selector) : null;
   const $$ = (selector, root = document) => root ? Array.from(root.querySelectorAll(selector)) : [];
+  const warningSelector = context => `[data-nicotine-warning="${context}"]`;
 
   function warningElement(context) {
-    const warning = document.createElement('p');
+    const warning = document.createElement('aside');
     warning.className = 'nicotine-health-warning';
     warning.dataset.nicotineWarning = context;
-    warning.textContent = NICOTINE_WARNING;
+    warning.setAttribute('role', 'note');
+    warning.setAttribute('aria-label', 'Nikotinvarning');
+
+    const text = document.createElement('p');
+    text.className = 'nicotine-health-warning-text';
+    text.textContent = NICOTINE_WARNING;
+    warning.appendChild(text);
     return warning;
   }
 
+  function existingWarning(context, root = document) {
+    return $(warningSelector(context), root);
+  }
+
   function ensureWarning(container, context, position = 'afterbegin') {
-    if (!container || $(`[data-nicotine-warning="${context}"]`, container)) return;
-    container.insertAdjacentElement(position, warningElement(context));
+    if (!container) return null;
+    const warning = existingWarning(context, container) || warningElement(context);
+    if (!warning.isConnected || warning.parentElement !== container) container.insertAdjacentElement(position, warning);
+    return warning;
+  }
+
+  function placeWarningBefore(target, context) {
+    if (!target?.parentNode) return null;
+    const warning = existingWarning(context) || warningElement(context);
+    if (warning.nextElementSibling !== target || warning.parentElement !== target.parentElement) target.parentNode.insertBefore(warning, target);
+    return warning;
+  }
+
+  function placeWarningAfter(target, context) {
+    if (!target?.parentNode) return null;
+    const warning = existingWarning(context) || warningElement(context);
+    if (target.nextElementSibling !== warning) target.insertAdjacentElement('afterend', warning);
+    return warning;
   }
 
   function removeWarning(container, context) {
-    $(`[data-nicotine-warning="${context}"]`, container)?.remove();
+    existingWarning(context, container)?.remove();
   }
 
   function productRow(product = {}) {
@@ -60,14 +87,14 @@
   function updateCartPanelWarnings() {
     const hasTobaccoFreeItem = storedItemsContainTobaccoFree(window.SwedsnusCart?.items?.() || []);
     $$('.cart-panel').forEach(panel => {
-      const existing = $('[data-nicotine-warning="cart-panel"]', panel);
+      const existing = existingWarning('cart-panel', panel);
       if (!hasTobaccoFreeItem) {
         existing?.remove();
         return;
       }
-      if (existing) return;
       const footer = $('.cart-panel-footer', panel);
-      footer ? footer.insertAdjacentElement('beforebegin', warningElement('cart-panel')) : ensureWarning(panel, 'cart-panel', 'beforeend');
+      if (footer) placeWarningBefore(footer, 'cart-panel');
+      else ensureWarning(panel, 'cart-panel', 'beforeend');
     });
   }
 
@@ -76,7 +103,7 @@
     const whiteCatalog = document.body.dataset.page === 'vitt-snus' ? $('.catalog-page') : null;
     if (whiteCatalog) {
       const intro = $('.catalog-intro', whiteCatalog);
-      if (intro && !whiteCatalog.querySelector('[data-nicotine-warning="white-catalog"]')) intro.insertAdjacentElement('afterend', warningElement('white-catalog'));
+      if (intro) placeWarningAfter(intro, 'white-catalog');
     }
 
     const productDetail = $('.product-detail');
@@ -87,12 +114,15 @@
         name: $('[data-product-title]', productDetail)?.textContent?.trim() || ''
       };
       const tobaccoFree = isTobaccoFree(product);
-      const existing = $('[data-nicotine-warning="product-detail"]', productDetail);
-      if (tobaccoFree && !existing) {
+      const existing = existingWarning('product-detail', productDetail);
+      if (tobaccoFree) {
         const choicePanel = $('.product-choice-panel', productDetail);
-        const warning = warningElement('product-detail');
-        choicePanel ? choicePanel.insertAdjacentElement('beforebegin', warning) : $('[data-product-title]', productDetail)?.insertAdjacentElement('afterend', warning);
-      } else if (!tobaccoFree) {
+        if (choicePanel) placeWarningBefore(choicePanel, 'product-detail');
+        else {
+          const title = $('[data-product-title]', productDetail);
+          if (title) placeWarningAfter(title, 'product-detail');
+        }
+      } else {
         existing?.remove();
       }
     }
@@ -105,15 +135,13 @@
     });
     const cartPageContainsTobaccoFree = document.body.dataset.page === 'cart' && storedItemsContainTobaccoFree(window.SwedsnusCart?.items?.() || []);
     const needsGlobalWarning = Boolean(uncoveredTobaccoFreeCard || cartPageContainsTobaccoFree);
-    const globalWarning = $('[data-nicotine-warning="mixed-products"]');
-    if (needsGlobalWarning && main && !globalWarning) main.insertAdjacentElement('afterbegin', warningElement('mixed-products'));
+    const globalWarning = existingWarning('mixed-products');
+    if (needsGlobalWarning && main) ensureWarning(main, 'mixed-products');
     if (!needsGlobalWarning) globalWarning?.remove();
 
-    const showcaseCopy = $('.vitt-showcase-copy');
-    if (showcaseCopy) {
-      if (needsGlobalWarning) removeWarning(showcaseCopy, 'white-showcase');
-      else ensureWarning(showcaseCopy, 'white-showcase', 'beforeend');
-    }
+    const showcase = $('.vitt-showcase-section');
+    if (showcase) placeWarningBefore(showcase, 'white-showcase');
+    else existingWarning('white-showcase')?.remove();
 
     updateCartPanelWarnings();
   }
@@ -123,6 +151,7 @@
     updateNicotineProductNotices();
   }
 
+  window.SwedsnusLegalContent = { refresh, warningElement };
   document.addEventListener('swedsnus:layout-rendered', refresh);
   document.addEventListener('swedsnus:products-rendered', refresh);
   document.addEventListener('swedsnus:bookmarks-rendered', refresh);
