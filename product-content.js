@@ -89,7 +89,7 @@
   }
 
   function render() {
-    if (pageName() !== 'product.html') return;
+    if (!['product.html', 'product'].includes(pageName())) return;
     const layout = document.querySelector('.product-layout');
     if (!layout) return;
 
