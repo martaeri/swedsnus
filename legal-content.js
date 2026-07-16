@@ -47,10 +47,6 @@
     return warning;
   }
 
-  function removeWarning(container, context) {
-    existingWarning(context, container)?.remove();
-  }
-
   function productRow(product = {}) {
     return window.SwedsnusProducts?.findRow?.(product) || null;
   }
@@ -92,9 +88,14 @@
         existing?.remove();
         return;
       }
+
+      const warning = existing || warningElement('cart-panel');
       const footer = $('.cart-panel-footer', panel);
-      if (footer) placeWarningBefore(footer, 'cart-panel');
-      else ensureWarning(panel, 'cart-panel', 'beforeend');
+      if (footer) {
+        if (warning.nextElementSibling !== footer || warning.parentElement !== panel) panel.insertBefore(warning, footer);
+      } else if (warning.parentElement !== panel) {
+        panel.appendChild(warning);
+      }
     });
   }
 
@@ -127,6 +128,7 @@
       }
     }
 
+    const isHome = document.body.dataset.page === 'home';
     const uncoveredTobaccoFreeCard = main && $$('.product-card', main).some(card => {
       if (!cardIsTobaccoFree(card)) return false;
       if (card.closest('.vitt-showcase-section')) return false;
@@ -134,7 +136,7 @@
       return true;
     });
     const cartPageContainsTobaccoFree = document.body.dataset.page === 'cart' && storedItemsContainTobaccoFree(window.SwedsnusCart?.items?.() || []);
-    const needsGlobalWarning = Boolean(uncoveredTobaccoFreeCard || cartPageContainsTobaccoFree);
+    const needsGlobalWarning = !isHome && Boolean(uncoveredTobaccoFreeCard || cartPageContainsTobaccoFree);
     const globalWarning = existingWarning('mixed-products');
     if (needsGlobalWarning && main) ensureWarning(main, 'mixed-products');
     if (!needsGlobalWarning) globalWarning?.remove();
