@@ -26,7 +26,7 @@ Responsibilities:
 - `styles.css`: base design tokens, global layout primitives, header, navigation, footer and general component foundations.
 - `themes.css`: theme-specific visual overrides. It should change colors, typography, borders, radii and decorative presentation without owning structural page layout.
 - `commerce.css`: shared commerce-component structure and responsive behavior used across product cards, cart, bookmarks, account and product pages.
-- `product-components.css`: reusable product-component presentation that is not tied to one page type, including shared legal-notice presentation used with products.
+- `product-components.css`: reusable product-component presentation that is not tied to one page type, including the single shared visual definition for product-related legal notices.
 - `catalog.css`: assortment-page structure, category pills, catalog filters, external filter-sidebar placement, catalog product-grid behavior and catalog-specific responsive rules.
 - `commerce-core.js`: shared storage keys, local/session storage access, selectors and common formatting utilities.
 - `ui-feedback.js`: shared toast creation, timing and display behavior.
@@ -41,7 +41,7 @@ Responsibilities:
 - `bookmarks.js`: saved-product storage, bookmark button state, bookmark-page rendering and bookmark actions.
 - `account.js`: login-page, account-page and order-page rendering plus account tabs.
 - `main.js`: shared product-card normalization/navigation, homepage carousel and showcase setup, product-page quantity/pack controls, support forms and prototype-only actions.
-- `legal-content.js`: shared age messaging, footer regulation copy and placement of required nicotine health warnings wherever tobacco-free nicotine products are presented.
+- `legal-content.js`: shared age messaging, footer regulation copy, creation of the centralized nicotine-warning component and placement of that component wherever tobacco-free nicotine products are presented.
 
 CSS ownership rules:
 
@@ -54,6 +54,6 @@ CSS ownership rules:
 
 Catalog layout tokens are owned by `catalog.css` on `.catalog-page-with-external-sidebar`. The sidebar width, centered content width and layout gap must be changed through those tokens rather than repeated numeric values inside component rules.
 
-Legal notices and wording shared across pages must be handled by `legal-content.js`. Page-specific factual company information remains in the relevant HTML page, while required warnings and global age or regulation copy must not be duplicated in individual templates.
+Legal notices and wording shared across pages must be handled by `legal-content.js`. The nicotine warning must always be created through its shared component factory and use the single `.nicotine-health-warning` presentation in `product-components.css`. Page layouts may control where the component is placed, but must not change its typography, padding, border or other visual treatment. Page-specific factual company information remains in the relevant HTML page, while required warnings and global age or regulation copy must not be duplicated in individual templates.
 
 The major frontend ownership areas are centralized. New work should modify the existing owner above instead of adding one-off patch files, duplicate product extraction, duplicate storage helpers or duplicate listeners.
